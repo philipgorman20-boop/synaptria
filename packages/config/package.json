@@ -1,0 +1,11 @@
+{
+  "name": "@synaptria/config",
+  "version": "0.0.0",
+  "private": true,
+  "scripts": {
+    "build": "node -e \"console.log('Not implemented')\"",
+    "lint": "node -e \"console.log('Not implemented')\"",
+    "typecheck": "node -e \"console.log('Not implemented')\"",
+    "test": "node -e \"console.log('No tests yet')\""
+  }
+}

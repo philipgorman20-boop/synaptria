@@ -1,0 +1,36 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: synaptria-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: synaptria
+      POSTGRES_PASSWORD: synaptria
+      POSTGRES_DB: synaptria
+    ports:
+      - "5432:5432"
+    volumes:
+      - synaptria_postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U synaptria -d synaptria"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  minio:
+    image: minio/minio:latest
+    container_name: synaptria-minio
+    command: server /data --console-address ":9001"
+    restart: unless-stopped
+    environment:
+      MINIO_ROOT_USER: minio
+      MINIO_ROOT_PASSWORD: minio123
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    volumes:
+      - synaptria_minio_data:/data
+
+volumes:
+  synaptria_postgres_data:
+  synaptria_minio_data:
