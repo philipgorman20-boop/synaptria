@@ -11,8 +11,12 @@
     "lint:fix": "eslint . --fix"
   },
   "dependencies": {
+    "@synaptria/auth": "workspace:*",
+    "@synaptria/config": "workspace:*",
     "@synaptria/database": "workspace:*",
     "@synaptria/types": "workspace:*",
+    "@synaptria/ui": "workspace:*",
+    "@synaptria/validation": "workspace:*",
     "next": "^15.4.1",
     "react": "^19.1.0",
     "react-dom": "^19.1.0"

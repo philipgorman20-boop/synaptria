@@ -2,10 +2,21 @@
   "name": "@synaptria/ui",
   "version": "0.0.0",
   "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
   "scripts": {
-    "build": "node -e \"console.log('Not implemented')\"",
-    "lint": "node -e \"console.log('Not implemented')\"",
-    "typecheck": "node -e \"console.log('Not implemented')\"",
+    "build": "tsc --noEmit",
+    "lint": "tsc --noEmit",
+    "typecheck": "tsc --noEmit",
     "test": "node -e \"console.log('No tests yet')\""
+  },
+  "peerDependencies": {
+    "react": "^19.1.0"
+  },
+  "devDependencies": {
+    "@types/react": "^19.1.8",
+    "typescript": "^5.8.3"
   }
 }

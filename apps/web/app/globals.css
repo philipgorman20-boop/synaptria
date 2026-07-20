@@ -101,3 +101,31 @@ h1 {
 .grid strong {
   font-size: 1.5rem;
 }
+
+.dashboard-section {
+  width: min(1080px, 100%);
+  margin: 56px auto 0;
+}
+
+.dashboard-section h2 {
+  margin: 0 0 20px;
+  font-size: 1.5rem;
+}
+
+.module-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 16px;
+}
+
+.module-list article {
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 16px;
+  padding: 20px;
+}
+
+.module-list span {
+  color: #6b7280;
+  line-height: 1.5;
+}
