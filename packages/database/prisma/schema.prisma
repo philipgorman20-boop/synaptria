@@ -22,25 +22,85 @@ enum ProjectStatus {
   CANCELLED
 }
 
+enum CompanyType {
+  PROSPECT
+  CUSTOMER
+  PARTNER
+  VENDOR
+  COMPETITOR
+  OTHER
+}
+
+enum CompanyStatus {
+  ACTIVE
+  INACTIVE
+  ARCHIVED
+}
+
+enum OpportunityStage {
+  LEAD
+  QUALIFIED
+  DISCOVERY
+  PROPOSAL
+  NEGOTIATION
+  CLOSED_WON
+  CLOSED_LOST
+  ON_HOLD
+}
+
+enum ActivityType {
+  NOTE
+  EMAIL
+  CALL
+  MEETING
+  TASK
+}
+
+enum ActivityStatus {
+  OPEN
+  COMPLETED
+  CANCELLED
+}
+
+enum Priority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+
 model User {
-  id          String       @id @default(uuid())
-  email       String       @unique
+  id          String  @id @default(uuid())
+  email       String  @unique
   displayName String?
-  memberships Membership[]
-  createdAt   DateTime     @default(now())
-  updatedAt   DateTime     @updatedAt
+
+  memberships        Membership[]
+  teamMemberships    TeamMember[]
+  ownedOpportunities Opportunity[] @relation("OpportunityOwner")
+  createdActivities  Activity[]    @relation("ActivityCreator")
+  assignedActivities Activity[]    @relation("ActivityAssignee")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model Organization {
-  id          String       @id @default(uuid())
-  name        String
-  slug        String       @unique
-  memberships Membership[]
-  programs    Program[]
-  projects    Project[]
-  vendors     Vendor[]
-  createdAt   DateTime     @default(now())
-  updatedAt   DateTime     @updatedAt
+  id   String @id @default(uuid())
+  name String
+  slug String @unique
+
+  memberships   Membership[]
+  teams         Team[]
+  programs      Program[]
+  projects      Project[]
+  vendors       Vendor[]
+  companies     Company[]
+  contacts      Contact[]
+  opportunities Opportunity[]
+  activities    Activity[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model Membership {
@@ -48,25 +108,207 @@ model Membership {
   organizationId String
   userId         String
   role           MembershipRole @default(MEMBER)
-  organization   Organization   @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  user           User           @relation(fields: [userId], references: [id], onDelete: Cascade)
-  createdAt      DateTime       @default(now())
-  updatedAt      DateTime       @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@unique([organizationId, userId])
   @@index([userId])
 }
 
-model Program {
-  id             String       @id @default(uuid())
+model Team {
+  id             String  @id @default(uuid())
   organizationId String
   name           String
   description    String?
-  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  projects       Project[]
-  createdAt      DateTime     @default(now())
-  updatedAt      DateTime     @updatedAt
 
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  members TeamMember[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([organizationId, name])
+  @@index([organizationId])
+}
+
+model TeamMember {
+  id     String @id @default(uuid())
+  teamId String
+  userId String
+
+  team Team @relation(fields: [teamId], references: [id], onDelete: Cascade)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@unique([teamId, userId])
+  @@index([userId])
+}
+
+model Company {
+  id             String        @id @default(uuid())
+  organizationId String
+  name           String
+  type           CompanyType   @default(PROSPECT)
+  status         CompanyStatus @default(ACTIVE)
+  website        String?
+  industry       String?
+  phone          String?
+  addressLine1   String?
+  addressLine2   String?
+  city           String?
+  stateProvince  String?
+  postalCode     String?
+  country        String?
+  notes          String?
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  contacts      Contact[]
+  opportunities Opportunity[]
+  projects      Project[]
+  activities    Activity[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([organizationId, name])
+  @@index([organizationId, status])
+  @@index([organizationId, type])
+}
+
+model Contact {
+  id             String  @id @default(uuid())
+  organizationId String
+  companyId      String?
+  firstName      String
+  lastName       String
+  email          String?
+  phone          String?
+  title          String?
+  department     String?
+  notes          String?
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  company Company? @relation(fields: [companyId], references: [id], onDelete: SetNull)
+
+  opportunities Opportunity[]
+  activities    Activity[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([organizationId, email])
+  @@index([organizationId])
+  @@index([companyId])
+  @@index([organizationId, lastName, firstName])
+}
+
+model Opportunity {
+  id              String           @id @default(uuid())
+  organizationId  String
+  companyId       String
+  contactId       String?
+  ownerId         String?
+  name            String
+  stage           OpportunityStage @default(LEAD)
+  amountCents     Int?
+  currency        String           @default("USD")
+  probability     Int              @default(10)
+  expectedCloseAt DateTime?
+  description     String?
+  lossReason      String?
+  closedAt        DateTime?
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  company Company @relation(fields: [companyId], references: [id], onDelete: Restrict)
+
+  contact Contact? @relation(fields: [contactId], references: [id], onDelete: SetNull)
+
+  owner User? @relation("OpportunityOwner", fields: [ownerId], references: [id], onDelete: SetNull)
+
+  projects   Project[]
+  activities Activity[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([organizationId, stage])
+  @@index([companyId])
+  @@index([contactId])
+  @@index([ownerId])
+  @@index([expectedCloseAt])
+}
+
+model Activity {
+  id             String         @id @default(uuid())
+  organizationId String
+  companyId      String?
+  contactId      String?
+  opportunityId  String?
+  projectId      String?
+  createdById    String
+  assignedToId   String?
+  type           ActivityType
+  status         ActivityStatus @default(OPEN)
+  priority       Priority       @default(MEDIUM)
+  subject        String
+  body           String?
+  occurredAt     DateTime?
+  dueAt          DateTime?
+  completedAt    DateTime?
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  company Company? @relation(fields: [companyId], references: [id], onDelete: SetNull)
+
+  contact Contact? @relation(fields: [contactId], references: [id], onDelete: SetNull)
+
+  opportunity Opportunity? @relation(fields: [opportunityId], references: [id], onDelete: SetNull)
+
+  project Project? @relation(fields: [projectId], references: [id], onDelete: SetNull)
+
+  createdBy User @relation("ActivityCreator", fields: [createdById], references: [id], onDelete: Restrict)
+
+  assignedTo User? @relation("ActivityAssignee", fields: [assignedToId], references: [id], onDelete: SetNull)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([organizationId, type])
+  @@index([organizationId, status])
+  @@index([companyId])
+  @@index([contactId])
+  @@index([opportunityId])
+  @@index([projectId])
+  @@index([createdById])
+  @@index([assignedToId])
+  @@index([dueAt])
+}
+
+model Program {
+  id             String  @id @default(uuid())
+  organizationId String
+  name           String
+  description    String?
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  projects Project[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([organizationId, name])
   @@index([organizationId])
 }
 
@@ -74,26 +316,45 @@ model Project {
   id             String        @id @default(uuid())
   organizationId String
   programId      String?
+  companyId      String?
+  opportunityId  String?
   name           String
   description    String?
   status         ProjectStatus @default(PLANNED)
-  organization   Organization  @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  program        Program?      @relation(fields: [programId], references: [id], onDelete: SetNull)
-  createdAt      DateTime      @default(now())
-  updatedAt      DateTime      @updatedAt
+  startDate      DateTime?
+  targetEndDate  DateTime?
+  completedAt    DateTime?
 
-  @@index([organizationId])
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  program Program? @relation(fields: [programId], references: [id], onDelete: SetNull)
+
+  company Company? @relation(fields: [companyId], references: [id], onDelete: SetNull)
+
+  opportunity Opportunity? @relation(fields: [opportunityId], references: [id], onDelete: SetNull)
+
+  activities Activity[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([organizationId, status])
   @@index([programId])
+  @@index([companyId])
+  @@index([opportunityId])
 }
 
 model Vendor {
-  id             String       @id @default(uuid())
+  id             String  @id @default(uuid())
   organizationId String
   name           String
   website        String?
-  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  createdAt      DateTime     @default(now())
-  updatedAt      DateTime     @updatedAt
 
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([organizationId, name])
   @@index([organizationId])
 }
