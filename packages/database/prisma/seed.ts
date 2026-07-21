@@ -24,10 +24,12 @@ async function main(): Promise<void> {
       email: 'philip@synaptria.local',
     },
     update: {
+      name: 'Philip Gorman',
       displayName: 'Philip Gorman',
     },
     create: {
       email: 'philip@synaptria.local',
+      name: 'Philip Gorman',
       displayName: 'Philip Gorman',
     },
   });

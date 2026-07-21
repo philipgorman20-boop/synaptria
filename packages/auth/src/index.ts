@@ -1,10 +1,14 @@
-import type { Role, TenantContext } from "@synaptria/types";
+import { PrismaAdapter } from '@auth/prisma-adapter';
+import { db } from '@synaptria/database';
+import type { Role, TenantContext } from '@synaptria/types';
+import NextAuth from 'next-auth';
+import Google from 'next-auth/providers/google';
 
 export const roles = [
-  "OWNER",
-  "ADMIN",
-  "MEMBER",
-  "VIEWER",
+  'OWNER',
+  'ADMIN',
+  'MEMBER',
+  'VIEWER',
 ] as const satisfies readonly Role[];
 
 export const roleRank: Readonly<Record<Role, number>> = {
@@ -14,14 +18,24 @@ export const roleRank: Readonly<Record<Role, number>> = {
   OWNER: 3,
 };
 
-export class AuthorizationError extends Error {
-  constructor(message = "You are not authorized to perform this action.") {
+export class AuthenticationError extends Error {
+  constructor(message = 'You must be signed in to continue.') {
     super(message);
-    this.name = "AuthorizationError";
+    this.name = 'AuthenticationError';
   }
 }
 
-export function hasMinimumRole(currentRole: Role, requiredRole: Role): boolean {
+export class AuthorizationError extends Error {
+  constructor(message = 'You are not authorized to perform this action.') {
+    super(message);
+    this.name = 'AuthorizationError';
+  }
+}
+
+export function hasMinimumRole(
+  currentRole: Role,
+  requiredRole: Role,
+): boolean {
   return roleRank[currentRole] >= roleRank[requiredRole];
 }
 
@@ -31,7 +45,7 @@ export function requireMinimumRole(
 ): TenantContext {
   if (!hasMinimumRole(context.role, requiredRole)) {
     throw new AuthorizationError(
-      `Role ${context.role} does not satisfy the required role ${requiredRole}.`,
+      `Role ${context.role} does not satisfy required role ${requiredRole}.`,
     );
   }
 
@@ -39,21 +53,45 @@ export function requireMinimumRole(
 }
 
 export function canManageOrganization(role: Role): boolean {
-  return hasMinimumRole(role, "ADMIN");
+  return hasMinimumRole(role, 'ADMIN');
 }
 
 export function canManageMembers(role: Role): boolean {
-  return hasMinimumRole(role, "ADMIN");
+  return hasMinimumRole(role, 'ADMIN');
 }
 
 export function canManageBilling(role: Role): boolean {
-  return role === "OWNER";
+  return role === 'OWNER';
 }
 
 export function canWriteWorkspaceData(role: Role): boolean {
-  return hasMinimumRole(role, "MEMBER");
+  return hasMinimumRole(role, 'MEMBER');
 }
 
 export function canViewWorkspace(role: Role): boolean {
-  return hasMinimumRole(role, "VIEWER");
+  return hasMinimumRole(role, 'VIEWER');
 }
+
+export const { auth, handlers, signIn, signOut } = NextAuth({
+  adapter: PrismaAdapter(db),
+
+  providers: [Google],
+
+  session: {
+    strategy: 'database',
+  },
+
+  pages: {
+    signIn: '/sign-in',
+  },
+
+  callbacks: {
+    session({ session, user }) {
+      if (session.user) {
+        session.user.id = user.id;
+      }
+
+      return session;
+    },
+  },
+});
