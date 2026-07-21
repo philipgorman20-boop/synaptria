@@ -21,14 +21,14 @@ const prisma = new PrismaClient();
 async function main(): Promise<void> {
   const user = await prisma.user.upsert({
     where: {
-      email: 'philip@synaptria.local',
+      email: 'philip.gorman20@gmail.com',
     },
     update: {
       name: 'Philip Gorman',
       displayName: 'Philip Gorman',
     },
     create: {
-      email: 'philip@synaptria.local',
+      email: 'philip.gorman20@gmail.com',
       name: 'Philip Gorman',
       displayName: 'Philip Gorman',
     },
