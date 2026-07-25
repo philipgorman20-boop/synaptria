@@ -6,7 +6,8 @@
   "exports": {
     ".": "./src/index.ts",
     "./organization": "./src/organization/index.ts",
-    "./programs": "./src/programs/index.ts"
+    "./programs": "./src/programs/index.ts",
+    "./projects": "./src/projects/index.ts"
   },
   "scripts": {
     "build": "tsc --noEmit",
