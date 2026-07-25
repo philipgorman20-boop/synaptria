@@ -1,0 +1,36 @@
+{
+  "name": "@synaptria/application",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./organization": "./src/modules/organization/index.ts",
+    "./finance": "./src/modules/finance/index.ts",
+    "./programs": "./src/modules/programs/index.ts",
+    "./vendors": "./src/modules/vendors/index.ts",
+    "./documents": "./src/modules/documents/index.ts",
+    "./reporting": "./src/modules/reporting/index.ts",
+    "./dashboard": "./src/modules/dashboard/index.ts",
+    "./ai": "./src/modules/ai/index.ts"
+  },
+  "scripts": {
+    "build": "tsc --noEmit",
+    "lint": "tsc --noEmit",
+    "typecheck": "tsc --noEmit",
+    "test": "node --import tsx --test src/**/*.test.ts"
+  },
+  "dependencies": {
+    "@synaptria/audit": "workspace:*",
+    "@synaptria/core": "workspace:*",
+    "@synaptria/domain": "workspace:*",
+    "@synaptria/events": "workspace:*",
+    "@synaptria/permissions": "workspace:*",
+    "@synaptria/types": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "^22.20.1",
+    "tsx": "^4.23.1",
+    "typescript": "^5.8.3"
+  }
+}

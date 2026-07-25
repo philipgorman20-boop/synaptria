@@ -1,0 +1,33 @@
+{
+  "name": "@synaptria/web",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit",
+    "test": "node -e \"console.log('No tests yet')\"",
+    "lint:fix": "eslint . --fix"
+  },
+  "dependencies": {
+    "@synaptria/auth": "workspace:*",
+    "@synaptria/config": "workspace:*",
+    "@synaptria/database": "workspace:*",
+    "@synaptria/types": "workspace:*",
+    "@synaptria/ui": "workspace:*",
+    "@synaptria/validation": "workspace:*",
+    "next": "^15.4.1",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0"
+  },
+  "devDependencies": {
+    "@eslint/eslintrc": "^3.3.6",
+    "@types/node": "^22.15.30",
+    "@types/react": "^19.1.8",
+    "@types/react-dom": "^19.1.6",
+    "eslint": "^9.39.5",
+    "eslint-config-next": "15.5.20",
+    "typescript": "^5.8.3"
+  }
+}
