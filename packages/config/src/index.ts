@@ -21,6 +21,11 @@ export function programRoute(programId: string): `${typeof routes.programs}/${st
   return `${routes.programs}/${programId}`;
 }
 
+/** Builds the canonical detail route for a project within the portfolio module. */
+export function projectRoute(projectId: string): `${typeof routes.projects}/${string}` {
+  return `${routes.projects}/${projectId}`;
+}
+
 export type AppRoute = (typeof routes)[keyof typeof routes];
 
 export interface NavigationItem {
