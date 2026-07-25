@@ -25,6 +25,7 @@
     "@synaptria/core": "workspace:*",
     "@synaptria/domain": "workspace:*",
     "@synaptria/events": "workspace:*",
+    "@synaptria/permissions": "workspace:*",
     "@synaptria/types": "workspace:*"
   },
   "devDependencies": {

@@ -5,7 +5,8 @@
   "type": "module",
   "exports": {
     ".": "./src/index.ts",
-    "./organization": "./src/organization/index.ts"
+    "./organization": "./src/organization/index.ts",
+    "./programs": "./src/programs/index.ts"
   },
   "scripts": {
     "build": "tsc --noEmit",

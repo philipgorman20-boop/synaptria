@@ -7,6 +7,7 @@ export type Identifier<TName extends string = string> = string & {
 export type UserId = Identifier<'UserId'>;
 export type OrganizationId = Identifier<'OrganizationId'>;
 export type MembershipId = Identifier<'MembershipId'>;
+export type ProgramId = Identifier<'ProgramId'>;
 export type RequestId = Identifier<'RequestId'>;
 export type CorrelationId = Identifier<'CorrelationId'>;
 
@@ -24,5 +25,6 @@ export const userId = (value: string): UserId => identifier(value, 'UserId');
 export const organizationId = (value: string): OrganizationId =>
   identifier(value, 'OrganizationId');
 export const membershipId = (value: string): MembershipId => identifier(value, 'MembershipId');
+export const programId = (value: string): ProgramId => identifier(value, 'ProgramId');
 export const requestId = (value: string): RequestId => identifier(value, 'RequestId');
 export const correlationId = (value: string): CorrelationId => identifier(value, 'CorrelationId');

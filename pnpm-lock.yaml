@@ -92,6 +92,9 @@ importers:
       '@synaptria/events':
         specifier: workspace:*
         version: link:../events
+      '@synaptria/permissions':
+        specifier: workspace:*
+        version: link:../permissions
       '@synaptria/types':
         specifier: workspace:*
         version: link:../types
