@@ -7,8 +7,6 @@ import {
   type OrganizationId,
   type ProgramId,
 } from '@synaptria/core';
-import { AuthorizationDeniedError } from '@synaptria/core/errors';
-import { AuthorizationDeniedError } from '@synaptria/core/errors';
 import type {
   CreateProgramInput,
   Program,
