@@ -8,6 +8,7 @@ import {
   formatProgramPriority,
   formatProgramStatus,
   getProgramDetailHref,
+  parseProgramRouteParam,
 } from './programs-format';
 
 test('formatProgramStatus returns readable labels', () => {
@@ -28,4 +29,18 @@ test('formatProgramDate uses the configured locale', () => {
 
 test('getProgramDetailHref builds the portfolio detail route', () => {
   assert.equal(getProgramDetailHref(programId('program-1')), '/programs/program-1');
+});
+
+test('parseProgramRouteParam accepts a valid UUID program id', () => {
+  const id = '550e8400-e29b-41d4-a716-446655440000';
+  assert.equal(parseProgramRouteParam(id), programId(id));
+  assert.equal(parseProgramRouteParam(`  ${id}  `), programId(id));
+});
+
+test('parseProgramRouteParam rejects invalid route params', () => {
+  assert.equal(parseProgramRouteParam(undefined), null);
+  assert.equal(parseProgramRouteParam(''), null);
+  assert.equal(parseProgramRouteParam('   '), null);
+  assert.equal(parseProgramRouteParam('program-1'), null);
+  assert.equal(parseProgramRouteParam('not-a-uuid'), null);
 });

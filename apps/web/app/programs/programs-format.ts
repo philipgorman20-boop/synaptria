@@ -1,6 +1,9 @@
 import type { ProgramPriority, ProgramStatus } from '@synaptria/domain/programs';
 import { appConfig, programRoute } from '@synaptria/config';
-import type { ProgramId } from '@synaptria/core';
+import { programId, type ProgramId } from '@synaptria/core';
+
+const PROGRAM_ID_PATTERN =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
 const PROGRAM_STATUS_LABELS: Record<ProgramStatus, string> = {
   CONCEPT: 'Concept',
@@ -37,4 +40,19 @@ export function formatProgramDate(date: Date): string {
 
 export function getProgramDetailHref(programId: ProgramId): string {
   return programRoute(programId);
+}
+
+export function parseProgramRouteParam(
+  rawProgramId: string | undefined,
+): ProgramId | null {
+  if (typeof rawProgramId !== 'string') {
+    return null;
+  }
+
+  const normalized = rawProgramId.trim();
+  if (!PROGRAM_ID_PATTERN.test(normalized)) {
+    return null;
+  }
+
+  return programId(normalized);
 }
