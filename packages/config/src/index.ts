@@ -16,6 +16,11 @@ export const routes = {
   settings: "/settings",
 } as const;
 
+/** Builds the canonical detail route for a program within the portfolio module. */
+export function programRoute(programId: string): `${typeof routes.programs}/${string}` {
+  return `${routes.programs}/${programId}`;
+}
+
 export type AppRoute = (typeof routes)[keyof typeof routes];
 
 export interface NavigationItem {

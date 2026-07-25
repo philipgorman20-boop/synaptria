@@ -35,6 +35,9 @@ importers:
       '@synaptria/database':
         specifier: workspace:*
         version: link:../../packages/database
+      '@synaptria/domain':
+        specifier: workspace:*
+        version: link:../../packages/domain
       '@synaptria/types':
         specifier: workspace:*
         version: link:../../packages/types
