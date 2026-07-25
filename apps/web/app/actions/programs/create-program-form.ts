@@ -27,6 +27,15 @@ export const initialCreateProgramState: CreateProgramActionState = {
   status: 'idle',
 };
 
+export function suggestProgramCodeFromName(name: string): string {
+  return name
+    .toUpperCase()
+    .trim()
+    .replace(/[^A-Z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .replace(/-{2,}/g, '-');
+}
+
 export function readCreateProgramFormValues(
   formData: FormData,
 ): CreateProgramFormValues {

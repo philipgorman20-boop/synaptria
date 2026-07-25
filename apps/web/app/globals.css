@@ -412,13 +412,36 @@ h1 {
   padding: 11px 13px;
 }
 
+.form-field textarea {
+  width: 100%;
+  min-width: 0;
+  border: 1px solid #d1d5db;
+  border-radius: 10px;
+  background: white;
+  color: #111827;
+  font: inherit;
+  line-height: 1.5;
+  padding: 11px 13px;
+  resize: vertical;
+}
+
 .form-field input:focus-visible {
   outline: 3px solid rgb(37 99 235 / 20%);
   outline-offset: 1px;
   border-color: #2563eb;
 }
 
+.form-field textarea:focus-visible {
+  outline: 3px solid rgb(37 99 235 / 20%);
+  outline-offset: 1px;
+  border-color: #2563eb;
+}
+
 .form-field input[aria-invalid='true'] {
+  border-color: #dc2626;
+}
+
+.form-field textarea[aria-invalid='true'] {
   border-color: #dc2626;
 }
 
@@ -676,6 +699,10 @@ h1 {
   color: #4b5563;
   line-height: 1.6;
   max-width: 640px;
+}
+
+.programs-empty-state-actions {
+  margin-top: 8px;
 }
 
 @media (max-width: 850px) {

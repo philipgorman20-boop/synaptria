@@ -1,6 +1,8 @@
 import { routes } from '@synaptria/config';
 import Link from 'next/link';
 
+import { CreateProgramDialog } from './create-program-dialog';
+
 export interface ProgramsPageHeaderProps {
   readonly organizationName: string;
   readonly role: string;
@@ -27,15 +29,7 @@ export function ProgramsPageHeader({
       </div>
 
       <div className="programs-page-actions">
-        <button
-          className="primary-button"
-          type="button"
-          disabled
-          aria-disabled="true"
-          title="Program creation dialog is not available yet."
-        >
-          Create program
-        </button>
+        <CreateProgramDialog />
         <Link className="secondary-button programs-page-back-link" href={routes.dashboard}>
           Back to dashboard
         </Link>

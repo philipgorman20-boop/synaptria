@@ -8,6 +8,7 @@ import { AuthorizationDeniedError } from '@synaptria/core/errors';
 import {
   mapCreateProgramActionError,
   readCreateProgramFormValues,
+  suggestProgramCodeFromName,
   validateCreateProgramFormValues,
 } from './create-program-form';
 
@@ -87,4 +88,9 @@ test('mapCreateProgramActionError maps persistence conflicts', () => {
   );
 
   assert.equal(result?.fieldErrors?.code, 'A program with this code already exists.');
+});
+
+test('suggestProgramCodeFromName generates uppercase program codes', () => {
+  assert.equal(suggestProgramCodeFromName('  Oncology Portfolio  '), 'ONCOLOGY-PORTFOLIO');
+  assert.equal(suggestProgramCodeFromName('onco 001'), 'ONCO-001');
 });
