@@ -1,0 +1,43 @@
+import type { OrganizationRole } from '@synaptria/core/context';
+
+import { ALL_PERMISSIONS, PERMISSIONS, type Permission } from './permissions';
+
+const ADMIN_EXCLUSIONS = new Set<Permission>([
+  PERMISSIONS.ORGANIZATION_TRANSFER_OWNERSHIP,
+  PERMISSIONS.ORGANIZATION_DELETE,
+]);
+
+const ADMIN_PERMISSIONS = ALL_PERMISSIONS.filter(
+  (permission) => !ADMIN_EXCLUSIONS.has(permission),
+);
+
+const MEMBER_PERMISSIONS = [
+  PERMISSIONS.ORGANIZATION_READ,
+  PERMISSIONS.DASHBOARD_READ,
+  PERMISSIONS.PROGRAMS_READ,
+  PERMISSIONS.PROGRAMS_MANAGE,
+  PERMISSIONS.VENDORS_READ,
+  PERMISSIONS.VENDORS_MANAGE,
+  PERMISSIONS.DOCUMENTS_READ,
+  PERMISSIONS.DOCUMENTS_UPLOAD,
+  PERMISSIONS.REPORTS_READ,
+  PERMISSIONS.REPORTS_GENERATE,
+  PERMISSIONS.AI_USE,
+] as const satisfies readonly Permission[];
+
+const VIEWER_PERMISSIONS = [
+  PERMISSIONS.ORGANIZATION_READ,
+  PERMISSIONS.DASHBOARD_READ,
+  PERMISSIONS.PROGRAMS_READ,
+  PERMISSIONS.VENDORS_READ,
+  PERMISSIONS.DOCUMENTS_READ,
+  PERMISSIONS.REPORTS_READ,
+] as const satisfies readonly Permission[];
+
+/** Immutable baseline permissions inherited by each organization membership role. */
+export const ROLE_PERMISSIONS: Readonly<Record<OrganizationRole, readonly Permission[]>> = {
+  OWNER: ALL_PERMISSIONS,
+  ADMIN: Object.freeze(ADMIN_PERMISSIONS),
+  MEMBER: Object.freeze(MEMBER_PERMISSIONS),
+  VIEWER: Object.freeze(VIEWER_PERMISSIONS),
+};

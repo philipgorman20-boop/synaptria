@@ -1,0 +1,26 @@
+{
+  "name": "@synaptria/core",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./context": "./src/context/index.ts",
+    "./errors": "./src/errors/index.ts",
+    "./ids": "./src/ids/index.ts",
+    "./result": "./src/result/index.ts",
+    "./time": "./src/time/index.ts",
+    "./pagination": "./src/pagination/index.ts"
+  },
+  "scripts": {
+    "build": "tsc --noEmit",
+    "lint": "tsc --noEmit",
+    "typecheck": "tsc --noEmit",
+    "test": "node --import tsx --test src/**/*.test.ts"
+  },
+  "devDependencies": {
+    "tsx": "^4.20.3",
+    "typescript": "^5.8.3",
+    "@types/node": "^22.15.30"
+  }
+}

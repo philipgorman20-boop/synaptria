@@ -1,9 +1,18 @@
-import { auth } from '@synaptria/auth';
+import {
+  AuthenticationError,
+  OrganizationMembershipRequiredError,
+  type ResolvedOrganizationContext,
+} from '@synaptria/auth';
 import { appConfig, primaryNavigation } from '@synaptria/config';
 import { Card, Stack } from '@synaptria/ui';
 import { redirect } from 'next/navigation';
 
+import { getOrganizationService } from '../../lib/organization-service';
+import { getRequestContext } from '../../lib/request-context';
+
 import { signOutCurrentUser } from '../actions/auth';
+import { CreateOrganizationDialog } from './components/create-organization-dialog';
+import { OrganizationSwitcher } from './components/organization-switcher';
 
 const cards = [
   ['Programs', '0 active'],
@@ -13,29 +22,59 @@ const cards = [
 ] as const;
 
 export default async function DashboardPage() {
-  const session = await auth();
+  let context: ResolvedOrganizationContext;
 
-  if (!session?.user) {
-    redirect('/sign-in');
+  try {
+    context = await getRequestContext();
+  } catch (error) {
+    if (error instanceof AuthenticationError) {
+      redirect('/sign-in');
+    }
+
+    if (error instanceof OrganizationMembershipRequiredError) {
+      redirect('/no-organization');
+    }
+
+    throw error;
   }
+
+  const organizationList = await getOrganizationService().listOrganizations({
+    userId: context.userId,
+    activeOrganizationId: context.organizationId,
+  });
 
   return (
     <main className="dashboard">
       <header className="dashboard-header">
-        <div>
+        <div className="dashboard-heading">
           <p className="eyebrow">WORKSPACE</p>
           <h1>Executive dashboard</h1>
           <p>
-            Welcome to the {appConfig.name} operating workspace,{' '}
-            {session.user.name ?? session.user.email ?? 'user'}.
+            Welcome to the {appConfig.name} operating workspace. You are working
+            in {context.organizationName} as {context.role.toLowerCase()}.
           </p>
         </div>
 
-        <form action={signOutCurrentUser}>
-          <button className="sign-out-button" type="submit">
-            Sign out
-          </button>
-        </form>
+        <div className="dashboard-controls">
+          <OrganizationSwitcher
+            activeOrganizationId={context.organizationId}
+            organizations={organizationList.organizations.map((item) => ({
+              id: item.organization.id,
+              name: item.organization.name,
+              role: item.membership.role,
+            }))}
+          />
+
+          <div className="dashboard-button-row">
+            <CreateOrganizationDialog />
+
+            <form action={signOutCurrentUser}>
+              <button className="sign-out-button" type="submit">
+                Sign out
+              </button>
+            </form>
+          </div>
+        </div>
       </header>
 
       <section className="grid" aria-label="Workspace metrics">
