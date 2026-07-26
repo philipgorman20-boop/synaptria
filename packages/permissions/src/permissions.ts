@@ -20,6 +20,9 @@ export const PERMISSIONS = {
   PROJECTS_READ: 'projects.read',
   PROJECTS_MANAGE: 'projects.manage',
 
+  MILESTONES_READ: 'milestones.read',
+  MILESTONES_MANAGE: 'milestones.manage',
+
   VENDORS_READ: 'vendors.read',
   VENDORS_MANAGE: 'vendors.manage',
 

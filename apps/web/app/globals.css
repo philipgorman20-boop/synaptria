@@ -310,6 +310,13 @@ h1 {
   padding: 12px 18px;
 }
 
+a.primary-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+}
+
 .create-organization-button:hover,
 .primary-button:hover {
   background: #1f2937;
@@ -703,6 +710,127 @@ h1 {
 
 .programs-empty-state-actions {
   margin-top: 8px;
+}
+
+.programs-table-wrapper {
+  width: min(1080px, 100%);
+  margin: 0 auto;
+  overflow-x: auto;
+}
+
+.programs-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 16px;
+  overflow: hidden;
+}
+
+.programs-table thead {
+  background: #f9fafb;
+}
+
+.programs-table th,
+.programs-table td {
+  padding: 14px 16px;
+  text-align: left;
+  vertical-align: middle;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.programs-table tbody tr:last-child th,
+.programs-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.programs-table th {
+  color: #6b7280;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.programs-table tbody th[scope='row'] {
+  color: #111827;
+  font-size: 1rem;
+  font-weight: 600;
+  letter-spacing: normal;
+  text-transform: none;
+}
+
+.programs-table-link {
+  color: #111827;
+  text-decoration: none;
+}
+
+.programs-table-link:hover,
+.programs-table-link:focus-visible {
+  color: #2563eb;
+  text-decoration: underline;
+}
+
+.programs-table-link:focus-visible {
+  outline: 3px solid rgb(37 99 235 / 20%);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+.program-status-badge[data-status='BLOCKED'] {
+  background: #fef2f2;
+  color: #b91c1c;
+}
+
+.program-status-badge[data-status='COMPLETED'] {
+  background: #ecfdf5;
+  color: #047857;
+}
+
+.program-status-badge[data-status='CANCELLED'] {
+  background: #f3f4f6;
+  color: #4b5563;
+}
+
+.programs-skeleton-line,
+.programs-skeleton-badge {
+  display: inline-block;
+  background: linear-gradient(90deg, #f3f4f6 0%, #e5e7eb 50%, #f3f4f6 100%);
+  background-size: 200% 100%;
+  animation: programs-skeleton-shimmer 1.4s ease infinite;
+  border-radius: 999px;
+}
+
+.programs-skeleton-line {
+  width: 96px;
+  height: 12px;
+}
+
+.programs-skeleton-line-wide {
+  width: min(320px, 100%);
+}
+
+.programs-skeleton-line-short {
+  width: 120px;
+}
+
+.programs-skeleton-badge {
+  width: 72px;
+  height: 24px;
+}
+
+.programs-table-skeleton td {
+  min-width: 96px;
+}
+
+@keyframes programs-skeleton-shimmer {
+  0% {
+    background-position: 100% 0;
+  }
+
+  100% {
+    background-position: -100% 0;
+  }
 }
 
 .program-detail-page {

@@ -52,6 +52,16 @@ test('projects permissions mirror programs role assignments', () => {
   assert.equal(hasPermission('VIEWER', PERMISSIONS.PROJECTS_MANAGE), false);
 });
 
+test('milestones permissions mirror projects role assignments', () => {
+  assert.equal(hasPermission('OWNER', PERMISSIONS.MILESTONES_READ), true);
+  assert.equal(hasPermission('OWNER', PERMISSIONS.MILESTONES_MANAGE), true);
+  assert.equal(hasPermission('ADMIN', PERMISSIONS.MILESTONES_MANAGE), true);
+  assert.equal(hasPermission('MEMBER', PERMISSIONS.MILESTONES_READ), true);
+  assert.equal(hasPermission('MEMBER', PERMISSIONS.MILESTONES_MANAGE), true);
+  assert.equal(hasPermission('VIEWER', PERMISSIONS.MILESTONES_READ), true);
+  assert.equal(hasPermission('VIEWER', PERMISSIONS.MILESTONES_MANAGE), false);
+});
+
 test('any and all helpers evaluate permission collections', () => {
   assert.equal(
     hasAnyPermission('MEMBER', [PERMISSIONS.FINANCE_MANAGE, PERMISSIONS.PROGRAMS_MANAGE]),

@@ -9,6 +9,8 @@ export type OrganizationId = Identifier<'OrganizationId'>;
 export type MembershipId = Identifier<'MembershipId'>;
 export type ProgramId = Identifier<'ProgramId'>;
 export type ProjectId = Identifier<'ProjectId'>;
+export type MilestoneId = Identifier<'MilestoneId'>;
+export type TaskId = Identifier<'TaskId'>;
 export type RequestId = Identifier<'RequestId'>;
 export type CorrelationId = Identifier<'CorrelationId'>;
 
@@ -28,5 +30,7 @@ export const organizationId = (value: string): OrganizationId =>
 export const membershipId = (value: string): MembershipId => identifier(value, 'MembershipId');
 export const programId = (value: string): ProgramId => identifier(value, 'ProgramId');
 export const projectId = (value: string): ProjectId => identifier(value, 'ProjectId');
+export const milestoneId = (value: string): MilestoneId => identifier(value, 'MilestoneId');
+export const taskId = (value: string): TaskId => identifier(value, 'TaskId');
 export const requestId = (value: string): RequestId => identifier(value, 'RequestId');
 export const correlationId = (value: string): CorrelationId => identifier(value, 'CorrelationId');

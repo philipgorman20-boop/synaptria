@@ -9,6 +9,7 @@
     "./finance": "./src/modules/finance/index.ts",
     "./programs": "./src/modules/programs/index.ts",
     "./projects": "./src/modules/projects/index.ts",
+    "./milestones": "./src/modules/milestones/index.ts",
     "./vendors": "./src/modules/vendors/index.ts",
     "./documents": "./src/modules/documents/index.ts",
     "./reporting": "./src/modules/reporting/index.ts",
