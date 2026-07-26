@@ -44,6 +44,14 @@ export function suggestProjectCodeFromName(name: string): string {
     .replace(/-{2,}/g, '-');
 }
 
+export function resolveSuggestedProjectCode(
+  name: string,
+  codeWasEdited: boolean,
+  manualCode: string,
+): string {
+  return codeWasEdited ? manualCode : suggestProjectCodeFromName(name);
+}
+
 export function readCreateProjectFormValues(
   formData: FormData,
 ): CreateProjectFormValues {

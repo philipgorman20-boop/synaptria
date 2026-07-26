@@ -9,6 +9,7 @@ import { AuthorizationDeniedError } from '@synaptria/core/errors';
 import {
   mapCreateProjectActionError,
   readCreateProjectFormValues,
+  resolveSuggestedProjectCode,
   suggestProjectCodeFromName,
   toCreateProjectInput,
   validateCreateProjectFormValues,
@@ -182,4 +183,15 @@ test('suggestProjectCodeFromName generates uppercase project codes', () => {
     'LEAD-CANDIDATE-STUDY',
   );
   assert.equal(suggestProjectCodeFromName('lc 001'), 'LC-001');
+});
+
+test('resolveSuggestedProjectCode preserves manually entered codes', () => {
+  assert.equal(
+    resolveSuggestedProjectCode('New Project', true, 'CUSTOM-CODE'),
+    'CUSTOM-CODE',
+  );
+  assert.equal(
+    resolveSuggestedProjectCode('New Project', false, ''),
+    'NEW-PROJECT',
+  );
 });
