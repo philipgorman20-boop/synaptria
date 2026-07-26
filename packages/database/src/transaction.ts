@@ -6,6 +6,7 @@ import { PrismaMembershipRepository } from './organization/prisma-membership-rep
 import { PrismaOrganizationRepository } from './organization/prisma-organization-repository';
 
 import { PrismaProgramRepository } from './programs/prisma-program-repository';
+import { PrismaProjectRepository } from './projects/prisma-project-repository';
 
 export interface PersistenceRepositories {
   readonly audit: PrismaAuditRepository;
@@ -13,6 +14,7 @@ export interface PersistenceRepositories {
   readonly memberships: PrismaMembershipRepository;
   readonly organizations: PrismaOrganizationRepository;
   readonly programs: PrismaProgramRepository;
+  readonly projects: PrismaProjectRepository;
 }
 
 export function createPersistenceRepositories(
@@ -24,6 +26,7 @@ export function createPersistenceRepositories(
     memberships: new PrismaMembershipRepository(client),
     organizations: new PrismaOrganizationRepository(client),
     programs: new PrismaProgramRepository(client),
+    projects: new PrismaProjectRepository(client),
   };
 }
 

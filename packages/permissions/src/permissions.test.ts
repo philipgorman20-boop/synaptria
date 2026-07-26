@@ -27,6 +27,7 @@ test('admin cannot transfer ownership or delete the organization', () => {
 
 test('member can manage operational work but not finance or membership', () => {
   assert.equal(hasPermission('MEMBER', PERMISSIONS.PROGRAMS_MANAGE), true);
+  assert.equal(hasPermission('MEMBER', PERMISSIONS.PROJECTS_MANAGE), true);
   assert.equal(hasPermission('MEMBER', PERMISSIONS.DOCUMENTS_UPLOAD), true);
   assert.equal(hasPermission('MEMBER', PERMISSIONS.FINANCE_READ), false);
   assert.equal(hasPermission('MEMBER', PERMISSIONS.ORGANIZATION_MANAGE_MEMBERS), false);
@@ -35,8 +36,20 @@ test('member can manage operational work but not finance or membership', () => {
 test('viewer receives read-only access', () => {
   assert.equal(hasPermission('VIEWER', PERMISSIONS.DASHBOARD_READ), true);
   assert.equal(hasPermission('VIEWER', PERMISSIONS.PROGRAMS_READ), true);
+  assert.equal(hasPermission('VIEWER', PERMISSIONS.PROJECTS_READ), true);
   assert.equal(hasPermission('VIEWER', PERMISSIONS.PROGRAMS_MANAGE), false);
+  assert.equal(hasPermission('VIEWER', PERMISSIONS.PROJECTS_MANAGE), false);
   assert.equal(hasPermission('VIEWER', PERMISSIONS.DOCUMENTS_UPLOAD), false);
+});
+
+test('projects permissions mirror programs role assignments', () => {
+  assert.equal(hasPermission('OWNER', PERMISSIONS.PROJECTS_READ), true);
+  assert.equal(hasPermission('OWNER', PERMISSIONS.PROJECTS_MANAGE), true);
+  assert.equal(hasPermission('ADMIN', PERMISSIONS.PROJECTS_MANAGE), true);
+  assert.equal(hasPermission('MEMBER', PERMISSIONS.PROJECTS_READ), true);
+  assert.equal(hasPermission('MEMBER', PERMISSIONS.PROJECTS_MANAGE), true);
+  assert.equal(hasPermission('VIEWER', PERMISSIONS.PROJECTS_READ), true);
+  assert.equal(hasPermission('VIEWER', PERMISSIONS.PROJECTS_MANAGE), false);
 });
 
 test('any and all helpers evaluate permission collections', () => {

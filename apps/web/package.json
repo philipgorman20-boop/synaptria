@@ -7,7 +7,7 @@
     "start": "next start",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
-    "test": "node --import tsx --test lib/**/*.test.ts app/actions/**/*.test.ts app/programs/**/*.test.ts",
+    "test": "node --import tsx --test lib/**/*.test.ts app/actions/**/*.test.ts app/programs/**/*.test.ts app/projects/**/*.test.ts",
     "lint:fix": "eslint . --fix"
   },
   "dependencies": {
@@ -22,7 +22,8 @@
     "react-dom": "^19.1.0",
     "@synaptria/core": "workspace:*",
     "@synaptria/application": "workspace:*",
-    "@synaptria/domain": "workspace:*"
+    "@synaptria/domain": "workspace:*",
+    "@synaptria/permissions": "workspace:*"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3.3.6",

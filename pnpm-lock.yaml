@@ -38,6 +38,9 @@ importers:
       '@synaptria/domain':
         specifier: workspace:*
         version: link:../../packages/domain
+      '@synaptria/permissions':
+        specifier: workspace:*
+        version: link:../../packages/permissions
       '@synaptria/types':
         specifier: workspace:*
         version: link:../../packages/types
