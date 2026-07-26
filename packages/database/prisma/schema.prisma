@@ -65,6 +65,14 @@ enum MilestoneStatus {
   CANCELLED
 }
 
+enum TaskStatus {
+  TODO
+  IN_PROGRESS
+  BLOCKED
+  COMPLETED
+  CANCELLED
+}
+
 enum DeliverableStatus {
   NOT_STARTED
   IN_PROGRESS
@@ -571,6 +579,7 @@ model Organization {
   programs     Program[]
   projects     Project[]
   milestones   Milestone[]
+  tasks        Task[]
   deliverables Deliverable[]
   dependencies Dependency[]
   risks        Risk[]
@@ -805,6 +814,7 @@ model Milestone {
   commitments   Commitment[]
   forecastLines ForecastLine[]
   documents     Document[]
+  tasks         Task[]
 
   deletedAt DateTime?
   createdAt DateTime  @default(now())
@@ -812,6 +822,32 @@ model Milestone {
 
   @@index([organizationId, status])
   @@index([projectId])
+  @@index([plannedEndDate])
+  @@index([organizationId, deletedAt])
+}
+
+model Task {
+  id               String     @id @default(uuid())
+  organizationId   String
+  milestoneId      String
+  name             String
+  description      String?
+  status           TaskStatus @default(TODO)
+  priority         Priority   @default(MEDIUM)
+  plannedStartDate DateTime?
+  plannedEndDate   DateTime?
+  actualStartDate  DateTime?
+  actualEndDate    DateTime?
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  milestone    Milestone    @relation(fields: [milestoneId], references: [id], onDelete: Cascade)
+
+  deletedAt DateTime?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  @@index([organizationId, status])
+  @@index([milestoneId])
   @@index([plannedEndDate])
   @@index([organizationId, deletedAt])
 }

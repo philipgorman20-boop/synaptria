@@ -8,6 +8,7 @@ import { PrismaOrganizationRepository } from './organization/prisma-organization
 import { PrismaProgramRepository } from './programs/prisma-program-repository';
 import { PrismaProjectRepository } from './projects/prisma-project-repository';
 import { PrismaMilestoneRepository } from './milestones/prisma-milestone-repository';
+import { PrismaTaskRepository } from './tasks/prisma-task-repository';
 
 export interface PersistenceRepositories {
   readonly audit: PrismaAuditRepository;
@@ -17,12 +18,21 @@ export interface PersistenceRepositories {
   readonly organizations: PrismaOrganizationRepository;
   readonly programs: PrismaProgramRepository;
   readonly projects: PrismaProjectRepository;
+  readonly tasks: PrismaTaskRepository;
 }
 
 /** Repositories required for milestone application transactions. */
 export interface MilestonePersistenceRepositories {
   readonly milestones: PrismaMilestoneRepository;
   readonly projects: PrismaProjectRepository;
+  readonly audit: PrismaAuditRepository;
+  readonly events: PrismaEventRepository;
+}
+
+/** Repositories required for task application transactions. */
+export interface TaskPersistenceRepositories {
+  readonly tasks: PrismaTaskRepository;
+  readonly milestones: PrismaMilestoneRepository;
   readonly audit: PrismaAuditRepository;
   readonly events: PrismaEventRepository;
 }
@@ -38,6 +48,7 @@ export function createPersistenceRepositories(
     organizations: new PrismaOrganizationRepository(client),
     programs: new PrismaProgramRepository(client),
     projects: new PrismaProjectRepository(client),
+    tasks: new PrismaTaskRepository(client),
   };
 }
 
@@ -52,12 +63,32 @@ export function selectMilestonePersistenceRepositories(
   };
 }
 
+export function selectTaskPersistenceRepositories(
+  repositories: PersistenceRepositories,
+): TaskPersistenceRepositories {
+  return {
+    tasks: repositories.tasks,
+    milestones: repositories.milestones,
+    audit: repositories.audit,
+    events: repositories.events,
+  };
+}
+
 export async function withMilestoneTransaction<T>(
   client: PrismaClient,
   operation: (repositories: MilestonePersistenceRepositories) => Promise<T>,
 ): Promise<T> {
   return withDatabaseTransaction(client, (repositories) =>
     operation(selectMilestonePersistenceRepositories(repositories)),
+  );
+}
+
+export async function withTaskTransaction<T>(
+  client: PrismaClient,
+  operation: (repositories: TaskPersistenceRepositories) => Promise<T>,
+): Promise<T> {
+  return withDatabaseTransaction(client, (repositories) =>
+    operation(selectTaskPersistenceRepositories(repositories)),
   );
 }
 
