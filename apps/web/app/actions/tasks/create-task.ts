@@ -31,6 +31,7 @@ export {
 } from './create-task-form';
 
 export async function createTaskAction(
+  expectedMilestoneId: MilestoneId,
   _previousState: CreateTaskActionState,
   formData: FormData,
 ): Promise<CreateTaskActionState> {
@@ -49,7 +50,7 @@ export async function createTaskAction(
   try {
     const { task } = await getTaskService().createTask(
       toCreateTaskContext(context),
-      toCreateTaskInput(values),
+      toCreateTaskInput(expectedMilestoneId, values),
     );
 
     createdTaskId = task.id;

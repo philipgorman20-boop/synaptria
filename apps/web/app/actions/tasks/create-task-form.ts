@@ -1,13 +1,12 @@
 import { ApplicationError } from '@synaptria/application';
 import type { CreateTaskInput } from '@synaptria/application';
-import { milestoneId } from '@synaptria/core';
+import type { MilestoneId } from '@synaptria/core';
 import { AuthorizationDeniedError } from '@synaptria/core/errors';
 
 export interface CreateTaskActionState {
   readonly status: 'idle' | 'error';
   readonly message?: string;
   readonly fieldErrors?: Readonly<{
-    milestoneId?: string;
     name?: string;
     description?: string;
     status?: string;
@@ -21,7 +20,6 @@ export interface CreateTaskActionState {
 }
 
 export interface CreateTaskFormValues {
-  readonly milestoneId: string;
   readonly name: string;
   readonly description: string;
   readonly status: string;
@@ -36,9 +34,6 @@ export const initialCreateTaskState: CreateTaskActionState = {
   status: 'idle',
 };
 
-const UUID_PATTERN =
-  /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
-
 const TASK_STATUSES = [
   'TODO',
   'IN_PROGRESS',
@@ -51,7 +46,6 @@ const TASK_PRIORITIES = ['LOW', 'MEDIUM', 'HIGH', 'CRITICAL'] as const;
 
 export function readCreateTaskFormValues(formData: FormData): CreateTaskFormValues {
   return {
-    milestoneId: readText(formData, 'milestoneId'),
     name: readText(formData, 'name'),
     description: readText(formData, 'description'),
     status: readText(formData, 'status'),
@@ -67,7 +61,6 @@ export function validateCreateTaskFormValues(
   values: CreateTaskFormValues,
 ): CreateTaskActionState | undefined {
   const fieldErrors: {
-    milestoneId?: string;
     name?: string;
     description?: string;
     status?: string;
@@ -78,14 +71,7 @@ export function validateCreateTaskFormValues(
     actualEndDate?: string;
   } = {};
 
-  const milestoneIdValue = values.milestoneId.trim();
   const name = values.name.trim();
-
-  if (milestoneIdValue.length === 0) {
-    fieldErrors.milestoneId = 'Milestone is required.';
-  } else if (!UUID_PATTERN.test(milestoneIdValue)) {
-    fieldErrors.milestoneId = 'Select a valid milestone.';
-  }
 
   if (name.length === 0) {
     fieldErrors.name = 'Task name is required.';
@@ -110,7 +96,10 @@ export function validateCreateTaskFormValues(
   };
 }
 
-export function toCreateTaskInput(values: CreateTaskFormValues): CreateTaskInput {
+export function toCreateTaskInput(
+  expectedMilestoneId: MilestoneId,
+  values: CreateTaskFormValues,
+): CreateTaskInput {
   const name = values.name.trim();
   const description = values.description.trim();
   const status = values.status.trim();
@@ -121,7 +110,7 @@ export function toCreateTaskInput(values: CreateTaskFormValues): CreateTaskInput
   const actualEndDate = readOptionalDate(values.actualEndDate);
 
   return {
-    milestoneId: milestoneId(values.milestoneId.trim()),
+    milestoneId: expectedMilestoneId,
     name,
     ...(description.length === 0 ? {} : { description }),
     ...(status.length === 0 || !isTaskStatus(status) ? {} : { status }),
@@ -157,6 +146,18 @@ function mapApplicationError(
   values: CreateTaskFormValues,
 ): CreateTaskActionState {
   const field = error.details?.field;
+
+  if (field === 'milestoneId') {
+    return {
+      status: 'error',
+      message:
+        error.code === 'NOT_FOUND'
+          ? 'The milestone is no longer available. Return to the task list and try again.'
+          : error.message,
+      values,
+    };
+  }
+
   const applicationFieldErrors = mapApplicationFieldError(error, field);
 
   return {
@@ -187,16 +188,6 @@ function mapApplicationFieldError(
     field === 'actualEndDate'
   ) {
     return { [field]: error.message };
-  }
-
-  if (field === 'milestoneId' && error.code === 'NOT_FOUND') {
-    return {
-      milestoneId: 'The selected milestone is not available.',
-    };
-  }
-
-  if (field === 'milestoneId') {
-    return { milestoneId: error.message };
   }
 
   return undefined;

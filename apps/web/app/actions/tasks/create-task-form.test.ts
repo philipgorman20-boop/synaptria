@@ -15,7 +15,6 @@ import {
 const MILESTONE_UUID = '550e8400-e29b-41d4-a716-446655440000';
 
 const VALUES = {
-  milestoneId: MILESTONE_UUID,
   name: 'Prepare assay protocol',
   description: 'Initial draft',
   status: 'TODO',
@@ -28,7 +27,6 @@ const VALUES = {
 
 test('readCreateTaskFormValues trims submitted fields', () => {
   const formData = new FormData();
-  formData.set('milestoneId', ` ${MILESTONE_UUID} `);
   formData.set('name', '  Prepare assay protocol  ');
   formData.set('description', ' Initial draft ');
   formData.set('status', ' TODO ');
@@ -41,26 +39,14 @@ test('readCreateTaskFormValues trims submitted fields', () => {
   assert.deepEqual(readCreateTaskFormValues(formData), VALUES);
 });
 
-test('validateCreateTaskFormValues requires milestoneId and name', () => {
+test('validateCreateTaskFormValues requires name', () => {
   const result = validateCreateTaskFormValues({
     ...VALUES,
-    milestoneId: '   ',
     name: '   ',
   });
 
   assert.equal(result?.status, 'error');
-  assert.equal(result?.fieldErrors?.milestoneId, 'Milestone is required.');
   assert.equal(result?.fieldErrors?.name, 'Task name is required.');
-});
-
-test('validateCreateTaskFormValues rejects malformed milestoneId values', () => {
-  const result = validateCreateTaskFormValues({
-    ...VALUES,
-    milestoneId: 'milestone-1',
-  });
-
-  assert.equal(result?.status, 'error');
-  assert.equal(result?.fieldErrors?.milestoneId, 'Select a valid milestone.');
 });
 
 test('validateCreateTaskFormValues rejects invalid status and priority values', () => {
@@ -89,9 +75,11 @@ test('validateCreateTaskFormValues accepts valid optional fields', () => {
   assert.equal(result, undefined);
 });
 
-test('toCreateTaskInput maps validated fields and omits empty optional values', () => {
-  assert.deepEqual(toCreateTaskInput(VALUES), {
-    milestoneId: milestoneId(MILESTONE_UUID),
+test('toCreateTaskInput uses the trusted route milestone and omits empty optional values', () => {
+  const expectedMilestoneId = milestoneId(MILESTONE_UUID);
+
+  assert.deepEqual(toCreateTaskInput(expectedMilestoneId, VALUES), {
+    milestoneId: expectedMilestoneId,
     name: 'Prepare assay protocol',
     description: 'Initial draft',
     status: 'TODO',
@@ -101,8 +89,7 @@ test('toCreateTaskInput maps validated fields and omits empty optional values', 
   });
 
   assert.deepEqual(
-    toCreateTaskInput({
-      milestoneId: MILESTONE_UUID,
+    toCreateTaskInput(expectedMilestoneId, {
       name: 'Prepare assay protocol',
       description: '',
       status: '',
@@ -113,7 +100,7 @@ test('toCreateTaskInput maps validated fields and omits empty optional values', 
       actualEndDate: '',
     }),
     {
-      milestoneId: milestoneId(MILESTONE_UUID),
+      milestoneId: expectedMilestoneId,
       name: 'Prepare assay protocol',
     },
   );
@@ -145,7 +132,7 @@ test('mapCreateTaskActionError maps authorization failures', () => {
   assert.equal(result?.message, 'You do not have permission to create tasks.');
 });
 
-test('mapCreateTaskActionError maps inaccessible parent milestones safely', () => {
+test('mapCreateTaskActionError maps inaccessible parent milestones to a summary message', () => {
   const result = mapCreateTaskActionError(
     new ApplicationError({
       code: 'NOT_FOUND',
@@ -155,10 +142,8 @@ test('mapCreateTaskActionError maps inaccessible parent milestones safely', () =
     VALUES,
   );
 
-  assert.equal(
-    result?.fieldErrors?.milestoneId,
-    'The selected milestone is not available.',
-  );
+  assert.equal(result?.message, 'The milestone is no longer available. Return to the task list and try again.');
+  assert.equal(result?.fieldErrors, undefined);
 });
 
 test('mapCreateTaskActionError returns undefined for unexpected errors', () => {
