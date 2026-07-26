@@ -23,6 +23,9 @@ export const PERMISSIONS = {
   MILESTONES_READ: 'milestones.read',
   MILESTONES_MANAGE: 'milestones.manage',
 
+  TASKS_READ: 'tasks.read',
+  TASKS_MANAGE: 'tasks.manage',
+
   VENDORS_READ: 'vendors.read',
   VENDORS_MANAGE: 'vendors.manage',
 
