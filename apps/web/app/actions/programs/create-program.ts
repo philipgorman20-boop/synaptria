@@ -15,11 +15,6 @@ import {
   type CreateProgramActionState,
 } from './create-program-form';
 
-export {
-  initialCreateProgramState,
-  type CreateProgramActionState,
-} from './create-program-form';
-
 export async function createProgramAction(
   _previousState: CreateProgramActionState,
   formData: FormData,

@@ -10,11 +10,11 @@ import {
 } from 'react';
 import { useFormStatus } from 'react-dom';
 
+import { createMilestoneAction } from '../../../../../actions/milestones/create-milestone';
 import {
-  createMilestoneAction,
   initialCreateMilestoneState,
   type CreateMilestoneActionState,
-} from '../../../../../actions/milestones/create-milestone';
+} from '../../../../../actions/milestones/create-milestone-form';
 import { formatMilestoneDateInputValue } from '../../../../../../lib/milestones-format';
 
 export const CREATE_MILESTONE_FORM_HEADING = 'Create a milestone';

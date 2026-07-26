@@ -25,11 +25,6 @@ import {
   type CreateTaskActionState,
 } from './create-task-form';
 
-export {
-  initialCreateTaskState,
-  type CreateTaskActionState,
-} from './create-task-form';
-
 export async function createTaskAction(
   expectedMilestoneId: MilestoneId,
   _previousState: CreateTaskActionState,

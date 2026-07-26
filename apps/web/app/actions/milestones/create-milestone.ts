@@ -17,11 +17,6 @@ import {
   type CreateMilestoneActionState,
 } from './create-milestone-form';
 
-export {
-  initialCreateMilestoneState,
-  type CreateMilestoneActionState,
-} from './create-milestone-form';
-
 export async function createMilestoneAction(
   _previousState: CreateMilestoneActionState,
   formData: FormData,

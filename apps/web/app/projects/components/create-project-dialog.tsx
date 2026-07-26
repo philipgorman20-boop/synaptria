@@ -9,11 +9,11 @@ import {
 } from 'react';
 import { useFormStatus } from 'react-dom';
 
+import { createProjectAction } from '../../actions/projects/create-project';
 import {
-  createProjectAction,
   initialCreateProjectState,
-} from '../../actions/projects/create-project';
-import { suggestProjectCodeFromName } from '../../actions/projects/create-project-form';
+  suggestProjectCodeFromName,
+} from '../../actions/projects/create-project-form';
 import {
   formatProjectProgramOptionLabel,
   type ProjectProgramOption,

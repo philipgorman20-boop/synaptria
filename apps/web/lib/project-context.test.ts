@@ -5,7 +5,6 @@ import {
   correlationId,
   membershipId,
   organizationId,
-  programId,
   requestId,
   userId,
 } from '@synaptria/core';

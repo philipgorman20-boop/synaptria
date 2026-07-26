@@ -18,11 +18,6 @@ import {
   type CreateProjectActionState,
 } from './create-project-form';
 
-export {
-  initialCreateProjectState,
-  type CreateProjectActionState,
-} from './create-project-form';
-
 export async function createProjectAction(
   _previousState: CreateProjectActionState,
   formData: FormData,

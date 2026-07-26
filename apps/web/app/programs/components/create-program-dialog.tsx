@@ -9,11 +9,11 @@ import {
 } from 'react';
 import { useFormStatus } from 'react-dom';
 
+import { createProgramAction } from '../../actions/programs/create-program';
 import {
-  createProgramAction,
   initialCreateProgramState,
-} from '../../actions/programs/create-program';
-import { suggestProgramCodeFromName } from '../../actions/programs/create-program-form';
+  suggestProgramCodeFromName,
+} from '../../actions/programs/create-program-form';
 
 export interface CreateProgramDialogProps {
   readonly triggerLabel?: string;
