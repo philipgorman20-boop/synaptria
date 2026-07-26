@@ -1,7 +1,10 @@
 import type { Program } from '@synaptria/domain/programs';
 import type { ProjectPriority, ProjectStatus } from '@synaptria/domain/projects';
-import { appConfig, projectRoute } from '@synaptria/config';
-import type { ProgramId, ProjectId } from '@synaptria/core';
+import { appConfig, programRoute, projectRoute, routes } from '@synaptria/config';
+import { projectId, type ProgramId, type ProjectId } from '@synaptria/core';
+
+const PROJECT_ID_PATTERN =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
 const PROJECT_STATUS_LABELS: Record<ProjectStatus, string> = {
   PLANNED: 'Planned',
@@ -44,6 +47,69 @@ export function formatProjectPercentComplete(percentComplete: number): string {
 
 export function getProjectDetailHref(projectId: ProjectId): string {
   return projectRoute(projectId);
+}
+
+export function getProjectsListHref(): string {
+  return routes.projects;
+}
+
+export function parseProjectRouteParam(
+  rawProjectId: string | undefined,
+): ProjectId | null {
+  if (typeof rawProjectId !== 'string') {
+    return null;
+  }
+
+  const normalized = rawProjectId.trim();
+  if (!PROJECT_ID_PATTERN.test(normalized)) {
+    return null;
+  }
+
+  return projectId(normalized);
+}
+
+export type ProjectProgramDisplay =
+  | {
+      readonly kind: 'organization-level';
+      readonly label: 'Organization-level';
+    }
+  | {
+      readonly kind: 'linked';
+      readonly label: string;
+      readonly href: string;
+    }
+  | {
+      readonly kind: 'unavailable';
+      readonly label: 'Program unavailable';
+    };
+
+/**
+ * Builds safe Program relationship display data for the project detail page.
+ *
+ * Pass `null` for `program` when the parent Program could not be loaded through
+ * the authorized Program read use case.
+ */
+export function resolveProjectProgramDisplay(
+  linkedProgramId: ProgramId | undefined,
+  program: Program | null,
+): ProjectProgramDisplay {
+  if (linkedProgramId === undefined) {
+    return { kind: 'organization-level', label: 'Organization-level' };
+  }
+
+  if (program === null || program.deletedAt !== undefined) {
+    return { kind: 'unavailable', label: 'Program unavailable' };
+  }
+
+  return {
+    kind: 'linked',
+    label: formatProjectProgramOptionLabel({
+      id: program.id,
+      name: program.name,
+      ...(program.code === undefined ? {} : { code: program.code }),
+    }),
+    href: programRoute(program.id),
+  };
 }
 
 export function formatProjectProgramAssociation(

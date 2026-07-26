@@ -783,6 +783,18 @@ h1 {
   margin: 0;
 }
 
+.project-detail-progress {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.project-detail-progress progress {
+  flex: 1;
+  min-width: 120px;
+  max-width: 280px;
+}
+
 @media (max-width: 850px) {
   .programs-page-header {
     flex-direction: column;
