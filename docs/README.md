@@ -10,9 +10,9 @@ Synaptria is an enterprise, multi-tenant SaaS platform for biotech organizations
 
 | Document | Description |
 | --- | --- |
-| [architecture/system.md](./architecture/system.md) | Platform overview, core components, and architectural decisions |
-| [architecture/layers.md](./architecture/layers.md) | Layered architecture, package boundaries, and dependency rules |
-| [architecture/coding-standards.md](./architecture/coding-standards.md) | TypeScript, security, testing, and review conventions |
+| [01-architecture/system.md](./01-architecture/system.md) | Platform overview, core components, and architectural decisions |
+| [01-architecture/layers.md](./01-architecture/layers.md) | Layered architecture, package boundaries, and dependency rules |
+| [01-architecture/coding-standards.md](./01-architecture/coding-standards.md) | TypeScript, security, testing, and review conventions |
 
 ## Additional Documentation
 

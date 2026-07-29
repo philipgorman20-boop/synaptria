@@ -4,7 +4,7 @@
 
 > **Status:** Living Document  
 
-> **Location:** `/docs/implementation-playbook.md`  
+> **Location:** `/docs/03-product/implementation-playbook.md`  
 
 > **Last Updated:** July 2026
 

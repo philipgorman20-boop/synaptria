@@ -907,5 +907,5 @@ Phase 1 delivers a **tenant-scoped Projects vertical slice** parallel to Program
 - [Programs module (reference implementation)](../../packages/application/src/modules/programs/)
 - [Programs implementation plan](./programs-implementation-plan.md)
 - [Product: Projects](../03-product/projects.md)
-- [Layered architecture](../architecture/layers.md)
-- [Coding standards](../architecture/coding-standards.md)
+- [Layered architecture](../01-architecture/layers.md)
+- [Coding standards](../01-architecture/coding-standards.md)
