@@ -297,6 +297,6 @@ Follow this sequence to avoid leaking infrastructure concerns into business logi
 
 - [system.md](./system.md) — platform overview and component topology
 - [coding-standards.md](./coding-standards.md) — implementation conventions
-- [domain-layer.md](../01-architecture/domain-layer.md)
-- [backend.md](../01-architecture/backend.md)
-- [frontend.md](../01-architecture/frontend.md)
+- [domain-layer.md](./domain-layer.md)
+- [backend.md](./backend.md)
+- [frontend.md](./frontend.md)

@@ -110,13 +110,13 @@ Authentication is integrated via Auth.js in `@synaptria/auth`. Authenticated cod
 
 The organization cookie is a **preference only**. It is never used directly in tenant queries and cannot grant access to organizations where the user lacks an active membership.
 
-See [request-context.md](../01-architecture/request-context.md) for full details.
+See [request-context.md](./request-context.md) for full details.
 
 ### Authorization
 
 Authorization is enforced on the server using `@synaptria/permissions`. Initial roles are Owner, Admin, Member, and Viewer. Application code checks permissions, not raw role names. UI permission checks are advisory; the server is authoritative.
 
-See [authorization.md](../01-architecture/authorization.md).
+See [authorization.md](./authorization.md).
 
 ### Audit Logging
 
@@ -130,7 +130,7 @@ State changes that other parts of the system may react to are published through 
 
 AI capabilities use versioned prompts, structured outputs, retrieval from authorized tenant data, background jobs, and evaluation fixtures. AI output is untrusted until validated. AI must not bypass permissions or silently mutate critical business records. Human review is required for material decisions.
 
-See [ai-architecture.md](../01-architecture/ai-architecture.md).
+See [ai-architecture.md](./ai-architecture.md).
 
 ### Document Storage
 
@@ -145,7 +145,7 @@ Uploaded files are treated as untrusted. Documents are stored in S3-compatible o
 - Idempotency for important writes
 - Pagination for collection endpoints
 
-See [api.md](../01-architecture/api.md).
+See [api.md](./api.md).
 
 ## Deployment and Environments
 
@@ -159,7 +159,7 @@ Initial environments:
 
 Docker Compose provides local database dependencies. GitHub Actions runs lint, typecheck, test, and build tasks via Turborepo. Production hosting remains an ADR decision.
 
-See [deployment.md](../01-architecture/deployment.md).
+See [deployment.md](./deployment.md).
 
 ## Technology Stack
 
@@ -191,6 +191,6 @@ When extracting a service:
 
 - [layers.md](./layers.md) — detailed layer responsibilities and dependency rules
 - [coding-standards.md](./coding-standards.md) — implementation conventions
-- [domain-layer.md](../01-architecture/domain-layer.md) — domain package design
-- [backend.md](../01-architecture/backend.md) — route handler and service patterns
-- [frontend.md](../01-architecture/frontend.md) — UI architecture
+- [domain-layer.md](./domain-layer.md) — domain package design
+- [backend.md](./backend.md) — route handler and service patterns
+- [frontend.md](./frontend.md) — UI architecture

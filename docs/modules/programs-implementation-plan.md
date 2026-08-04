@@ -924,7 +924,7 @@ Execute in this sequence to maintain compilable increments and respect layer dep
 | Task | Files |
 | --- | --- |
 | Expand product doc | `docs/03-product/programs.md` |
-| Update architecture docs if patterns change | `docs/architecture/layers.md` (module list only) |
+| Update architecture docs if patterns change | `docs/01-architecture/layers.md` (module list only) |
 
 **Verification:** Full monorepo check: `pnpm lint && pnpm typecheck && pnpm test`.
 
@@ -991,7 +991,7 @@ Future operations (not Phase 1):
 
 - [Organization module (application)](../../packages/application/src/modules/organization/)
 - [Product: Programs](../03-product/programs.md)
-- [Layered architecture](../architecture/layers.md)
-- [Coding standards](../architecture/coding-standards.md)
+- [Layered architecture](../01-architecture/layers.md)
+- [Coding standards](../01-architecture/coding-standards.md)
 - [Authorization](../01-architecture/authorization.md)
 - [Request context](../01-architecture/request-context.md)
