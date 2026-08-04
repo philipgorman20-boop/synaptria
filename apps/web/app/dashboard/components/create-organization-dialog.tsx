@@ -9,10 +9,8 @@ import {
 } from 'react';
 import { useFormStatus } from 'react-dom';
 
-import {
-  createOrganizationAction,
-  initialCreateOrganizationState,
-} from '../../actions/organization/create-organization';
+import { createOrganizationAction } from '../../actions/organization/create-organization';
+import { initialCreateOrganizationState } from '../../actions/organization/create-organization-form';
 
 export function CreateOrganizationDialog() {
   const dialogRef = useRef<HTMLDialogElement>(null);
