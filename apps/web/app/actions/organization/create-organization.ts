@@ -10,54 +10,27 @@ import {
 } from '../../../lib/request-context';
 import { getOrganizationService } from '../../../lib/organization-service';
 
+import {
+  readCreateOrganizationFormValues,
+  validateCreateOrganizationFormValues,
+  type CreateOrganizationActionState,
+} from './create-organization-form';
+
 const ONE_YEAR_IN_SECONDS = 60 * 60 * 24 * 365;
-
-export interface CreateOrganizationActionState {
-  readonly status: 'idle' | 'error';
-  readonly message?: string;
-  readonly fieldErrors?: Readonly<{
-    name?: string;
-    slug?: string;
-  }>;
-  readonly values?: Readonly<{
-    name: string;
-    slug: string;
-  }>;
-}
-
-export const initialCreateOrganizationState: CreateOrganizationActionState = {
-  status: 'idle',
-};
 
 export async function createOrganizationAction(
   _previousState: CreateOrganizationActionState,
   formData: FormData,
 ): Promise<CreateOrganizationActionState> {
-  const name = readText(formData, 'name');
-  const slug = readText(formData, 'slug');
-  const values = { name, slug };
+  const values = readCreateOrganizationFormValues(formData);
+  const validation = validateCreateOrganizationFormValues(values);
 
-  const fieldErrors: { name?: string; slug?: string } = {};
-
-  if (name.length === 0) {
-    fieldErrors.name = 'Organization name is required.';
+  if (validation !== undefined) {
+    return validation;
   }
 
-  if (slug.length === 0) {
-    fieldErrors.slug = 'Workspace slug is required.';
-  } else if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug)) {
-    fieldErrors.slug =
-      'Use lowercase letters, numbers, and single hyphens only.';
-  }
-
-  if (Object.keys(fieldErrors).length > 0) {
-    return {
-      status: 'error',
-      message: 'Correct the highlighted fields and try again.',
-      fieldErrors,
-      values,
-    };
-  }
+  const name = values.name.trim();
+  const slug = values.slug.trim();
 
   try {
     const context = await getRequestContext();
@@ -101,21 +74,16 @@ export async function createOrganizationAction(
         ...(applicationFieldErrors === undefined
           ? {}
           : { fieldErrors: applicationFieldErrors }),
-        values,
+        values: { name, slug },
       };
     }
 
     return {
       status: 'error',
       message: 'The organization could not be created. Please try again.',
-      values,
+      values: { name, slug },
     };
   }
 
   redirect('/dashboard');
-}
-
-function readText(formData: FormData, field: string): string {
-  const value = formData.get(field);
-  return typeof value === 'string' ? value.trim() : '';
 }
