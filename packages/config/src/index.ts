@@ -26,6 +26,53 @@ export function projectRoute(projectId: string): `${typeof routes.projects}/${st
   return `${routes.projects}/${projectId}`;
 }
 
+/** Builds the canonical detail route for a milestone within a project. */
+export function milestoneRoute(
+  projectId: string,
+  milestoneId: string,
+): `${typeof routes.projects}/${string}/milestones/${string}` {
+  return `${routes.projects}/${projectId}/milestones/${milestoneId}`;
+}
+
+/** Builds the canonical list route for milestones within a project. */
+export function projectMilestonesRoute(
+  projectId: string,
+): `${typeof routes.projects}/${string}/milestones` {
+  return `${routes.projects}/${projectId}/milestones`;
+}
+
+/** Builds the canonical create route for a milestone within a project. */
+export function newMilestoneRoute(
+  projectId: string,
+): `${typeof routes.projects}/${string}/milestones/new` {
+  return `${routes.projects}/${projectId}/milestones/new`;
+}
+
+/** Builds the canonical list route for tasks within a milestone. */
+export function milestoneTasksRoute(
+  projectId: string,
+  milestoneId: string,
+): `${typeof routes.projects}/${string}/milestones/${string}/tasks` {
+  return `${routes.projects}/${projectId}/milestones/${milestoneId}/tasks`;
+}
+
+/** Builds the canonical detail route for a task within a milestone. */
+export function taskRoute(
+  projectId: string,
+  milestoneId: string,
+  taskId: string,
+): `${typeof routes.projects}/${string}/milestones/${string}/tasks/${string}` {
+  return `${routes.projects}/${projectId}/milestones/${milestoneId}/tasks/${taskId}`;
+}
+
+/** Builds the canonical create route for a task within a milestone. */
+export function newTaskRoute(
+  projectId: string,
+  milestoneId: string,
+): `${typeof routes.projects}/${string}/milestones/${string}/tasks/new` {
+  return `${routes.projects}/${projectId}/milestones/${milestoneId}/tasks/new`;
+}
+
 export type AppRoute = (typeof routes)[keyof typeof routes];
 
 export interface NavigationItem {

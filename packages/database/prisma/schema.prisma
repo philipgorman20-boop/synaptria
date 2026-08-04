@@ -58,9 +58,16 @@ enum ProjectStatus {
 }
 
 enum MilestoneStatus {
-  NOT_STARTED
+  PLANNED
   IN_PROGRESS
-  AT_RISK
+  BLOCKED
+  COMPLETED
+  CANCELLED
+}
+
+enum TaskStatus {
+  TODO
+  IN_PROGRESS
   BLOCKED
   COMPLETED
   CANCELLED
@@ -488,7 +495,6 @@ model User {
 
   ownedPrograms       Program[]         @relation("ProgramOwner")
   ownedProjects       Project[]         @relation("ProjectOwner")
-  ownedMilestones     Milestone[]       @relation("MilestoneOwner")
   ownedDeliverables   Deliverable[]     @relation("DeliverableOwner")
   ownedRisks          Risk[]            @relation("RiskOwner")
   createdRisks        Risk[]            @relation("RiskCreator")
@@ -573,6 +579,7 @@ model Organization {
   programs     Program[]
   projects     Project[]
   milestones   Milestone[]
+  tasks        Task[]
   deliverables Deliverable[]
   dependencies Dependency[]
   risks        Risk[]
@@ -696,7 +703,6 @@ model Program {
   owner        User?        @relation("ProgramOwner", fields: [ownerId], references: [id], onDelete: SetNull)
 
   projects         Project[]
-  milestones       Milestone[]
   deliverables     Deliverable[]
   risks            Risk[]
   decisions        Decision[]
@@ -785,23 +791,20 @@ model Project {
 }
 
 model Milestone {
-  id              String          @id @default(uuid())
-  organizationId  String
-  programId       String?
-  projectId       String?
-  ownerId         String?
-  name            String
-  description     String?
-  status          MilestoneStatus @default(NOT_STARTED)
-  priority        Priority        @default(MEDIUM)
-  targetDate      DateTime?
-  completedAt     DateTime?
-  percentComplete Int             @default(0)
+  id               String          @id @default(uuid())
+  organizationId   String
+  projectId        String
+  name             String
+  description      String?
+  status           MilestoneStatus @default(PLANNED)
+  priority         Priority        @default(MEDIUM)
+  plannedStartDate DateTime?
+  plannedEndDate   DateTime?
+  actualStartDate  DateTime?
+  actualEndDate    DateTime?
 
   organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  program      Program?     @relation(fields: [programId], references: [id], onDelete: Cascade)
-  project      Project?     @relation(fields: [projectId], references: [id], onDelete: Cascade)
-  owner        User?        @relation("MilestoneOwner", fields: [ownerId], references: [id], onDelete: SetNull)
+  project      Project      @relation(fields: [projectId], references: [id], onDelete: Cascade)
 
   deliverables  Deliverable[]
   risks         Risk[]
@@ -811,16 +814,41 @@ model Milestone {
   commitments   Commitment[]
   forecastLines ForecastLine[]
   documents     Document[]
+  tasks         Task[]
 
   deletedAt DateTime?
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
 
   @@index([organizationId, status])
-  @@index([programId])
   @@index([projectId])
-  @@index([ownerId])
-  @@index([targetDate])
+  @@index([plannedEndDate])
+  @@index([organizationId, deletedAt])
+}
+
+model Task {
+  id               String     @id @default(uuid())
+  organizationId   String
+  milestoneId      String
+  name             String
+  description      String?
+  status           TaskStatus @default(TODO)
+  priority         Priority   @default(MEDIUM)
+  plannedStartDate DateTime?
+  plannedEndDate   DateTime?
+  actualStartDate  DateTime?
+  actualEndDate    DateTime?
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  milestone    Milestone    @relation(fields: [milestoneId], references: [id], onDelete: Cascade)
+
+  deletedAt DateTime?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  @@index([organizationId, status])
+  @@index([milestoneId])
+  @@index([plannedEndDate])
   @@index([organizationId, deletedAt])
 }
 

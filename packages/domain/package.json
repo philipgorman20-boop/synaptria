@@ -7,7 +7,10 @@
     ".": "./src/index.ts",
     "./organization": "./src/organization/index.ts",
     "./programs": "./src/programs/index.ts",
-    "./projects": "./src/projects/index.ts"
+    "./projects": "./src/projects/index.ts",
+    "./milestones": "./src/milestones/index.ts",
+    "./shared": "./src/shared/index.ts",
+    "./tasks": "./src/tasks/index.ts"
   },
   "scripts": {
     "build": "tsc --noEmit",

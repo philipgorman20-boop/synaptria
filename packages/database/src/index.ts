@@ -4,11 +4,24 @@ export { PrismaAuditRepository } from './audit/prisma-audit-repository';
 export type { AuditDatabaseClient } from './audit/prisma-audit-repository';
 export { PrismaEventRepository } from './events/prisma-event-repository';
 export type { EventDatabaseClient } from './events/prisma-event-repository';
-export { createPersistenceRepositories, withDatabaseTransaction } from './transaction';
+export {
+  createPersistenceRepositories,
+  selectMilestonePersistenceRepositories,
+  selectTaskPersistenceRepositories,
+  withDatabaseTransaction,
+  withMilestoneTransaction,
+  withTaskTransaction,
+} from './transaction';
+export * from './milestones';
+export * from './tasks';
 export * from './organization';
 export * from './programs';
 export * from './projects';
-export type { PersistenceRepositories } from './transaction';
+export type {
+  MilestonePersistenceRepositories,
+  PersistenceRepositories,
+  TaskPersistenceRepositories,
+} from './transaction';
 
 const globalForPrisma = globalThis as unknown as { prisma?: PrismaClient };
 
