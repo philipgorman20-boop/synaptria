@@ -1,253 +1,229 @@
 # Domain Model Assessment
 
 **Status:** Assessment (read-only review)  
-**Branch inspected:** `docs/domain-model-assessment` @ `c0b5c86`  
-**Date:** 2026-07-29  
-**Scope:** Architecture-to-domain-model alignment. No code, schema, migration, or test changes were made.
-
-## Document sources
-
-| Document | Location on inspected branch | Notes |
-| --- | --- | --- |
-| AI philosophy | Not on disk | Read from `docs/ai-operating-system:docs/03-product/ai-philosophy.md` (**Status: Proposed**) |
-| Architecture overview | Not on disk | Placeholder only on `docs/ai-operating-system` (`# Architecture Overview`) |
-| Context engine | Not on disk | Read from `docs/ai-operating-system:docs/01-architecture/context-engine.md` (**Status: Accepted**) |
-| Organizational memory | Not on disk | Placeholder only on `docs/ai-operating-system` |
-| Reasoning layer | Not on disk | Placeholder only on `docs/ai-operating-system` |
-| Recommendation engine | Not on disk | Placeholder only on `docs/ai-operating-system` |
-| Event system | Not on disk | Placeholder only on `docs/ai-operating-system` |
-| Provider platform | Not on disk | Placeholder only on `docs/ai-operating-system` |
-| Layered architecture | `docs/architecture/layers.md` | Canonical dependency and module pattern guidance |
-| Domain layer | `docs/01-architecture/domain-layer.md` | Short package boundary statement |
-| Request context | `docs/01-architecture/request-context.md` | Accepted tenant resolution flow |
-| Database schema doc | `docs/02-database/schema.md` | **Outdated** relative to Prisma schema |
-| Product stubs | `docs/03-product/*.md` | High-level one-liners for most domains |
-
-**Cross-branch note (confirmed via `git diff docs/domain-model-assessment feature/tasks`):** The `feature/tasks` branch contains substantial in-flight work (milestones/tasks domain, persistence, application, permissions, web UI, and Prisma migrations) that is **not** present on the inspected branch. Findings below describe the inspected branch unless explicitly labeled as *inference from `feature/tasks`*.
+**Branch inspected:** `docs/domain-model-assessment` @ `ec69e8b` (working tree includes restored AI architecture docs)  
+**Date:** 2026-08-12  
+**Scope:** Architecture-to-domain-model alignment at current working tree. No code, schema, migration, test, or other documentation changes were made.
 
 ---
 
 ## 1. Executive Summary
 
-Synaptria’s **implemented** domain model is a small, well-structured vertical slice: **Organization**, **Membership**, **Program**, and **Project**, following a modular monolith with explicit repository ports, application use cases, Prisma adapters, audit recording, and domain event publication.
+Synaptria implements a **complete execution vertical slice**: **Organization → Program → Project → Milestone → Task**, spanning domain contracts, application use cases, Prisma adapters, permissions, audit/events on writes, web composition roots, server actions, routes, and UI.
 
-The **Prisma schema** (`packages/database/prisma/schema.prisma`) is a much larger **target v3 architecture** with 40+ models spanning execution, finance, vendors, documents, reporting, AI traceability, audit/events, and ledger concerns. Most of these models have **no domain, application, or delivery implementation** on the inspected branch.
+The **Prisma schema** still describes a broader **target platform** (finance, vendors, documents, ledger, AI traceability, platform governance) with most models **unimplemented** in domain/application code. Three migrations are applied: init (`20260725015903_init`), Milestone alignment (`20260725220000_align_milestone_domain_model`), and Task creation (`20260726200000_add_task_model`).
 
-The **AI operating system** architecture (Observe → Understand → Recommend → Act → Learn) is documented in product/architecture docs on the `docs/ai-operating-system` branch, with the **Context Engine** as the most mature specification. **No Context Engine, Organizational Memory, Reasoning Layer, Recommendation Engine, or Provider Platform code exists** in the repository on the inspected branch.
+**AI architecture documentation** under `docs/01-architecture/` and `docs/03-product/` is now **substantive** for the operating-system map and all major subsystems. Classification:
 
-**Highest-risk gaps:**
+| Subsystem | Doc status | Code status |
+| --- | --- | --- |
+| AI Operating System Overview | **Proposed** (`docs/01-architecture/overview.md`) | Unimplemented |
+| AI Philosophy | **Proposed** (`docs/03-product/ai-philosophy.md`) | Unimplemented |
+| Context Engine | **Accepted** (`docs/01-architecture/context-engine.md`) | **Unimplemented** |
+| Organizational Memory | **Proposed** (`docs/01-architecture/organizational-memory.md`) | **Unimplemented** — conceptual model documented |
+| Reasoning Layer | **Proposed** (`docs/01-architecture/reasoning-layer.md`) | **Unimplemented** — architecturally defined |
+| Recommendation Engine | **Proposed** (`docs/01-architecture/recommendation-engine.md`) | **Unimplemented** — architecturally defined |
+| Event System | **Proposed** (`docs/01-architecture/event-system.md`) | **Partially implemented** (persist + publish; no consumer) |
+| Provider Platform | **Proposed** (`docs/01-architecture/provider-platform.md`) | **Unimplemented** — architecturally defined |
 
-1. **Schema–code divergence:** Database migrations create tables (e.g., `Milestone`, `Vendor`, `Document`, `AiRun`) that application code never reads or writes, increasing migration risk and developer confusion.
-2. **Documentation drift:** `docs/02-database/schema.md` and `docs/architecture/layers.md` understate implemented modules and misstate Milestone/Task as future-only.
-3. **Delivery-layer persistence access:** `apps/web/lib/request-context.ts` queries Prisma directly for memberships instead of using a repository or auth service abstraction.
-4. **Event model impedance:** Domain event envelopes carry fields (`actorId`, `requestId`, `idempotencyKey`, `occurredAt`) that are partially stored inside JSON metadata in `PrismaEventRepository` rather than as first-class columns.
-5. **In-flight branch divergence:** `feature/tasks` introduces domain models whose enums and field names **do not align** with the current Prisma `Milestone` model (*inference from branch comparison*; requires reconciliation before merge).
+**Source-of-truth model (confirmed):** Business semantics in `@synaptria/domain`; persistence in Prisma (aligned via migrations); use-case contracts in `@synaptria/application`. Domain leads semantic changes; Prisma follows.
 
-**Recommended posture:** Preserve the existing layered architecture and Programs/Projects vertical-slice pattern. Evolve incrementally: align documentation, finish execution hierarchy (Milestones → Tasks) against the **existing Prisma models where possible**, then add platform services (event consumer, context assembly) before broad finance/vendor/document domains.
+**Highest-risk remaining gaps:**
+
+1. **Large dormant Prisma surface** — 35+ models without domain/application implementations.
+2. **Context Engine unimplemented** — Accepted spec with no contracts or assembler (`docs/01-architecture/overview.md` and Context Engine doc agree first delivery is deterministic context contracts).
+3. **Event consumption and broader reads missing** — persistence and publish-in-transaction exist; no dispatcher, no organization/time-window queries (`docs/01-architecture/event-system.md` § Current-State Implications).
+4. **Replay/idempotency strategy deferred** — interfaces exist; producer/consumer idempotency not wired (`packages/events/src/idempotency.ts`; Prisma `IdempotencyKey` unused).
+5. **Obsolete operational docs** — `docs/02-database/schema.md` and `docs/01-architecture/layers.md` module table understate shipped execution slice.
+
+**Recommended first phase (unchanged):** Provider-independent, deterministic **Context Engine contracts** and read-only assembly — **no LLM**, **no new persistence** unless justified.
 
 ---
 
 ## 2. Current Domain Architecture
 
-### Layering (confirmed)
+### 2.1 Layering (implemented production architecture)
 
-The repository implements the modular monolith described in `docs/architecture/layers.md` and ADR-0003:
+Confirmed in `docs/01-architecture/layers.md` and implemented consistently:
 
 ```text
-apps/web (delivery)
+apps/web (delivery: pages, server actions, composition roots)
   → @synaptria/application (use cases, services, unit of work)
-    → @synaptria/domain (models, repository ports)
-      ← @synaptria/database (Prisma adapters)
+    → @synaptria/domain (models, validation, repository ports)
+      ← @synaptria/database (Prisma adapters, transactions)
 ```
 
 Cross-cutting packages in active use: `@synaptria/core`, `@synaptria/auth`, `@synaptria/permissions`, `@synaptria/audit`, `@synaptria/events`.
 
-### Pattern in practice (confirmed)
+**Write-path pattern (confirmed)** for Organization, Program, Project, Milestone, Task:
 
-Each shipped write use case (e.g., `CreateProgramUseCase`, `CreateProjectUseCase`) follows:
+1. `requirePermission` with role from trusted context  
+2. Domain normalization/validation (Tasks use `packages/domain/src/tasks/validation.ts`)  
+3. Parent-entity existence checks inside transaction  
+4. Repository create via module unit of work  
+5. `AuditService.record`  
+6. `DomainEventService.publish`  
+7. Branded IDs at persistence boundary via `identifier()`  
 
-1. `requirePermission` with organization role from trusted context
-2. Input normalization and application-level validation
-3. Uniqueness / referential checks via repository ports
-4. Transaction via module-specific unit of work
-5. `AuditService.record` for material mutations
-6. `DomainEventService.publish` with typed aggregate metadata
-7. Branded IDs applied at persistence boundaries via `identifier()` from `@synaptria/core`
+Evidence: `packages/application/src/modules/{programs,projects,milestones,tasks}/create-*.ts`.
 
-Evidence: `packages/application/src/modules/programs/create-program.ts`, `packages/application/src/modules/projects/create-project.ts`.
+### 2.2 Source-of-truth model
 
-### Domain style (confirmed + inference)
+| Concern | Owner | Evidence |
+| --- | --- | --- |
+| **Business semantics** | `@synaptria/domain` | `packages/domain/src/milestones/models.ts`, `tasks/models.ts`, `tasks/validation.ts`; migration `20260725220000_align_milestone_domain_model/migration.sql` |
+| **Persistence representation** | Prisma + migrations | `packages/database/prisma/schema.prisma`; mappers in `packages/database/src/*/prisma-*-repository.ts` |
+| **Use-case semantics** | `@synaptria/application` | `Create*Context`, `Create*Input`, use case classes |
+| **Delivery binding** | `apps/web` | `createTaskAction(expectedMilestoneId, …)` in `apps/web/app/actions/tasks/create-task.ts` |
+| **AI subsystem contracts** (when implemented) | Domain + application per `docs/01-architecture/overview.md` Layer Boundaries | Domain: memory/recommendation concepts; Application: context, reasoning, recommendations |
 
-- **Confirmed:** Domain types are TypeScript interfaces with string-literal status enums; no framework imports in `@synaptria/domain`.
-- **Confirmed:** No explicit DDD aggregate classes, domain services, or command/query type objects—use cases play the command role.
-- **Inference:** The team treats each tenant-owned entity (Program, Project) as a **logical aggregate root** for events and audit, but child entities (future Milestone, Task) are not yet modeled in domain on this branch.
+**Conclusion:** Deliberate split — domain-led semantics; Prisma persistence truth after alignment. AI architecture docs assign stable contracts to domain/application and adapters to infrastructure (`docs/01-architecture/overview.md`).
+
+### 2.3 Domain style
+
+- **Confirmed:** TypeScript interfaces; repository ports; no framework imports in domain.
+- **Confirmed:** Task validation in domain; Milestone validation primarily in application (*variance*).
+- **Confirmed:** Shared `Priority` in `packages/domain/src/shared/priority.ts`.
+- **Inference:** Program, Project, Milestone, Task are logical aggregate roots for audit/events.
 
 ---
 
 ## 3. Existing Bounded Contexts
 
-| Bounded context | Purpose (from docs/schema) | Implementation status | Evidence |
+| Bounded context | Implementation status | Architecture doc status | Evidence |
 | --- | --- | --- | --- |
-| **Identity & tenant** | Users, sessions, organizations, memberships | **Partial** — org create/list/switch; Auth.js users/sessions in Prisma; membership repo exists but no full member-admin use cases | `packages/domain/src/organization/`, `packages/auth/`, `apps/web/lib/request-context.ts` |
-| **Execution / portfolio** | Programs, projects, milestones, tasks, deliverables, dependencies, risks, decisions | **Partial** — programs & projects E2E; milestones/tasks Prisma-only | Domain/application through projects; Prisma `Milestone`+ in schema |
-| **Finance** | Budgets, expenses, cash, ledger | **Schema only** | Prisma models; `packages/application/src/modules/finance/index.ts` stub |
-| **Vendors & procurement** | Vendors, contracts, POs, invoices | **Schema only** | Prisma models; vendors application stub |
-| **Documents & intelligence** | Documents, versions, AI extraction | **Schema only** | Prisma models; documents application stub |
-| **Reporting** | Executive reports | **Schema only** | Prisma `ExecutiveReport`; reporting stub |
-| **Platform governance** | API keys, audit, domain events, idempotency | **Partial** — audit/event packages + Prisma adapters; no delivery UI or consumers | `@synaptria/audit`, `@synaptria/events`, `packages/database/src/audit/`, `events/` |
-| **AI execution** | AiRun traceability, prompts, review | **Schema only** | Prisma `AiRun`, `AIExtraction`; `@synaptria/ai` is README-only |
-| **AI operating system** | Context engine, memory, reasoning, recommendations | **Documentation only** (mostly on `docs/ai-operating-system`) | No matching package or module in codebase |
-
-**Uncertainty:** Product docs (`docs/03-product/*.md`) do not define explicit bounded-context boundaries. Context boundaries above are **inferred** from Prisma model groupings and application module stubs.
+| **Identity & tenant** | Partial | Operational system (overview) | `packages/domain/src/organization/`, `apps/web/lib/request-context.ts` |
+| **Execution / portfolio** | **Implemented MVP** | Operational system | Org → Task full slice |
+| **Finance / vendors / documents / reporting** | Schema only | Operational systems (future) | Prisma + application stubs |
+| **Platform governance** | Partial (audit/event writes) | Event System + audit | `@synaptria/audit`, `@synaptria/events` |
+| **AI execution trace** | Schema only (`AiRun`) | Provider Platform telemetry | Prisma; `@synaptria/ai` README only |
+| **Context Engine** | Unimplemented | **Accepted** | `docs/01-architecture/context-engine.md` |
+| **Organizational Memory** | Unimplemented | **Proposed** (fully specified conceptually) | `docs/01-architecture/organizational-memory.md` |
+| **Reasoning / Recommendation** | Unimplemented | **Proposed** (defined) | `reasoning-layer.md`, `recommendation-engine.md` |
+| **Event System (proactive bus)** | **Partial** | **Proposed** (defined; acknowledges current gaps) | `event-system.md`; code in `@synaptria/events` |
+| **Provider Platform** | Unimplemented | **Proposed** (defined) | `provider-platform.md` |
 
 ---
 
 ## 4. Existing Entities
 
-### Implemented in domain layer (confirmed)
+### 4.1 Implemented end-to-end (confirmed)
 
-| Entity | Module | Key fields | Tenant-owned |
-| --- | --- | --- | --- |
-| `Organization` | `organization` | `id`, `name`, `slug`, settings, soft delete | N/A (is tenant root) |
-| `OrganizationMembership` | `organization` | `organizationId`, `userId`, `role`, `status` | Yes |
-| `Program` | `programs` | `organizationId`, `ownerId?`, status, priority, therapeutic metadata | Yes |
-| `Project` | `projects` | `organizationId`, `programId?`, `ownerId?`, status, priority, `% complete` | Yes |
+| Entity | Domain | Application | Persistence | Web |
+| --- | --- | --- | --- | --- |
+| Organization | ✓ | ✓ | ✓ | ✓ |
+| OrganizationMembership | ✓ | partial | ✓ | via context |
+| Program | ✓ | ✓ | ✓ | ✓ |
+| Project | ✓ | ✓ | ✓ | ✓ |
+| Milestone | ✓ | ✓ | ✓ | ✓ |
+| Task | ✓ | ✓ | ✓ | ✓ |
 
-Evidence: `packages/domain/src/organization/models.ts`, `programs/models.ts`, `projects/models.ts`.
+**Domain exports:** `packages/domain/src/index.ts` — `organization`, `programs`, `projects`, `milestones`, `tasks`, `shared`.
 
-### Prisma-only entities (confirmed — no domain counterpart on inspected branch)
+**Web routes:** `/programs`, `/projects`, `/projects/[projectId]/milestones`, `…/tasks`, `…/tasks/new`, `…/tasks/[taskId]`.
 
-All models in `packages/database/prisma/schema.prisma` except those mapped above, including but not limited to: `User`, `Account`, `Session`, `Team`, `TeamMember`, `Milestone`, `Deliverable`, `Dependency`, `Risk`, `Decision`, finance models, vendor models, document models, `ApiKey`, `AuditEvent`, `DomainEvent`, `IdempotencyKey`, ledger models, `AiRun`, `AIExtraction`, `ExecutiveReport`.
+**Composition roots:** `apps/web/lib/{organization,program,project,milestone,task}-service.ts`.
 
-**Note:** There is **no `Task` model** in the Prisma schema on the inspected branch (*confirmed via grep*). The `feature/tasks` branch adds it (*inference from `git diff`*).
+### 4.2 Prisma-only entities (confirmed)
 
-### Auth/session entities (confirmed)
+~35 remaining models in `packages/database/prisma/schema.prisma`.
 
-`User`, `Account`, `Session`, `VerificationToken` live in Prisma for Auth.js. They are **not** exported from `@synaptria/domain`. *Inference:* intentionally infrastructure/auth concerns, not business domain entities yet.
+### 4.3 Auth entities (confirmed)
+
+`User`, `Account`, `Session`, `VerificationToken` — infrastructure only.
 
 ---
 
 ## 5. Existing Aggregates and Aggregate Roots
 
-Synaptria does not implement explicit aggregate types. The following **logical** aggregate map is inferred from repository boundaries, audit targets, and domain event `aggregateType` values:
+**Inferred** from audit targets and domain events:
 
-| Aggregate root | Consistency boundary (inferred) | Children in schema (not in domain) | Event / audit evidence |
-| --- | --- | --- | --- |
-| **Organization** | Org profile + initial owner membership on create | Memberships, teams, all tenant data (FK) | `organization.created` — `packages/application/src/modules/organization/create-organization.ts` |
-| **Program** | Program record; optional link to projects | Projects, milestones, risks, … | `program.created`; aggregateType `Program` |
-| **Project** | Project record; optional program FK validation on create | Milestones, deliverables, dependencies, … | `project.created`; aggregateType `Project` |
-| **Milestone** (schema) | *Not implemented* — Prisma allows optional `programId` and `projectId` | Deliverables, linked risks/decisions | None on inspected branch |
-| **Vendor**, **Document**, **Budget**, etc. | *Not implemented* | Various | None |
+| Aggregate root | Events (writes) |
+| --- | --- |
+| Organization | `organization.created` |
+| Program | `program.created` |
+| Project | `project.created` |
+| Milestone | `milestone.created` |
+| Task | `task.created` |
 
-**Confirmed fact:** Write use cases validate parent existence (e.g., program must exist before project create) but do **not** load aggregate graphs or enforce invariants across children.
-
-**Inference:** Milestones on `feature/tasks` treat **Project** as the parent boundary (`projectId` required in domain) — closer to execution tree `Program → Project → Milestone → Task` than Prisma’s optional dual parent on `Milestone`.
+**Execution hierarchy (confirmed, aligned):** `Program → Project → Milestone → Task` — required FKs in Prisma; migration `20260725220000_align_milestone_domain_model`.
 
 ---
 
 ## 6. Existing Value Objects
 
-| Concept | Location | Status | Notes |
-| --- | --- | --- | --- |
-| Branded identifiers (`OrganizationId`, `ProgramId`, …) | `@synaptria/core` | **Implemented** | `packages/core/src/ids/identifier.ts` |
-| `RequestId`, `CorrelationId` | `@synaptria/core` | **Implemented** | Propagated through context, audit, events |
-| Status enums (Program, Project, Membership) | `@synaptria/domain` | **Implemented** | String union types, mirrored in Prisma enums |
-| Priority (`LOW`…`CRITICAL`) | Domain modules + Prisma `Priority` enum | **Duplicated** | Separate `ProgramPriority` / `ProjectPriority` types identical to Prisma |
-| `OrganizationSettings` | Domain | **Weakly typed** | `{ readonly [key: string]: unknown }` |
-| Slug, currency, timezone | Plain strings on entities | **No dedicated VO types** | Validation lives in application use cases |
-| Money / dates / percentages | Prisma + plain `number`/`Date` | **No domain VOs** | `% complete` is unchecked beyond application validation |
-
-**Confirmed:** No shared value-object module beyond branded IDs. `packages/domain/src/shared/` does **not** exist on the inspected branch (*inference:* `feature/tasks` adds `shared/priority.ts`).
+| Concept | Location | Status |
+| --- | --- | --- |
+| Branded IDs | `@synaptria/core` | Implemented |
+| `RequestId`, `CorrelationId` | `@synaptria/core` | Implemented |
+| `Priority` | `packages/domain/src/shared/priority.ts` | Implemented (partial adoption) |
+| Status enums | Domain modules | Match Prisma at HEAD |
+| Date-range validation | Domain (Task), application (Milestone) | Partially centralized |
 
 ---
 
 ## 7. Repository and Persistence Boundaries
 
-### Repository ports (domain)
+### 7.1 Repository ports and adapters
 
-| Port | File |
-| --- | --- |
-| `OrganizationRepository` | `packages/domain/src/organization/organization-repository.ts` |
-| `MembershipRepository` | `packages/domain/src/organization/membership-repository.ts` |
-| `ProgramRepository` | `packages/domain/src/programs/program-repository.ts` |
-| `ProjectRepository` | `packages/domain/src/projects/project-repository.ts` |
-
-### Prisma implementations (database)
-
-| Adapter | File | Tenant scoping |
+| Port | Domain | Prisma adapter |
 | --- | --- | --- |
-| `PrismaOrganizationRepository` | `packages/database/src/organization/prisma-organization-repository.ts` | User-scoped list; org by id |
-| `PrismaMembershipRepository` | `packages/database/src/organization/prisma-membership-repository.ts` | By org + user |
-| `PrismaProgramRepository` | `packages/database/src/programs/prisma-program-repository.ts` | **`organizationId` on all queries**; soft-delete filter |
-| `PrismaProjectRepository` | `packages/database/src/projects/prisma-project-repository.ts` | Same pattern |
-| `PrismaAuditRepository` | `packages/database/src/audit/prisma-audit-repository.ts` | Org-scoped create |
-| `PrismaEventRepository` | `packages/database/src/events/prisma-event-repository.ts` | Org-scoped create/query |
+| Organization, Membership, Program, Project, Milestone, Task | `packages/domain/src/*/` | `packages/database/src/*/prisma-*-repository.ts` |
+| Audit, Event | `@synaptria/audit`, `@synaptria/events` | `prisma-audit-repository.ts`, `prisma-event-repository.ts` |
 
-Transaction wiring: `packages/database/src/transaction.ts` exposes `createPersistenceRepositories` and `withDatabaseTransaction`.
+### 7.2 Transaction boundaries
 
-### Unit of work (application)
+`packages/database/src/transaction.ts` — entity + audit + event in one transaction for creates. **Confirmed** in all six create use cases.
 
-| Module | Write UoW | Read pattern |
+### 7.3 Event and audit architecture (code vs `docs/01-architecture/event-system.md`)
+
+| Capability | Status | Evidence |
 | --- | --- | --- |
-| Organization | `organization-unit-of-work.ts` | Direct repo injection |
-| Programs | `program-unit-of-work.ts` | Direct repo injection |
-| Projects | `project-unit-of-work.ts` | Direct repo injection |
+| **Event persistence** | **Implemented** | `PrismaEventRepository.append` — `packages/database/src/events/prisma-event-repository.ts` |
+| **Event publishing (producer path)** | **Implemented** | `DomainEventService.publish` inside create use cases — e.g. `packages/application/src/modules/tasks/create-task.ts` |
+| **Transactional consistency (write + event)** | **Implemented** | Same DB transaction via unit of work — matches event-system doc preference |
+| **Event consumption / dispatcher** | **Not implemented** | No worker, handler registry, or `updateStatus` transitions from app code |
+| **Aggregate-scoped event query** | **Implemented** | `EventRepository.findByAggregate` — `packages/events/src/repository.ts` |
+| **Organization / time-window event queries** | **Not implemented** | No `findByOrganization`, `since`, or `listPending` on `EventRepository`; grep confirms absence in `packages/` |
+| **Producer idempotency** | **Deferred** | `EventIdempotencyStore` + `InMemoryEventIdempotencyStore` — `packages/events/src/idempotency.ts`; not injected in use cases; no `idempotencyKey` in application layer |
+| **Consumer idempotency** | **Deferred** | Documented requirement in `event-system.md`; no consumer exists |
+| **Replay** | **Deferred** | Storage supports future replay; no replay tooling or processor |
+| **First-class event identity fields** | **Partial** | `correlationId` column; `actorId`, `requestId`, `idempotencyKey` in metadata bucket — `INTERNAL_METADATA_KEY` in `prisma-event-repository.ts` |
+| **Audit persistence** | **Implemented (write)** | `PrismaAuditRepository.create` |
+| **Audit read** | **Not implemented** | No query methods on `AuditRepository` |
 
-**Confirmed:** Application layer does not import `@prisma/client`. Composition roots in `apps/web/lib/*-service.ts` wire Prisma implementations.
+**Distinction (confirmed):** `@synaptria/events` implements **domain event persistence and producer-side publish-in-transaction**. The **Event System architecture** additionally requires consumers, broader reads, explicit idempotency/replay — **not yet built**. Event System doc explicitly states this at § Current-State Implications.
+
+**Distinction (documented):** Event System records operational history; Organizational Memory preserves curated knowledge (`event-system.md` Core Distinction; `organizational-memory.md` Operational History vs Organizational Memory).
 
 ---
 
 ## 8. Prisma Model Inventory
 
-Full schema: `packages/database/prisma/schema.prisma` (comment: *“Generated as a clean target architecture. Validate before creating migrations.”*).
+Schema: `packages/database/prisma/schema.prisma`  
+Migrations: three through `20260726200000_add_task_model`
 
-Applied migration on inspected branch: **`20260725015903_init` only** — creates the **entire** v3 schema in one migration.
-
-| Category | Models |
-| --- | --- |
-| Auth | `User`, `Account`, `Session`, `VerificationToken` |
-| Tenant & access | `Organization`, `Membership`, `Team`, `TeamMember` |
-| Execution | `Program`, `Project`, `Milestone`, `Deliverable`, `Dependency`, `Risk`, `Decision` |
-| Finance | `CashAccount`, `Investor`, `FundingRound`, `FundingCommitment`, `Grant`, `RevenueEvent`, `BudgetCategory`, `Budget`, `BudgetLine`, `Expense`, `Commitment`, `Forecast`, `ForecastScenario`, `ForecastLine` |
-| Vendors | `Vendor`, `VendorContact`, `Quote`, `Contract`, `StatementOfWork`, `StatementOfWorkDeliverable`, `PurchaseOrder`, `Invoice`, `VendorPerformanceReview` |
-| Documents | `Document`, `DocumentVersion`, `DocumentLink`, `AIExtraction` |
-| Reporting | `ExecutiveReport` |
-| Platform | `ApiKey`, `AuditEvent`, `DomainEvent`, `IdempotencyKey` |
-| Ledger | `LedgerAccount`, `LedgerTransaction`, `LedgerEntry` |
-| AI | `AiRun` |
-
-**Task model:** Absent on inspected branch. Added on `feature/tasks` (*branch diff*).
+Execution entities **aligned** at HEAD — Milestone and Task match domain enums and FKs. No historical mismatch remains.
 
 ---
 
 ## 9. Tenant and Authorization Boundaries
 
-### Tenant resolution (confirmed)
+### 9.1 Tenant resolution (implemented)
 
-Flow matches `docs/01-architecture/request-context.md`:
+`apps/web/lib/request-context.ts` — matches `docs/01-architecture/request-context.md`.
 
-1. Auth.js session → `apps/web/lib/request-context.ts`
-2. Active memberships loaded (soft-deleted orgs excluded)
-3. Cookie preference `synaptria.organization` honored when valid
-4. Deterministic fallback to first membership
-5. `buildOrganizationContext` in `@synaptria/auth` produces branded context
+### 9.2 `request-context.ts` Prisma access
 
-**Boundary concern (confirmed):** Step 2 uses `db.membership.findMany` directly in the delivery layer rather than `MembershipRepository` or an auth-scoped query service.
+**Classification: intentional infrastructure composition at the delivery-layer composition root.**
 
-### Authorization (confirmed)
+Evidence: `docs/01-architecture/layers.md` dependency matrix allows web → database; parallel pattern in `apps/web/lib/*-service.ts`. Application layer does not import `@synaptria/database`. **Not a boundary violation.**
 
-- Permissions defined in `packages/permissions/src/permissions.ts`
-- Role mappings in `packages/permissions/src/roles.ts` (`OWNER`, `ADMIN`, `MEMBER`, `VIEWER`)
-- Enforcement via `requirePermission` in application use cases
-- **No** resource-level ownership checks beyond setting `ownerId` on create (*inference:* owners do not confer edit rights separate from role permissions)
+### 9.3 Permissions (implemented)
 
-### Tenant isolation in persistence (confirmed)
+`MILESTONES_*`, `TASKS_*` in `packages/permissions/src/permissions.ts`; role mappings in `roles.ts`.
 
-Program and project repositories always filter by `organizationId` and `deletedAt: null`. Tests explicitly cover cross-tenant isolation: `packages/database/src/programs/prisma-program-repository.test.ts`.
-
-### AI architecture tenant requirements (from docs — not implemented)
-
-Context Engine doc requires permission-aware context assembly with no unauthorized facts in reasoning requests (`docs/ai-operating-system:docs/01-architecture/context-engine.md`). **No code path implements this yet.**
+Organizational Memory doc defines visibility (Personal, Team, Department, Organization, Shared) and least-privilege retrieval (`organizational-memory.md` § Permissions and Tenant Isolation) — **documented, not implemented in code**.
 
 ---
 
@@ -255,18 +231,17 @@ Context Engine doc requires permission-aware context assembly with no unauthoriz
 
 | Concept | Evidence |
 | --- | --- |
-| Modular monolith with package boundaries | `docs/ADR/0003-modular-monolith.md`, `docs/architecture/layers.md` |
-| Repository ports + Prisma adapters | Domain and database packages |
-| Branded tenant/user IDs | `@synaptria/core` |
-| Server-side request context | `apps/web/lib/request-context.ts`, `@synaptria/auth` |
-| Role-based permissions | `@synaptria/permissions` |
-| Audit trail for mutations | `@synaptria/audit`, wired in create use cases |
-| Domain events on mutation | `@synaptria/events`, `program.created`, `project.created`, `organization.created` |
-| Unit of work / transactions | `withDatabaseTransaction`, module UoW interfaces |
-| Soft delete pattern | `deletedAt` on Program, Project, Organization |
-| Vertical slice delivery | Programs and Projects UI + server actions |
-| Idempotency interface for events | `packages/events/src/idempotency.ts` (`InMemoryEventIdempotencyStore`; Prisma store not present) |
-| AI guardrails (high level) | `docs/01-architecture/ai-architecture.md`, AGENTS.md AI rules |
+| Modular monolith | `docs/ADR/0003-modular-monolith.md`, `docs/01-architecture/layers.md` |
+| Execution hierarchy Org → Task | Domain through UI |
+| Repository ports + Prisma adapters | Domain + database packages |
+| RBAC including milestones/tasks | `@synaptria/permissions` |
+| Audit on creates | Six create use cases |
+| Domain event persist + publish on creates | `*.created` events via `DomainEventService` |
+| Aggregate event query port | `EventRepository.findByAggregate` |
+| Transactional write + audit + event | Unit of work pattern |
+| Route-integrity for Task create | `apps/web/app/actions/tasks/create-task.ts` |
+| Task domain validation | `packages/domain/src/tasks/validation.ts` |
+| AI architecture documentation (substantive) | `docs/01-architecture/{overview,context-engine,organizational-memory,reasoning-layer,recommendation-engine,event-system,provider-platform}.md` |
 
 ---
 
@@ -274,139 +249,166 @@ Context Engine doc requires permission-aware context assembly with no unauthoriz
 
 | Concept | Current state | Gap |
 | --- | --- | --- |
-| **Product domain coverage** | 4 domain entities implemented | 40+ Prisma models without domain/application |
-| **Application module layout** | Full modules: organization, programs, projects | Stubs only: ai, dashboard, documents, finance, reporting, vendors |
-| **Domain events pipeline** | Events persisted as `PENDING` | No consumer/worker, no outbox processor (*inference*) |
-| **Event idempotency** | Interface + in-memory store | No `IdempotencyKey` Prisma adapter wired to `DomainEventService` |
-| **Audit read path** | Write-only adapter | `AUDIT_READ` permission exists; no query use cases or UI |
-| **Membership administration** | Repository methods exist | No invite/manage use cases in application layer |
-| **Teams** | Prisma `Team`, `TeamMember` | No domain or authorization integration |
-| **Execution hierarchy** | Prisma Milestone (+ Deliverable, Dependency, Risk, Decision) | No domain/repos/use cases on inspected branch |
-| **AI traceability schema** | `AiRun`, `AIExtraction` models | No `@synaptria/ai` implementation |
-| **Context Engine** | Accepted architecture doc | No package, no context package type, no retrieval orchestration |
-| **Organizational Memory** | Named in Context Engine doc | Placeholder doc only; no storage model |
-| **Documentation accuracy** | Multiple doc locations | `docs/02-database/schema.md`, `docs/architecture/layers.md` stale vs code |
+| **Product domain coverage** | 6 entities E2E | ~35 Prisma models without domain |
+| **Event System** | Persist + publish in transaction; aggregate query | Consumer, org/time-window reads, dispatcher, idempotency wiring, replay (`event-system.md`) |
+| **Audit** | Write path | Read/query path |
+| **Application stubs** | finance, vendors, documents, ai, etc. | Module constants only |
+| **Context Engine** | Accepted spec | No contracts or assembler |
+| **Organizational Memory** | Proposed spec (concept complete) | No domain types, services, or persistence |
+| **Reasoning Layer** | Proposed spec | No `ReasoningResult` contracts or services |
+| **Recommendation Engine** | Proposed spec | No recommendation contracts or services |
+| **Provider Platform** | Proposed spec | `@synaptria/ai` placeholder only |
+| **Documentation accuracy** | AI arch docs current | `docs/02-database/schema.md`, `layers.md` module table stale |
+
+### 11.1 AI subsystem classification (doc vs code)
+
+| Subsystem | Documentation | Implementation |
+| --- | --- | --- |
+| **AI OS Overview** | **Proposed** — map and delivery sequence | **Unimplemented** |
+| **AI Philosophy** | **Proposed** — principles | **Unimplemented** (no runtime) |
+| **Context Engine** | **Accepted** | **Unimplemented** |
+| **Organizational Memory** | **Proposed** — full conceptual architecture | **Unimplemented** (persistence/storage TBD) |
+| **Reasoning Layer** | **Proposed** — defined inputs/outputs/pipeline | **Unimplemented** |
+| **Recommendation Engine** | **Proposed** — defined lifecycle/contracts | **Unimplemented** |
+| **Event System** | **Proposed** — target architecture | **Partially implemented** (see §7.3) |
+| **Provider Platform** | **Proposed** — defined contracts/routing | **Unimplemented** |
+| **Workflow Execution** | Referenced in overview | **Deferred** (not in scope of this assessment) |
+
+### 11.2 Concept placement for initial implementation (no unjustified persistence)
+
+| Concept | Initial form | Persistence |
+| --- | --- | --- |
+| **Context Package** | Domain/application **immutable DTO** | **Ephemeral/derived** — serializable for trace; not a Prisma table (`context-engine.md`) |
+| **Context Engine** | **Application service** — deterministic reads | None dedicated |
+| **Organizational Memory** | **Typed domain contracts** + retrieval port; lifecycle per doc | **Deferred** — doc: contracts independent of storage; shape when first durable capability ships (`organizational-memory.md` § Typed Memory Contracts) |
+| **Recent Events (in context)** | **Derived** via `EventRepository.findByAggregate` (v0); org/time-window later | Reuses `DomainEvent` table |
+| **Reasoning Result** | **Application/domain contract** | Ephemeral unless audit/eval requires retention |
+| **Recommendation** | **Application/domain contract** | **Deferred** — doc: justify storage when first durable recommendation capability ships (`recommendation-engine.md` § Persistence) |
+| **Provider request/response** | **Infrastructure contracts** in `@synaptria/ai` | **Optional durable** via existing `AiRun` when jobs run |
+| **Candidate Memory** | Application/domain type in memory lifecycle | **Deferred** with Organizational Memory persistence |
 
 ---
 
-## 12. Missing Architectural Concepts
+## 12. Missing Architectural Concepts (code only)
 
-Derived from architecture/product docs and AGENTS.md — **not invented**:
+Architecture is **documented** for items below; **code is missing**:
 
-| Concept | Source | Code status |
+| Concept | Doc | Code |
 | --- | --- | --- |
-| **AI Operating Loop** (Observe → Understand → Recommend → Act → Learn) | `docs/03-product/ai-philosophy.md` (ai-operating-system branch) | Not implemented |
-| **Context Package** (immutable, permission-aware, provenance) | Context Engine doc | Not implemented |
-| **Reasoning Layer** | Placeholder architecture doc | Not implemented |
-| **Recommendation Engine** | Placeholder architecture doc | Not implemented |
-| **Event System** (operational event bus feeding context) | Placeholder + Context Engine diagram | Domain events table only; no pub/sub or handlers |
-| **Provider Platform** (modular LLM/providers) | Placeholder architecture doc | Not implemented |
-| **Organizational Memory** (curated institutional knowledge) | Context Engine principles | Not implemented |
-| **Background job infrastructure** | `docs/01-architecture/system-architecture.md` | Not present in packages |
-| **S3 document storage adapter** | system-architecture.md, layers.md | Not present |
-| **Row-level security** | Schema comment only | Application-level scoping only |
-| **Task entity** | Product doc `docs/03-product/tasks.md` | Missing from Prisma on inspected branch |
-| **Prepared Actions / human review workflow** | AI philosophy | Not implemented |
-| **Evaluation fixtures for AI** | AGENTS.md, ai-architecture.md | Not implemented |
+| Context Engine assembler | Accepted | None |
+| Organizational Memory types, validation, curation services | Proposed | None |
+| Reasoning Layer pipeline | Proposed | None |
+| Recommendation Engine | Proposed | None |
+| Event dispatcher / consumers | Proposed | None |
+| Provider adapters / router | Proposed | None |
+| Background job / outbox worker | system-architecture.md | None |
+| S3 document storage | system-architecture.md | None |
+| Audit query UI/API | — | None |
+| Update/delete execution use cases | — | Not present (*inference*) |
 
 ---
 
 ## 13. Persistence Leakage or Boundary Violations
 
-| Issue | Severity | Evidence | Fact vs inference |
-| --- | --- | --- | --- |
-| Direct Prisma in delivery layer for memberships | Medium | `apps/web/lib/request-context.ts` imports `db` from `@synaptria/database` | **Confirmed** |
-| Domain event fields stored in JSON metadata bucket | Medium | `INTERNAL_METADATA_KEY` in `packages/database/src/events/prisma-event-repository.ts` | **Confirmed** |
-| `DomainEvent` / `AuditEvent` optional `programId` columns | Low–Medium | Schema lines ~2044–2075, ~2015–2016 | **Confirmed** — purpose unclear; not set by current use cases |
-| Prisma client exported as singleton from database package | Low | `packages/database/src/index.ts` — consumed by web delivery | **Confirmed** — convenient but broadens delivery access surface |
-| Full schema migrated before feature implementation | High | Single init migration creates all tables | **Confirmed** |
-| Anemic domain (no invariant enforcement in domain) | Low | Validation primarily in application layer | **Confirmed** — consistent with current pattern, not necessarily a violation |
-| `feature/tasks` domain Milestone shape vs Prisma | High (if merged without reconciliation) | Branch diff: status enums and date fields differ | **Inference** from `git show feature/tasks:...` |
+| Issue | Classification | Evidence |
+| --- | --- | --- |
+| Event identity fields in JSON metadata | Accepted adapter workaround | `packages/database/src/events/prisma-event-repository.ts` |
+| Large dormant schema | Target schema pattern | Init migration |
+| Unused `programId` on platform models | Unresolved schema intent | `DomainEvent`, `AuditEvent`, etc. |
+| Delivery `db` at composition root | Documented pattern | `layers.md` web → database |
 
 ---
 
 ## 14. Naming and Terminology Inconsistencies
 
-| Area | Variant A | Variant B | Location |
-| --- | --- | --- | --- |
-| Architecture docs path | `docs/01-architecture/` | `docs/architecture/` | Both exist; README links to `docs/architecture/` |
-| AI product doc path | `docs/03-product/ai-philosophy.md` (ai-operating-system) | Missing on inspected branch | Branch divergence |
-| Milestone status (Prisma) | `NOT_STARTED`, `AT_RISK`, … | `PLANNED`, … (*feature/tasks* domain) | Schema vs in-flight branch |
-| Milestone dates (Prisma) | `targetDate`, `completedAt`, `percentComplete` | `plannedStartDate`, `plannedEndDate`, … (*feature/tasks*) | Schema vs in-flight branch |
-| Priority typing | Shared Prisma `Priority` enum | Separate `ProgramPriority`, `ProjectPriority` domain aliases | Domain modules |
-| AI job naming | `AIJob` in outdated schema doc | `AiRun` in Prisma | `docs/02-database/schema.md` vs schema |
-| Aggregate naming in events | `aggregateType: 'Program'` | Prisma model `Program` | Consistent today |
-| Module vs bounded context | Application `modules/vendors` | Product “Vendors” | Stubs vs product docs — terminology aligned, implementation missing |
-| “Future entities” doc | Lists Milestone, Task as future | Milestone in Prisma + migration | `docs/02-database/schema.md` |
+| Area | Issue | Locations |
+| --- | --- | --- |
+| Priority type aliases | Duplicate names, same values | Domain modules vs `shared/priority.ts` |
+| Obsolete schema doc | Milestone/Task listed as “Future” | `docs/02-database/schema.md` |
+| Stale layers module table | Lists only `organization` | `docs/01-architecture/layers.md` |
+| `AIJob` vs `AiRun` | Naming drift | `docs/02-database/schema.md` vs Prisma |
+| Doc status labels | Context Engine **Accepted**; other AI subsystems **Proposed** | Respective architecture files |
+
+**Removed:** Claims that overview, reasoning, recommendation, event-system, provider-platform, or organizational-memory docs are placeholders.
 
 ---
 
 ## 15. Risks
 
-| Risk | Likelihood | Impact | Mitigation direction |
-| --- | --- | --- | --- |
-| Developers query Prisma directly for new features, bypassing ports | Medium | High — tenant leaks, untested paths | Enforce composition roots; lint/rule against `db` import in `apps/web` except approved files |
-| Large dormant schema confuses domain boundaries | High | Medium | Update docs; mark models as “target” vs “implemented”; consider schema comments/codegen markers |
-| Merge `feature/tasks` without enum/FK alignment | Medium | High — runtime mapping bugs, bad migrations | Reconcile domain to Prisma **before** merge; prefer Prisma as source of truth per AGENTS.md |
-| Domain events never consumed | Medium | Medium — AI loop “Observe” stage blocked | Implement minimal event dispatcher + handler registry |
-| Context Engine built ad hoc in route handlers | Medium | High — permission leaks to AI | Introduce `@synaptria/context` (or similar) package early with tests |
-| Audit/event metadata JSON hacks become permanent | Medium | Low–Medium | Plan forward migration to first-class columns when event pipeline stabilizes |
-| Init migration already applied broadly | Low | High if rollback needed | Forward-only migrations; feature flags for new tables usage |
-| Duplicate documentation misleads agents/contributors | High | Medium | Consolidate `docs/architecture` → `docs/01-architecture`; merge ai-operating-system docs |
+| Risk | Impact | Notes |
+| --- | --- | --- |
+| Dormant Prisma models invite ad hoc `db` usage | High | Lint/guard composition roots |
+| Context Engine skipped in favor of LLM features | High | Overview and Context Engine doc forbid this |
+| Event consumer delay blocks Observe and Mission Control | High | `event-system.md` + overview delivery sequence |
+| Conflating DomainEvent history with Organizational Memory | Medium | Both docs forbid; enforce in implementation |
+| Event metadata nesting limits query/replay | Medium | `event-system.md` calls for first-class identity fields “where justified” |
+| Obsolete `schema.md` / `layers.md` | Medium | Misleads contributors |
+| Organizational Memory persistence designed before contracts | Medium | Doc requires typed contracts first |
 
 ---
 
 ## 16. Recommended Domain Model
 
-Recommendations favor **incremental evolution** and **preserve working patterns**. Prisma schema v3 is treated as the **persistence source of truth** (per AGENTS.md), with domain types adapted via mappers—not parallel divergent models.
+Preserve **Program → Project → Milestone → Task** and existing repository/use-case pattern.
 
-### Core execution tree (priority)
+### 16.1 Minimum domain contracts for first Context Engine (deterministic v0)
 
-```text
-Organization (tenant root)
-  └── Program (optional portfolio grouping)
-        └── Project
-              └── Milestone
-                    └── Task   ← add via migration on feature/tasks merge
-```
+Aligned with `docs/01-architecture/overview.md` Initial Delivery Sequence and Context Engine doc:
 
-**Recommendations:**
+| Contract | Purpose | Reuse today |
+| --- | --- | --- |
+| `ContextRequest` | Capability id, primary entity ref, objective | **New** |
+| `ContextPackage` | Immutable sections: Request, Identity, Authorization, Primary Entity, Related Entities, Events, Provenance, Metadata (`context-engine.md`) | **New** DTO — no Prisma |
+| `ContextEntityRef` | Typed entity pointer | **New** |
+| `ProvenanceRecord` | Source, retrievedAt, permission scope | **New** |
+| Read ports | Authorized entity graph | **Reuse** — Program/Project/Milestone/Task repositories |
+| `EventRepository.findByAggregate` | Recent events for primary/related aggregates | **Reuse** |
+| Permissions / `RequestContext` | Authorization section | **Reuse** |
+| `OrganizationalMemoryProvider` | Curated retrieval port | **New port + no-op impl** — returns empty until memory persistence exists; **must not** substitute raw events |
+| `AuditRepository` reads | Supporting evidence | **Gap** — add read port or methods |
 
-1. **Adopt Project-scoped Milestones** as the primary boundary (*matches `feature/tasks` direction*). Use Prisma `Milestone.projectId` as required at application level even though schema allows null (*inference:* enforce in use case, not schema change initially).
-2. **Map domain types to Prisma enums** for Milestone (`MilestoneStatus`, `Priority`) rather than introducing parallel enum sets. Deprecate divergent statuses on `feature/tasks` during merge.
-3. **Introduce `Task` model** aligned with product doc: status, due dates, owner, milestone FK — follow `feature/tasks` branch but reconcile field names to Prisma once Task migration lands.
-4. **Keep Organization, Program, Project** as separate aggregate roots** with existing repository/use-case pattern.
-5. **Treat Deliverable, Dependency, Risk, Decision** as **sibling modules** under Project/Milestone—not embedded in Project aggregate—until cross-entity rules are specified in product docs.
-6. **Do not model finance/vendor/document entities in domain** until corresponding product docs and ADRs define MVP scope.
+**Inference:** v0 assembler for `Project` or `Milestone` with empty Organizational Memory section degrades gracefully per `organizational-memory.md` § Integration with the Context Engine.
 
-### Platform domain (parallel track)
+### 16.2 Organizational Memory
 
-| Concept | Recommended representation |
-| --- | --- |
-| Context Package | Immutable DTO in new package (e.g. `@synaptria/context`); not a Prisma entity |
-| Organizational Memory | Defer dedicated storage until doc moves beyond placeholder; *uncertainty* whether memory is document-derived vs curated entries |
-| AiRun | Map 1:1 to Prisma `AiRun` when AI module starts; domain type mirrors trace fields |
-| DomainEvent | Keep `@synaptria/events` envelope as domain concept; Prisma row is infrastructure |
+**Documented (Proposed architecture — not placeholder):**
 
-### Shared kernels
+- **Conceptual model:** typed Memory with Identity, Type, Content, Confidence, Provenance, Evidence, Relationships, Access Context, Lifecycle, Metadata (`organizational-memory.md` § Typed Memory Contracts)
+- **Lifecycle:** Operational Event → Candidate Memory → Validation → Curation → Published Memory → Active Retrieval → Review → Updated/Superseded/Archived/Retired
+- **Validation & curation:** evidence, duplication, confidence, permission scope; human review for high-impact types
+- **Retrieval & ranking:** context-driven, composite relevance, retrieval budget, progressive/explainable
+- **Provenance & permissions:** full provenance chain; visibility levels; least privilege; tenant isolation
+- **Retention:** operational forgetting vs archival/retirement with provenance preserved
+- **Context Engine integration:** specialized Context Provider; operational context assembled first; graceful degradation when memory unavailable
 
-- **`Priority`**: Export single domain type from `@synaptria/domain/shared` (*pattern started on feature/tasks*) used by Program, Project, Milestone, Task.
-- **Branded IDs**: Continue `@synaptria/core` pattern; add `MilestoneId`, `TaskId` (*on feature/tasks*).
+**Open (implementation only):** concrete **persistence/storage design** — doc explicitly defers storage shape until first durable capability (`organizational-memory.md`: contracts independent of storage; `recommendation-engine.md` similar for recommendations).
+
+**Explicit:** Organizational Memory is **not** raw event history, generic embeddings, or unfiltered summaries.
+
+### 16.3 Downstream execution entities
+
+Defer Deliverable, Dependency, Risk, Decision until product MVP defined.
 
 ---
 
 ## 17. Recommended Implementation Sequence
 
-| Phase | Scope | Rationale |
+Per `docs/01-architecture/overview.md` Initial Delivery Sequence — **deterministic first, no LLM, no embeddings, no autonomous writes**:
+
+| Phase | Scope | Deliverables |
 | --- | --- | --- |
-| **0 — Doc & branch hygiene** | Merge ai-operating-system docs; update `docs/02-database/schema.md`, `layers.md`; resolve `docs/architecture` duplication | Reduces agent/contributor error without code risk |
-| **1 — Complete execution MVP** | Merge/reconcile `feature/tasks`: Milestone + Task domain, repos, application, permissions (`MILESTONES_*`, `TASKS_*`), web UI | Closes largest schema–code gap; aligns with product tasks doc |
-| **2 — Event consumption** | Background worker or in-process dispatcher reading `DomainEvent` `PENDING` rows; register handlers for `*.created` | Enables Observe stage for AI loop |
-| **3 — Context Engine v0** | Read-only context assembler: load authorized Program/Project/Milestone/Task + recent audit/events; produce Context Package DTO | Implements Accepted architecture doc minimally |
-| **4 — Audit & membership admin** | List audit events; invite/manage members | Security/compliance baseline |
-| **5 — Vendor MVP** | Vendor domain slice (Prisma `Vendor` already exists) | Partner coordination per product vision |
-| **6 — Document + AiRun slice** | Upload metadata, `AiRun` trace on extraction jobs | Needed before document intelligence |
-| **7 — Finance (deferred)** | Budget/expense/ledger modules | High complexity; schema ready but no product MVP detail in docs reviewed |
+| **0** | Doc hygiene | Fix `docs/02-database/schema.md`, `docs/01-architecture/layers.md` module table |
+| **1** | **Context contracts (no LLM)** | `ContextRequest`, `ContextPackage`, provenance types, `OrganizationalMemoryProvider` stub; unit tests |
+| **2** | **Deterministic Context Engine v0** | Read-only assembler for Project/Milestone; permission-aware; aggregate events only |
+| **3** | **Event read extensions + dispatcher** | Org/time-window queries per `event-system.md`; PENDING processor; handler registry |
+| **4** | **Idempotency + replay foundations** | Wire producer idempotency; consumer dedup; status transitions |
+| **5** | **Audit read + membership admin** | Query use cases |
+| **6** | **Organizational Memory contracts** | Domain memory types + lifecycle enums; still **no persistence** until curation MVP scoped |
+| **7** | **Organizational Memory persistence** | Storage **only when** first curation/publication workflow is specified |
+| **8** | **Provider Platform skeleton** | Provider-agnostic contracts, one adapter — **after** Context Engine (`provider-platform.md` § Initial Implementation) |
+| **9** | **Reasoning Layer** | `ReasoningResult` contract + deterministic capabilities first |
+| **10** | **Recommendation Engine** | Contracts; durable storage when first review-state capability needs it |
+| **11+** | Finance, vendors, documents | Product MVP specs |
 
 ---
 
@@ -414,30 +416,86 @@ Organization (tenant root)
 
 | Non-recommendation | Reason |
 | --- | --- |
-| **Full schema rewrite or microservice extraction** | ADR-0003 modular monolith; current slice pattern works |
-| **Rich DDD aggregate classes everywhere** | Would fight established anemic interface + use case pattern |
-| **Implement all 40+ Prisma models at once** | No product requirements in docs for most domains |
-| **LLM-side permission enforcement** | Context Engine doc explicitly forbids; platform must enforce |
-| **Organizational Memory in PostgreSQL JSON blobs without spec** | Placeholder doc only — storage shape undefined |
-| **Replacing Prisma with alternate ORM** | AGENTS.md: Prisma is source of truth |
-| **Client-supplied `organizationId` in mutations** | Violates request-context architecture |
-| **Embedding Task under Project skipping Milestone** | Product doc: tasks belong to milestones |
-| **Immediate row-level security** | Application scoping works today; RLS is future per schema comment |
+| Prisma tables for Context Package, Context Engine, Reasoning Layer, provider abstractions | Architecture assigns these to contracts/services (`overview.md`, `context-engine.md`) |
+| Prisma tables for Organizational Memory **before** typed contracts and curation workflow | `organizational-memory.md` § Typed Memory Contracts |
+| Using `DomainEvent` rows as Organizational Memory | Both event-system and organizational-memory docs forbid |
+| Generic embedding store as Organizational Memory | Not curated/validated knowledge |
+| LLM / provider SDK before Context assembler | `overview.md` § Current Implementation Boundary |
+| Chatbot-first delivery | Explicit non-goal in overview |
 
 ---
 
 ## 19. Open Questions
 
-1. **Should `Milestone.programId` remain nullable in Prisma** when application enforces project scope only? (*Schema vs domain authority*)
-2. **Is the single init migration intentional for all environments**, or should fresh installs split migrations by bounded context going forward?
-3. **What is the intended use of `programId` on `DomainEvent`, `AuditEvent`, `ApiKey`, and `AiRun`?** Columns exist but are unused in current use cases.
-4. **Organizational Memory:** curated entries, derived summaries, or document embeddings? Doc is placeholder-only.
-5. **When should `@synaptria/database/db` be inaccessible from `apps/web`?** Is direct membership query acceptable long-term?
-6. **`feature/tasks` merge strategy:** adapt domain to Prisma Milestone fields, or migrate Prisma toward domain shapes?
-7. **Task entity:** confirm required fields (assignee, dependencies, due date) for MVP — product doc is one sentence.
-8. **Team / TeamMember:** are these planned for authorization, or deferred?
-9. **Event delivery:** outbox + worker vs synchronous handlers — not specified in architecture placeholders.
-10. **Should Context Engine live in `@synaptria/ai` or a separate `@synaptria/context` package?** Layers doc lists AI package for “retrieval orchestration” but Context Engine doc says it is not the LLM layer.
+1. When to add `AuditRepository` query methods vs a dedicated read model for context/history?
+2. Should event `actorId`/`requestId`/`idempotencyKey` migrate to first-class columns (`event-system.md` § Current-State Implications)?
+3. When to wire Prisma `IdempotencyKey` to `DomainEventService` — at dispatcher introduction or earlier?
+4. What is optional `programId` on `DomainEvent`, `AuditEvent`, `ApiKey`, `AiRun` for?
+5. **Organizational Memory persistence shape** — relational vs document vs hybrid (*conceptual architecture defined; storage design open*)?
+6. Centralize Milestone validation in domain like Task?
+7. Update/delete/soft-delete use cases — timeline for execution entities?
+
+**Removed (answered by restored architecture docs):**
+
+- ~~Organizational Memory curation workflow unknown~~ — defined in `organizational-memory.md` § Memory Lifecycle, Validation and Curation  
+- ~~Organizational Memory governance/retrieval undefined~~ — defined in permissions, retention, ranking sections  
+- ~~Event System vs `@synaptria/events` relationship unclear~~ — `event-system.md` § Current-State Implications acknowledges existing persistence and lists gaps  
+- ~~Reasoning/Recommendation/Provider/Event architecture absent~~ — substantive docs now present  
+
+---
+
+## 20. Changes Since Initial Assessment
+
+Baselines: (1) first assessment @ `c0b5c86` (2026-07-29); (2) second revision @ `ec69e8b` (2026-08-04).
+
+### Findings removed (this revision)
+
+| Removed finding | Reason |
+| --- | --- |
+| Organizational Memory is “placeholder doc only” | **Substantive** `docs/01-architecture/organizational-memory.md` (Proposed v0.1) |
+| OM curation workflow / lifecycle / governance undefined | **Documented** — lifecycle, validation, curation, retrieval, ranking, permissions, retention |
+| Overview, Reasoning, Recommendation, Event System, Provider Platform “placeholder headers only” | **Restored to substantive Proposed architecture docs** |
+| Phase 5 “expand placeholder doc” for Organizational Memory | Doc expansion **done**; phase reframed to contracts then persistence |
+| Open question: Event System doc vs `@synaptria/events` | **Answered** in `event-system.md` § Current-State Implications |
+| Open question: OM approval workflow undefined | **Answered** in organizational-memory lifecycle and validation sections |
+| Placeholder vs Accepted row in naming table for AI docs | Replaced with accurate Proposed/Accepted labels |
+
+### Findings revised (this revision)
+
+| Topic | Prior (second revision) | Current |
+| --- | --- | --- |
+| AI subsystem docs | Context Engine Accepted; others placeholders | **All major subsystems architecturally defined**; Context Engine **Accepted**; others **Proposed** |
+| Organizational Memory status | “Principles only” / placeholder | **Proposed architecture complete**; code **unimplemented**; persistence **open** |
+| Event System | “Domain event table only” | **Partially implemented**: persist, publish-in-transaction, aggregate query; gaps per event-system doc |
+| Reasoning / Recommendation / Provider | “Placeholder docs” | **Proposed, architecturally defined, unimplemented** |
+| Architecture gap matrix OM row | “Memory doc expansion” | **Contracts + persistence when justified** |
+| Implementation Phase 5 | Expand OM doc | **OM domain contracts** (Phase 6–7 persistence) |
+| Overview delivery alignment | Not cited | **Confirmed** — overview Initial Delivery Sequence matches Phase 1–2 |
+
+### Findings confirmed
+
+| Finding | Still true |
+| --- | --- |
+| Execution MVP Org → Task | Yes |
+| Context Engine unimplemented | Yes |
+| Reasoning / Recommendation / Provider unimplemented | Yes |
+| No event consumer | Yes |
+| No org/time-window event queries in code | Yes |
+| Idempotency/replay deferred | Yes |
+| Context contracts as first implementation step | Yes — reinforced by overview.md |
+| Dormant Prisma surface | Yes |
+| Obsolete `schema.md` / stale `layers.md` table | Yes |
+
+### New findings introduced (this revision)
+
+| Finding | Evidence |
+| --- | --- |
+| AI OS overview defines layer boundaries and delivery sequence | `docs/01-architecture/overview.md` |
+| Event System doc distinguishes operational events from Organizational Memory | `event-system.md` Core Distinction |
+| OM integrates as Context Provider with graceful degradation | `organizational-memory.md` § Integration with the Context Engine |
+| Provider Platform must follow Context Engine | `provider-platform.md` § Initial Implementation |
+| Recommendation persistence deferred until first durable capability | `recommendation-engine.md` § Persistence |
+| Reasoning may be deterministic without LLM | `reasoning-layer.md` § Deterministic and Model-Assisted Reasoning |
 
 ---
 
@@ -447,148 +505,85 @@ Organization (tenant root)
 
 | Concept | Current location | Status | Evidence | Recommended action |
 | --- | --- | --- | --- | --- |
-| Organization | `@synaptria/domain/organization` | Implemented | Domain + app + DB + UI | Maintain; add member admin |
-| Membership | `@synaptria/domain/organization` | Partial | Repo + create org; no invite flows | Add use cases |
-| Program | `@synaptria/domain/programs` | Implemented | Full vertical slice | Maintain; add update/delete phase |
-| Project | `@synaptria/domain/projects` | Implemented | Full vertical slice | Maintain; add update/delete phase |
-| Milestone | Prisma only (inspected branch) | Schema only | `schema.prisma`; no domain export | Merge `feature/tasks` reconciled to Prisma |
-| Task | Absent (inspected branch) | Missing | No Prisma model; product doc exists | Merge `feature/tasks` migration + domain |
-| Deliverable | Prisma only | Not started | Schema | Defer until milestone MVP stable |
-| Dependency | Prisma only | Not started | Schema | Defer |
-| Risk / Decision | Prisma only | Not started | Schema | Defer until execution MVP |
-| Vendor | Prisma + app stub | Not started | Stub `vendorsModule` | Phase 5 vendor MVP |
-| Document | Prisma + app stub | Not started | Stub | Phase 6 |
-| Finance / Ledger | Prisma + app stub | Not started | Stub | Phase 7+ |
-| AiRun | Prisma only | Not started | Schema | Wire when AI module starts |
-| DomainEvent | `@synaptria/events` + Prisma | Partial | Write path only | Add consumer/dispatcher |
-| AuditEvent | `@synaptria/audit` + Prisma | Partial | Write path only | Add read queries + UI |
-| Context Package | Architecture doc | Not started | context-engine.md | New package Phase 3 |
-| Organizational Memory | Placeholder doc | Not started | organizational-memory.md | Await product spec |
-| User (auth) | Prisma / Auth.js | Implemented (infra) | Not in domain | Keep infra-side unless profile features needed |
-| Team | Prisma only | Not started | Schema | Clarify intent |
+| Organization … Task | `@synaptria/domain/*` | Implemented | Full slice | Maintain; add update/delete when prioritized |
+| Priority (shared) | `domain/shared` | Partial | Task uses | Consolidate aliases |
+| DomainEvent (persist/publish) | `@synaptria/events` + Prisma | **Partial** | Write + aggregate query | Dispatcher + broader reads |
+| AuditEvent | `@synaptria/audit` + Prisma | Partial | Write only | Read queries |
+| Context Package | Architecture | **Accepted doc; no code** | `context-engine.md` | **Phase 1 contracts** |
+| Organizational Memory | Architecture | **Proposed doc; no code** | `organizational-memory.md` | Phase 6 contracts; Phase 7 persistence when justified |
+| Reasoning Result | Architecture | Proposed doc; no code | `reasoning-layer.md` | After Context Engine + provider skeleton |
+| Recommendation | Architecture | Proposed doc; no code | `recommendation-engine.md` | After Reasoning Layer |
+| Provider Platform | Architecture | Proposed doc; no code | `provider-platform.md` | After Context Engine |
+| Event System (bus) | Architecture + partial code | **Partial** | `event-system.md`; `@synaptria/events` | Consumer + queries + idempotency |
+| AiRun | Prisma only | Not started | Schema | On first provider job |
 
 ### B. Prisma-to-domain mapping
 
+(Unchanged for execution entities — aligned at HEAD.)
+
 | Prisma model | Domain concept | Aggregate | Tenant-owned | Concerns |
 | --- | --- | --- | --- | --- |
-| Organization | Organization | Organization | N/A (root) | Mapped |
-| Membership | OrganizationMembership | Organization | Yes | Mapped |
-| User | — (auth) | — | No | Intentionally outside domain |
-| Program | Program | Program | Yes | Mapped |
-| Project | Project | Project | Yes | Mapped |
-| Milestone | — (inspected) / Milestone (*feature/tasks*) | Milestone | Yes | Schema–code gap; enum mismatch on branch |
-| Task | — / Task (*feature/tasks*) | Task | Yes | Not in schema on inspected branch |
-| Deliverable | — | Milestone/Project | Yes | Unmapped |
-| Dependency | — | Project | Yes | Unmapped |
-| Risk | — | Project/Program | Yes | Unmapped |
-| Decision | — | Project/Program | Yes | Unmapped |
-| Vendor + procurement set | — | Vendor | Yes | Unmapped |
-| Document + AIExtraction | — | Document | Yes | Unmapped |
-| ExecutiveReport | — | Report | Yes | Unmapped |
-| Budget* / Expense* / Ledger* | — | Finance | Yes | Unmapped |
-| AuditEvent | AuditEventRecord | — | Yes | Write-only mapping |
-| DomainEvent | DomainEventEnvelope | — | Yes | Metadata leakage for some fields |
-| IdempotencyKey | EventIdempotencyClaim | — | Yes | Not wired |
-| ApiKey | — | — | Yes | Unmapped |
-| AiRun | — | — | Yes | Unmapped |
-| Team / TeamMember | — | — | Partial | No organizationId on TeamMember |
+| Organization … Task | Mapped | Respective roots | Yes | Aligned |
+| DomainEvent | DomainEventEnvelope | — | Yes | Partial impl; metadata nesting |
+| IdempotencyKey | — | — | Yes | Unwired |
+| AiRun | — | — | Yes | Future provider telemetry |
+| ~35 other models | — | — | Yes | Unmapped |
 
 ### C. Architecture gap matrix
 
 | Architecture capability | Current support | Gap | Priority | Dependency |
 | --- | --- | --- | --- | --- |
-| Tenant request context | Implemented | Delivery uses direct Prisma for memberships | Medium | — |
-| RBAC permissions | Implemented | No milestone/task permissions on inspected branch | High | Execution MVP |
-| Audit logging | Write-only | No read/reporting | Medium | — |
-| Domain events | Persist only | No dispatcher/consumers | High | AI Observe stage |
-| Event idempotency | In-memory | No Prisma store | Medium | Event dispatcher |
-| Context Engine | Documented | No implementation | High | Events + read models |
-| Organizational Memory | Named only | No storage/API | Low | Context Engine spec |
-| Reasoning Layer | Placeholder doc | None | Medium | Context Engine |
-| Recommendation Engine | Placeholder doc | None | Medium | Reasoning Layer |
-| Provider Platform | Placeholder doc | None | Medium | AiRun traceability |
-| AI Operating Loop | Philosophy doc | No end-to-end path | High | All AI components |
-| Background jobs | Mentioned in system doc | None | Medium | Event dispatcher |
-| Document storage (S3) | Mentioned | None | Medium | Documents module |
-| Execution hierarchy UI | Projects only | Milestones/tasks on feature branch | High | Merge feature/tasks |
-| Finance / vendors / documents | Schema only | Full domain gap | Low | Product MVP specs |
+| Execution MVP (Program→Task) | **Implemented** | Update/delete | Low | — |
+| Context Engine | Accepted doc | Contracts + assembler | **High** | Execution read ports |
+| Organizational Memory | **Proposed doc (complete concept)** | Domain types, services, persistence | Medium | Context Engine v0 |
+| Reasoning Layer | Proposed doc | Contracts + services | Medium | Context Package |
+| Recommendation Engine | Proposed doc | Contracts + services | Medium | Reasoning Layer |
+| Provider Platform | Proposed doc | Adapters + router | Medium | Context Engine first |
+| Event persistence | **Implemented** | — | — | — |
+| Event publishing | **Implemented** | — | — | — |
+| Event consumption | Not implemented | Dispatcher, handlers | **High** | — |
+| Event org/time-window reads | Not implemented | Repository extensions | **High** | event-system.md |
+| Event idempotency / replay | Deferred | Wire store + consumer dedup | Medium | Dispatcher |
+| Audit logging | Write-only | Read/reporting | Medium | — |
+| AI Operating Loop | Proposed docs | End-to-end runtime | High | Context + events + provider |
+| Finance / vendors / documents | Schema only | Domain slices | Low | Product specs |
 
 ### D. Recommended implementation phases
 
 | Phase | Scope | Deliverables | Dependencies | Risk |
 | --- | --- | --- | --- | --- |
-| 0 | Documentation alignment | Updated schema.md, merged AI docs, deduped architecture paths | — | Low |
-| 1 | Execution MVP | Milestone + Task domain/repos/app/UI; permissions; Task migration | Reconcile feature/tasks with Prisma | **High** if enums diverge |
-| 2 | Event pipeline | PENDING event processor, handler registry, idempotency adapter | Phase 1 events stable | Medium |
-| 3 | Context Engine v0 | Context Package builder, permission-filtered reads | Phase 1–2 | Medium |
-| 4 | Governance | Audit query API, membership invite/manage | Permissions patterns | Low |
-| 5 | Vendors MVP | Vendor domain slice + UI | Phase 0 docs | Medium |
-| 6 | Documents + AI trace | Document metadata, AiRun on jobs | S3 adapter, Phase 3 | Medium |
-| 7 | Finance | Budget/expense selective MVP | Product definition | **High** complexity |
+| **0** | Doc hygiene | Fix `schema.md`, `layers.md` | — | Low |
+| **1** | **Context contracts** | `ContextRequest`, `ContextPackage`, provenance, memory port stub | Execution repos | Low |
+| **2** | **Context assembler v0** | Deterministic Project/Milestone assembly; no LLM | Phase 1 | Medium |
+| **3** | Event dispatcher + reads | Consumer, org/time-window queries | — | Medium |
+| **4** | Idempotency / replay foundations | Producer + consumer idempotency | Phase 3 | Medium |
+| **5** | Governance reads | Audit query, membership admin | — | Low |
+| **6** | OM domain contracts | Memory types, lifecycle, provider port | Phase 1 | Low |
+| **7** | OM persistence | Storage when curation MVP defined | Phase 6 | Medium |
+| **8** | Provider skeleton | Contracts, one adapter, `AiRun` wiring | Phase 2 | Medium |
+| **9–10** | Reasoning + Recommendation | Contracts; durable reco storage when needed | Phases 2, 8 | Medium |
+| **11+** | Finance/vendors/docs | Domain slices | Product MVP | High |
 
 ---
 
-## Appendix: Files inspected
+## Appendix: Files inspected (working tree @ `ec69e8b`)
 
-### Architecture & product documentation
+### Architecture documentation (read in full for this revision)
 
-- `docs/03-product/ai-philosophy.md` — via `git show docs/ai-operating-system:...`
-- `docs/01-architecture/overview.md`, `context-engine.md`, `organizational-memory.md`, `reasoning-layer.md`, `recommendation-engine.md`, `event-system.md`, `provider-platform.md` — via git show (placeholders except context-engine + ai-philosophy)
-- `docs/01-architecture/domain-layer.md`, `request-context.md`, `authorization.md`, `system-architecture.md`, `ai-architecture.md`, `backend.md`
-- `docs/architecture/layers.md`, `system.md`, `coding-standards.md`
-- `docs/02-database/schema.md`, `erd.md`, `naming-conventions.md`, `migrations.md`
-- `docs/03-product/organizations.md`, `programs.md`, `projects.md`, `tasks.md`, `documents.md`, `vendors.md`, `reporting.md`, `ai.md`
-- `docs/modules/projects-implementation-plan.md`, `programs-implementation-plan.md`
-- `docs/ADR/0003-modular-monolith.md`, `docs/README.md`, `AGENTS.md`
+- `docs/01-architecture/overview.md`
+- `docs/01-architecture/context-engine.md`
+- `docs/01-architecture/organizational-memory.md`
+- `docs/01-architecture/reasoning-layer.md`
+- `docs/01-architecture/recommendation-engine.md`
+- `docs/01-architecture/event-system.md`
+- `docs/01-architecture/provider-platform.md`
+- `docs/01-architecture/layers.md`, `request-context.md`, `domain-layer.md`
+- `docs/03-product/ai-philosophy.md`
 
-### Prisma & migrations
+### Code (unchanged from prior revision)
 
-- `packages/database/prisma/schema.prisma`
-- `packages/database/prisma/migrations/20260725015903_init/migration.sql`
-
-### Domain
-
-- `packages/domain/src/index.ts`
-- `packages/domain/src/organization/*`
-- `packages/domain/src/programs/*`
-- `packages/domain/src/projects/*`
-
-### Application
-
-- `packages/application/src/index.ts`
-- `packages/application/src/modules/organization/*`
-- `packages/application/src/modules/programs/*`
-- `packages/application/src/modules/projects/*`
-- `packages/application/src/modules/{ai,dashboard,documents,finance,reporting,vendors}/index.ts`
-
-### Database / persistence
-
-- `packages/database/src/index.ts`, `transaction.ts`, `prisma-errors.ts`, `json.ts`
-- `packages/database/src/organization/*`, `programs/*`, `projects/*`, `audit/*`, `events/*`
-
-### Cross-cutting
-
-- `packages/core/src/context/*`, `ids/*`, `errors/*`
-- `packages/auth/src/organization-context.ts`
-- `packages/permissions/src/*`
-- `packages/audit/src/*`
-- `packages/events/src/*`
-- `packages/ai/README.md`
-
-### Delivery
-
-- `apps/web/lib/request-context.ts`, `program-service.ts`, `project-service.ts`
-- `apps/web/app/actions/{organization,programs,projects}/*`
-- `apps/web/app/{programs,projects,dashboard}/*` (filesystem listing)
-
-### Tests (sampled)
-
-- Repository tests: `packages/database/src/programs/prisma-program-repository.test.ts`, `projects/`, `audit/`, `events/`
-- Application tests: `packages/application/src/modules/{organization,programs,projects}/*.test.ts`
-- Web tests: `apps/web/app/actions/programs/create-program-form.test.ts`, `projects/create-project-form.test.ts`
-
-### Branch comparison
-
-- `git diff docs/domain-model-assessment feature/tasks` (stat)
-- `git show feature/tasks:packages/domain/src/milestones/models.ts`
-- `git show feature/tasks:packages/domain/src/tasks/models.ts`
+- `packages/{core,domain,application,database,permissions,events,audit,ai}/**`
+- `apps/web/lib/*.ts`, `apps/web/app/actions/**`, execution UI routes
+- `packages/database/prisma/schema.prisma` + three migrations
+- `packages/events/src/{repository,types,service,idempotency}.ts`
+- `packages/database/src/events/prisma-event-repository.ts`
