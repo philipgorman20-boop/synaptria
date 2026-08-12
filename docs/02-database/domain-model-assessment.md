@@ -1,8 +1,8 @@
 # Domain Model Assessment
 
-**Status:** Assessment (read-only review)  
-**Branch inspected:** `docs/domain-model-assessment` @ `ec69e8b` (working tree includes restored AI architecture docs)  
-**Date:** 2026-08-12  
+**Status:** Assessment (read-only review)
+**Branch inspected:** `docs/domain-model-assessment` @ `ec69e8b` (working tree includes restored AI architecture docs)
+**Date:** 2026-08-12
 **Scope:** Architecture-to-domain-model alignment at current working tree. No code, schema, migration, test, or other documentation changes were made.
 
 ---
@@ -57,13 +57,13 @@ Cross-cutting packages in active use: `@synaptria/core`, `@synaptria/auth`, `@sy
 
 **Write-path pattern (confirmed)** for Organization, Program, Project, Milestone, Task:
 
-1. `requirePermission` with role from trusted context  
-2. Domain normalization/validation (Tasks use `packages/domain/src/tasks/validation.ts`)  
-3. Parent-entity existence checks inside transaction  
-4. Repository create via module unit of work  
-5. `AuditService.record`  
-6. `DomainEventService.publish`  
-7. Branded IDs at persistence boundary via `identifier()`  
+1. `requirePermission` with role from trusted context
+2. Domain normalization/validation (Tasks use `packages/domain/src/tasks/validation.ts`)
+3. Parent-entity existence checks inside transaction
+4. Repository create via module unit of work
+5. `AuditService.record`
+6. `DomainEventService.publish`
+7. Branded IDs at persistence boundary via `identifier()`
 
 Evidence: `packages/application/src/modules/{programs,projects,milestones,tasks}/create-*.ts`.
 
@@ -200,7 +200,7 @@ Evidence: `packages/application/src/modules/{programs,projects,milestones,tasks}
 
 ## 8. Prisma Model Inventory
 
-Schema: `packages/database/prisma/schema.prisma`  
+Schema: `packages/database/prisma/schema.prisma`
 Migrations: three through `20260726200000_add_task_model`
 
 Execution entities **aligned** at HEAD — Milestone and Task match domain enums and FKs. No historical mismatch remains.
@@ -437,10 +437,10 @@ Per `docs/01-architecture/overview.md` Initial Delivery Sequence — **determini
 
 **Removed (answered by restored architecture docs):**
 
-- ~~Organizational Memory curation workflow unknown~~ — defined in `organizational-memory.md` § Memory Lifecycle, Validation and Curation  
-- ~~Organizational Memory governance/retrieval undefined~~ — defined in permissions, retention, ranking sections  
-- ~~Event System vs `@synaptria/events` relationship unclear~~ — `event-system.md` § Current-State Implications acknowledges existing persistence and lists gaps  
-- ~~Reasoning/Recommendation/Provider/Event architecture absent~~ — substantive docs now present  
+- ~~Organizational Memory curation workflow unknown~~ — defined in `organizational-memory.md` § Memory Lifecycle, Validation and Curation
+- ~~Organizational Memory governance/retrieval undefined~~ — defined in permissions, retention, ranking sections
+- ~~Event System vs `@synaptria/events` relationship unclear~~ — `event-system.md` § Current-State Implications acknowledges existing persistence and lists gaps
+- ~~Reasoning/Recommendation/Provider/Event architecture absent~~ — substantive docs now present
 
 ---
 
