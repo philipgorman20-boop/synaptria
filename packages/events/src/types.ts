@@ -88,4 +88,5 @@ export interface OrganizationRecentEventsQuery {
   readonly limit: number;
   readonly eventTypes?: readonly string[];
   readonly aggregateTypes?: readonly string[];
+  readonly occurredAtOnOrAfter?: Date;
 }

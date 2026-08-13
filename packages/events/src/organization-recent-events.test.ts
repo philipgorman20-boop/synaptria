@@ -162,6 +162,35 @@ test('filterRecentOrganizationEvents supports optional aggregate-type filtering'
   assert.equal(result[0]?.id, 'event-task');
 });
 
+test('filterRecentOrganizationEvents supports occurredAtOnOrAfter filtering', () => {
+  const cutoff = new Date('2026-07-25T12:00:00.000Z');
+  const events = [
+    eventFixture({
+      id: identifier('event-before', 'DomainEventId'),
+      occurredAt: new Date('2026-07-24T12:00:00.000Z'),
+    }),
+    eventFixture({
+      id: identifier('event-at-cutoff', 'DomainEventId'),
+      occurredAt: cutoff,
+    }),
+    eventFixture({
+      id: identifier('event-after', 'DomainEventId'),
+      occurredAt: new Date('2026-07-26T12:00:00.000Z'),
+    }),
+  ];
+
+  const result = filterRecentOrganizationEvents(events, {
+    organizationId: ORG_A,
+    limit: 10,
+    occurredAtOnOrAfter: cutoff,
+  });
+
+  assert.deepEqual(
+    result.map((event) => event.id),
+    ['event-after', 'event-at-cutoff'],
+  );
+});
+
 test('filterRecentOrganizationEvents is deterministic across repeated reads', () => {
   const events = [
     eventFixture({

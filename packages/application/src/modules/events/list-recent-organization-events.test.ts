@@ -136,3 +136,26 @@ test('ListRecentOrganizationEventsUseCase forwards optional filters to the repos
   assert.equal(events.length, 1);
   assert.equal(events[0]?.aggregateType, 'Milestone');
 });
+
+test('ListRecentOrganizationEventsUseCase forwards occurredAtOnOrAfter to the repository', async () => {
+  const cutoff = new Date('2026-07-25T12:00:00.000Z');
+  const repository = new InMemoryEventRepository([
+    eventFixture({
+      id: identifier('event-before', 'DomainEventId'),
+      occurredAt: new Date('2026-07-24T12:00:00.000Z'),
+    }),
+    eventFixture({
+      id: identifier('event-after', 'DomainEventId'),
+      occurredAt: new Date('2026-07-26T12:00:00.000Z'),
+    }),
+  ]);
+  const useCase = new ListRecentOrganizationEventsUseCase(repository);
+
+  const { events } = await useCase.execute(
+    { organizationId: ORG_A, role: 'MEMBER' },
+    { limit: 10, occurredAtOnOrAfter: cutoff },
+  );
+
+  assert.equal(events.length, 1);
+  assert.equal(events[0]?.id, 'event-after');
+});

@@ -107,6 +107,9 @@ export class PrismaEventRepository implements EventRepository {
         ...(query.aggregateTypes === undefined || query.aggregateTypes.length === 0
           ? {}
           : { aggregateType: { in: [...query.aggregateTypes] } }),
+        ...(query.occurredAtOnOrAfter === undefined
+          ? {}
+          : { createdAt: { gte: query.occurredAtOnOrAfter } }),
       },
       orderBy: [{ createdAt: 'desc' }, { id: 'asc' }],
       take: query.limit,

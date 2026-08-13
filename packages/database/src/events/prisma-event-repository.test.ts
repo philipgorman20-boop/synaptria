@@ -174,3 +174,37 @@ test('PrismaEventRepository lists recent organization events with deterministic 
   assert.deepEqual(capturedQuery?.orderBy, [{ createdAt: 'desc' }, { id: 'asc' }]);
   assert.equal(capturedQuery?.take, 2);
 });
+
+test('PrismaEventRepository applies occurredAtOnOrAfter as createdAt gte filter', async () => {
+  const orgA = 'org-a';
+  const cutoff = new Date('2026-07-25T12:00:00.000Z');
+
+  let capturedQuery: Record<string, unknown> | undefined;
+  const client = {
+    domainEvent: {
+      create: async () => {
+        throw new Error('not used');
+      },
+      findUnique: async () => null,
+      findMany: async (args: Record<string, unknown>) => {
+        capturedQuery = args;
+        return [];
+      },
+      update: async () => {
+        throw new Error('not used');
+      },
+    },
+  };
+
+  const repository = new PrismaEventRepository(client as never);
+  await repository.listRecentForOrganization({
+    organizationId: identifier(orgA, 'OrganizationId'),
+    limit: 10,
+    occurredAtOnOrAfter: cutoff,
+  });
+
+  assert.deepEqual(
+    (capturedQuery?.where as { createdAt?: { gte: Date } })?.createdAt,
+    { gte: cutoff },
+  );
+});

@@ -14,6 +14,7 @@
     "./context": "./src/modules/context/index.ts",
     "./events": "./src/modules/events/index.ts",
     "./mission-control": "./src/modules/mission-control/index.ts",
+    "./daily-briefing": "./src/modules/daily-briefing/index.ts",
     "./vendors": "./src/modules/vendors/index.ts",
     "./documents": "./src/modules/documents/index.ts",
     "./reporting": "./src/modules/reporting/index.ts",
