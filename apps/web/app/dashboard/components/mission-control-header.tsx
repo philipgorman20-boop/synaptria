@@ -1,11 +1,13 @@
 import { routes } from '@synaptria/config';
 import Link from 'next/link';
 
+import { DAILY_BRIEFING_ROUTE } from '../../daily-briefing/daily-briefing-format';
 import { signOutCurrentUser } from '../../actions/auth';
 import { CreateOrganizationDialog } from './create-organization-dialog';
 import { OrganizationSwitcher } from './organization-switcher';
 import type { OrganizationSwitcherItem } from './organization-switcher';
 import {
+  MISSION_CONTROL_DAILY_BRIEFING_LABEL,
   MISSION_CONTROL_PAGE_TITLE,
   MISSION_CONTROL_SUBTITLE,
 } from './mission-control-ui-constants';
@@ -25,6 +27,11 @@ export function MissionControlHeader({
         <p className="eyebrow">OPERATIONS</p>
         <h1>{MISSION_CONTROL_PAGE_TITLE}</h1>
         <p className="mission-control-subtitle">{MISSION_CONTROL_SUBTITLE}</p>
+        <nav className="mission-control-nav" aria-label="Related operational views">
+          <Link className="mission-control-inline-link" href={DAILY_BRIEFING_ROUTE}>
+            {MISSION_CONTROL_DAILY_BRIEFING_LABEL}
+          </Link>
+        </nav>
       </div>
 
       <div className="dashboard-controls">

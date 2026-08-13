@@ -13,10 +13,12 @@ import type {
 } from '@synaptria/application/mission-control';
 import { routes } from '@synaptria/config';
 
+import { DAILY_BRIEFING_ROUTE } from '../daily-briefing/daily-briefing-format';
 import { getMissionControlService } from '../../lib/mission-control-service';
 import { toMissionControlContext } from '../../lib/mission-control-context';
 import {
   ATTENTION_LIST_HEADING,
+  MISSION_CONTROL_DAILY_BRIEFING_LABEL,
   MISSION_CONTROL_PAGE_TITLE,
   MISSION_CONTROL_SUBTITLE,
 } from './components/mission-control-ui-constants';
@@ -322,6 +324,11 @@ test('mission control UI constants expose page structure labels', () => {
     'What needs attention across your organization.',
   );
   assert.equal(ATTENTION_LIST_HEADING, 'Needs Attention');
+});
+
+test('Mission Control secondary navigation links to the Daily Briefing route', () => {
+  assert.equal(MISSION_CONTROL_DAILY_BRIEFING_LABEL, 'Daily Briefing');
+  assert.equal(DAILY_BRIEFING_ROUTE, '/daily-briefing');
 });
 
 test('attention navigation supports program entities when present', () => {
