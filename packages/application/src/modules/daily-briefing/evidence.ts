@@ -6,6 +6,7 @@ import type {
 
 import { toEntityReference } from '../context/mappers/entity-reference';
 import type { MissionControlAttentionItem } from '../mission-control/types';
+import { dailyBriefingEvidenceKey } from './evidence-keys';
 import type {
   DailyBriefingEvidenceItem,
   DailyBriefingProjectHighlight,
@@ -43,8 +44,8 @@ export function buildDailyBriefingEvidence(input: {
   }
 
   return [...evidence.values()].sort((left, right) => {
-    const leftKey = evidenceSortKey(left);
-    const rightKey = evidenceSortKey(right);
+    const leftKey = dailyBriefingEvidenceKey(left);
+    const rightKey = dailyBriefingEvidenceKey(right);
     return leftKey.localeCompare(rightKey, 'en', { sensitivity: 'base' });
   });
 }
@@ -81,14 +82,4 @@ function addEventEvidence(evidence: Map<string, DailyBriefingEvidenceItem>, even
     reference,
     source: 'recentEvents',
   });
-}
-
-function evidenceSortKey(item: DailyBriefingEvidenceItem): string {
-  if (item.evidenceType === 'operationalEntity') {
-    const reference = item.reference as EntityReference;
-    return `entity:${reference.entityType}:${reference.entityId}`;
-  }
-
-  const reference = item.reference as EventEvidenceReference;
-  return `event:${reference.eventId}`;
 }
