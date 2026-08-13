@@ -225,6 +225,7 @@ type ContextSectionId =
 **Rules:**
 
 - `ContextRequest` is serializable and provider-independent.
+- Duplicate entries in `requestedSections` are invalid (Phase 1 validation).
 - Authorization identity (`userId`, `role`) is **not** embedded — supplied separately via trusted `ApplicationContext` at assembly time (*application contract* boundary).
 - No Prisma persistence.
 - Capability identifiers (`capabilityId`, `capabilityVersion`) are **not** on `ContextRequest` in Phase 1. They are introduced in Phase 2 via capability definitions that wrap or accompany the request at assembly time.
@@ -252,6 +253,7 @@ interface ContextScope {
 **Rules:**
 
 - `ContextScope` is capable of representing descendant entity inclusion via `includeDescendants` (e.g. `Program`, `Milestone`, `Task`).
+- Duplicate entries in `includeDescendants` are invalid (Phase 1 validation).
 - **Individual capability definitions** (Phase 2) determine which descendants are actually loaded for a given assembly — not the domain model alone.
 - A capability such as `project.intelligence.v0` may omit `Task` from `includeDescendants` for performance or relevance; that is a **capability decision**, not a domain-model constraint.
 - Scope is derived from capability definition + `ContextRequest` — not client-supplied.
@@ -299,12 +301,13 @@ interface ContextAuthorization {
 }
 
 interface ContextPackageMetadata {
-  readonly assemblerVersion: string;
-  readonly capabilityId?: string;
-  readonly capabilityVersion?: number;
   readonly deterministic: true;
 }
 ```
+
+**Phase 1 metadata:** `deterministic: true` marks packages produced by deterministic assembly paths. Schema versioning lives on `ContextPackage.packageVersion`.
+
+**Phase 2 metadata (deferred):** When the assembler and capability definitions exist, additional metadata such as `assemblerVersion`, `capabilityId`, and `capabilityVersion` may be introduced at the application boundary. They are **not** part of the Phase 1 domain contract.
 
 **Rules:**
 
@@ -332,12 +335,7 @@ interface ContextContribution {
   readonly provenance: ProvenanceRecord;
 }
 
-type ContextContributorId =
-  | 'operational.primaryEntity'
-  | 'operational.relatedEntities'
-  | 'operational.events'
-  | 'organizationalMemory'
-  | 'audit.evidence'; // deferred — no Phase 2 provider initially
+type ContextContributorId = Identifier<'ContextContributorId'>;
 
 type ContextPayload = ContextJsonObject;
 
@@ -345,7 +343,19 @@ type ContextJsonObject = Readonly<{ [key: string]: ContextJsonValue }>;
 type ContextJsonValue = string | number | boolean | null | ContextJsonObject | readonly ContextJsonValue[];
 ```
 
-**Phase 2 payload conventions:**
+**Known contributor IDs (examples only — not an exhaustive registry):**
+
+| Example ID | Phase 2 role |
+| --- | --- |
+| `operational.primaryEntity` | Primary entity provider |
+| `operational.relatedEntities` | Related-entity provider |
+| `operational.events` | Aggregate event provider |
+| `organizationalMemory` | Organizational Memory provider |
+| `audit.evidence` | Audit evidence provider (deferred) |
+
+Phase 1 may export these as reference constants (e.g. `KNOWN_CONTEXT_CONTRIBUTOR_IDS`) for convenience. Application-layer providers may introduce additional contributor IDs without domain-model changes.
+
+**Phase 2 payload conventions (illustrative — not Phase 1 validation rules):**
 
 | Contributor | Payload contents |
 | --- | --- |
@@ -358,6 +368,9 @@ type ContextJsonValue = string | number | boolean | null | ContextJsonObject | r
 
 - Contributions are **facts from authorized sources**, not inferences.
 - No LLM-generated content.
+- Multiple contributions from the same `contributorId` to the same `section` are **valid** (e.g. one contribution per related entity or event).
+- Phase 1 validation rejects duplicate entries in `ContextRequest.requestedSections` and `ContextScope.includeDescendants` only.
+- Phase 1 does **not** require a particular `contributorId` for `primaryEntity` or other sections — that belongs to Phase 2 assembler policy.
 
 **Location:** `@synaptria/domain/context`
 
@@ -416,14 +429,15 @@ interface ProvenanceRecord {
   readonly retrievalMethod: 'repository.read' | 'repository.list' | 'eventRepository.findByAggregate' | 'memoryProvider.retrieve';
   readonly retrievedAt: Date;
   readonly permissionScope: readonly string[];
-  readonly dataFreshness: 'live';
 }
 ```
 
 **Rules:**
 
 - One provenance record minimum per `ContextContribution`.
-- `retrievedAt` comes from assembler clock (`Clock` from `@synaptria/core`).
+- Phase 1 uses `retrievedAt` as the available **freshness signal** — when the fact was retrieved relative to assembly time.
+- Broader freshness classification (e.g. cached vs live) is **not** modeled in Phase 1. It may be introduced later if a capability requires it; do not invent cache or provider policy in the domain contract.
+- In Phase 2, `retrievedAt` is set from the assembler clock (`Clock` from `@synaptria/core`).
 - No provider names, model names, or embedding indexes in the assembler.
 
 **Location:** `@synaptria/domain/context`
@@ -543,7 +557,7 @@ Organizational Memory is **curated institutional knowledge**, not raw event hist
 
 ```typescript
 interface OrganizationalMemoryProvider extends ContextProvider {
-  readonly contributorId: 'organizationalMemory';
+  readonly contributorId: ContextContributorId; // e.g. 'organizationalMemory'
   retrieve(input: OrganizationalMemoryQuery): Promise<readonly MemoryContribution[]>;
 }
 
@@ -650,9 +664,8 @@ interface ContextEventSnapshot {
 
 | Artifact | Versioning strategy | Persistence |
 | --- | --- | --- |
-| Capability version (Phase 2 metadata) | Integer per capability | Ephemeral |
 | `ContextPackage.packageVersion` | Schema version of package shape | Ephemeral |
-| `ContextPackageMetadata.assemblerVersion` | Semver string of assembler | Ephemeral |
+| Capability / assembler metadata (Phase 2) | `capabilityId`, `capabilityVersion`, `assemblerVersion` on extended metadata | Ephemeral |
 | Domain event `eventVersion` | Already on envelope | Durable (existing) |
 | Operational entities | Domain model evolution via migrations | Durable (existing) |
 
@@ -710,8 +723,9 @@ interface ContextEventSnapshot {
 | Export | Classification |
 | --- | --- |
 | `EntityReference`, `ContextRequest`, `ContextScope`, `ContextPackage`, `ContextContribution`, `ProvenanceRecord`, `EvidenceReference`, `ConfidenceAssessment`, `ContextCompleteness` | *new domain value objects* |
-| Section and contributor ID types (`ContextSectionId`, `ContextContributorId`) | *new domain value objects* |
-| Pure validation helpers (reference well-formedness, JSON shape guards) | *domain logic* |
+| `ContextSectionId` (closed section vocabulary) | *new domain value object* |
+| `ContextContributorId` (extensible branded identifier) | *new domain value object* |
+| Pure validation helpers (reference well-formedness, JSON shape guards, duplicate section/descendant rejection) | *domain logic* |
 
 **Dependencies:** `@synaptria/core` only. Use `readonly string[]` for permission fields in `ContextAuthorization` and `ProvenanceRecord`; map from `@synaptria/permissions` at the application boundary.
 
@@ -767,7 +781,7 @@ Existing Prisma adapters only. **No context tables.**
 
 | Layer | Approach |
 | --- | --- |
-| **Domain (`context`)** — Phase 1 | Unit tests for validation and value-object well-formedness |
+| **Domain (`context`)** — Phase 1 | Unit tests for validation and value-object well-formedness; duplicate `requestedSections` / `includeDescendants` rejection; multiple contributions per contributor+section allowed |
 | **Application (`context`)** — Phase 2 | Use case tests with in-memory fake repositories and fake `EventRepository` — mirror pattern in `packages/application/src/modules/projects/create-project.test.ts` |
 | **Providers** | Test each provider independently: permission denial, empty events, missing program |
 | **Assembler** | Golden-file JSON tests: deterministic `ContextPackage` output for fixture entity graphs |
@@ -825,6 +839,8 @@ Existing Prisma adapters only. **No context tables.**
 | 4 | Serialize domain entities in contributions | (a) explicit mappers (b) structured field picks | **(a)** explicit mappers in application providers — no Prisma, no blind spread |
 | 5 | Context package durable retention for evaluation | defer until evaluation pipeline exists | **Defer** — ephemeral by default |
 | 6 | Event lookback default | configurable per capability vs constant | **Constant in capability definition** (Phase 2) for determinism |
+| 7 | Provenance freshness classification | (a) `retrievedAt` only (b) explicit freshness enum | **(a) Phase 1** — `retrievedAt` only; broader classification deferred until a capability requires it |
+| 8 | Per-entity branded ID validation on `EntityReference.entityId` | (a) validate by `entityType` (b) generic non-empty string | **(b) Phase 1** — generic string; entity-type-specific branded validation deferred to Phase 2 providers/mappers if needed |
 
 ---
 
@@ -835,6 +851,7 @@ Existing Prisma adapters only. **No context tables.**
 | Organization, Program, Project, Milestone, Task | existing domain entity |
 | Priority, branded IDs | existing domain value object / core primitive |
 | EntityReference, ContextRequest, ContextScope, ContextPackage, ContextContribution, ProvenanceRecord, EvidenceReference, ConfidenceAssessment, ContextCompleteness | new domain value object |
+| ContextSectionId, ContextContributorId | new domain value object |
 | ContextProvider, OrganizationalMemoryProvider | application port |
 | Capability definitions / registry | application contract |
 | AssembleContextUseCase, AssembleContextInput/Output | application contract |
