@@ -37,6 +37,19 @@ export function createEventProvenance(input: {
   };
 }
 
+export function createOrganizationRecentEventsProvenance(input: {
+  readonly clock: Clock;
+  readonly permissionScope: readonly string[];
+}): ProvenanceRecord {
+  return {
+    sourceSystem: 'synaptria.events',
+    sourceType: 'Organization',
+    retrievalMethod: 'eventRepository.listRecentForOrganization',
+    retrievedAt: input.clock.now(),
+    permissionScope: [...input.permissionScope],
+  };
+}
+
 export function createOrganizationalMemoryProvenance(input: {
   readonly clock: Clock;
   readonly permissionScope: readonly string[];

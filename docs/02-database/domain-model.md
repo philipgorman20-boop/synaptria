@@ -113,7 +113,7 @@ Organization → Program → Project → Milestone → Task
 | --- | --- | --- |
 | **Identity & tenant** | Supplies actor identity and organization scope to `ContextRequest` | Implemented |
 | **Execution / portfolio** | Primary and related entity sources for context | Implemented |
-| **Platform events** | Aggregate-scoped recent events for context | Partially implemented (`findByAggregate` only) |
+| **Platform events** | Aggregate- and organization-scoped recent events for context | Partially implemented (`findByAggregate`, `listRecentForOrganization`; no time-window reads yet) |
 | **Context assembly** | Value objects (Phase 1); assembler (Phase 2) | **Phase 1–2 target** |
 | **Organizational Memory** | No-op provider (Phase 2); persistence deferred | Deferred persistence |
 | **Reasoning** | Consumer of `ContextPackage` | Deferred |
@@ -426,7 +426,7 @@ interface ProvenanceRecord {
   readonly sourceSystem: 'synaptria.operational' | 'synaptria.events' | 'synaptria.organizationalMemory';
   readonly sourceType: string;
   readonly sourceId?: string;
-  readonly retrievalMethod: 'repository.read' | 'repository.list' | 'eventRepository.findByAggregate' | 'memoryProvider.retrieve';
+  readonly retrievalMethod: 'repository.read' | 'repository.list' | 'eventRepository.findByAggregate' | 'eventRepository.listRecentForOrganization' | 'memoryProvider.retrieve';
   readonly retrievedAt: Date;
   readonly permissionScope: readonly string[];
 }
@@ -607,7 +607,8 @@ type MemoryType =
 | Requirement | Phase | Classification | Evidence |
 | --- | --- | --- | --- |
 | Aggregate-scoped event history | **Phase 2** | `EventRepository.findByAggregate` — *infrastructure adapter* | `packages/events/src/repository.ts` |
-| Organization/time-window queries | **Deferred** | Future port extension | `event-system.md` § Event Query Requirements; not in code |
+| Organization-scoped recent events | **Phase 2** | `EventRepository.listRecentForOrganization` — organization + limit + optional event/aggregate filters; no time-window reads | `packages/events/src/repository.ts` |
+| Organization/time-window queries | **Deferred** | Time-window filtering (e.g. since timestamp) not implemented | `event-system.md` § Event Query Requirements |
 | Event consumer / dispatcher | **Deferred** | — | Not implemented |
 | Producer idempotency | **Deferred** | — | `packages/events/src/idempotency.ts` unused |
 | Consumer idempotency | **Deferred** | — | — |

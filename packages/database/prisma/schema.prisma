@@ -2104,6 +2104,7 @@ model DomainEvent {
 
   @@index([status, availableAt])
   @@index([organizationId, aggregateType, aggregateId])
+  @@index([organizationId, createdAt(sort: Desc), id(sort: Asc)])
   @@index([correlationId])
 }
 

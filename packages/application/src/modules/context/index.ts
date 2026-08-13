@@ -12,6 +12,7 @@ export * from './ports/context-provider';
 export * from './ports/organizational-memory-provider';
 export * from './providers/aggregate-event-provider';
 export * from './providers/no-op-organizational-memory-provider';
+export * from './providers/organization-recent-events-provider';
 export * from './providers/primary-entity-provider';
 export * from './providers/related-entities-provider';
 export * from './scope/resolve-context-scope';
