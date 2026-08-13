@@ -5,24 +5,32 @@ import {
 } from '@synaptria/auth';
 import { AuthorizationDeniedError } from '@synaptria/core/errors';
 import { redirect } from 'next/navigation';
+import { Suspense } from 'react';
 
 import { toDailyBriefingContext } from '../../lib/daily-briefing-context';
-import { loadDailyBriefingPageData } from '../../lib/daily-briefing-loader';
+import {
+  loadDailyBriefingSnapshot,
+  startDailyBriefingNarrativeGeneration,
+} from '../../lib/daily-briefing-loader';
 import { getOrganizationService } from '../../lib/organization-service';
 import { getRequestContext } from '../../lib/request-context';
 
-import { DailyBriefingAiStatus } from './components/daily-briefing-ai-status';
 import { DailyBriefingAttentionList } from './components/briefing-attention-list';
 import { DailyBriefingCompletenessPanel } from './components/briefing-completeness';
 import { DailyBriefingHeader } from './components/daily-briefing-header';
 import { DailyBriefingProjectHighlights } from './components/briefing-project-highlights';
 import { DailyBriefingRecentChanges } from './components/briefing-recent-changes';
 import { DailyBriefingUpcomingWork } from './components/briefing-upcoming-work';
+import {
+  DailyBriefingExecutiveSummaryContent,
+  DailyBriefingExecutiveSummaryLoading,
+  DailyBriefingHeadlineContent,
+  DailyBriefingNarrativeLoadingStatus,
+  DailyBriefingNarrativeStatusContent,
+} from './components/daily-briefing-narrative-stream';
 import { DailyBriefingExecutiveSignals } from './components/executive-signals';
-import { DailyBriefingExecutiveSummary } from './components/executive-summary';
 import {
   resolveBriefingHeadline,
-  resolveExecutiveSummary,
   shouldShowDailyBriefingEmptyState,
 } from './daily-briefing-format';
 
@@ -43,12 +51,14 @@ export default async function DailyBriefingPage() {
     throw error;
   }
 
-  const [organizationList, pageData] = await Promise.all([
+  const briefingContext = toDailyBriefingContext(context);
+
+  const [organizationList, snapshot] = await Promise.all([
     getOrganizationService().listOrganizations({
       userId: context.userId,
       activeOrganizationId: context.organizationId,
     }),
-    loadDailyBriefingPageData(toDailyBriefingContext(context)).catch((error: unknown) => {
+    loadDailyBriefingSnapshot(briefingContext).catch((error: unknown) => {
       if (error instanceof AuthorizationDeniedError) {
         redirect('/no-organization');
       }
@@ -57,60 +67,84 @@ export default async function DailyBriefingPage() {
     }),
   ]);
 
-  const { snapshot, narrative, aiSummaryUnavailable } = pageData;
-  const headline = resolveBriefingHeadline(narrative, snapshot);
-  const executiveSummary = resolveExecutiveSummary(narrative);
+  const narrativePromise = startDailyBriefingNarrativeGeneration(snapshot);
+  const fallbackHeadline = resolveBriefingHeadline(null, snapshot);
   const showEmptyState = shouldShowDailyBriefingEmptyState(snapshot);
 
   return (
     <main className="dashboard mission-control-page daily-briefing-page">
-      <DailyBriefingHeader
-        activeOrganizationId={context.organizationId}
-        headline={headline}
-        organizations={organizationList.organizations.map((item) => ({
-          id: item.organization.id,
-          name: item.organization.name,
-          role: item.membership.role,
-        }))}
-        snapshot={snapshot}
-      />
+      <div className="daily-briefing-content">
+        <DailyBriefingHeader
+          activeOrganizationId={context.organizationId}
+          headline={
+            <Suspense fallback={fallbackHeadline}>
+              <DailyBriefingHeadlineContent
+                narrativePromise={narrativePromise}
+                snapshot={snapshot}
+              />
+            </Suspense>
+          }
+          organizations={organizationList.organizations.map((item) => ({
+            id: item.organization.id,
+            name: item.organization.name,
+            role: item.membership.role,
+          }))}
+          snapshot={snapshot}
+        />
 
-      <DailyBriefingAiStatus aiSummaryUnavailable={aiSummaryUnavailable} />
+        <Suspense fallback={<DailyBriefingNarrativeLoadingStatus />}>
+          <DailyBriefingNarrativeStatusContent narrativePromise={narrativePromise} />
+        </Suspense>
 
-      <DailyBriefingExecutiveSummary summary={executiveSummary} />
+        <Suspense fallback={<DailyBriefingExecutiveSummaryLoading />}>
+          <DailyBriefingExecutiveSummaryContent narrativePromise={narrativePromise} />
+        </Suspense>
 
-      <DailyBriefingExecutiveSignals snapshot={snapshot} />
+        <DailyBriefingExecutiveSignals snapshot={snapshot} />
 
-      <DailyBriefingCompletenessPanel narrative={narrative} snapshot={snapshot} />
+        <DailyBriefingCompletenessPanel
+          narrativePromise={narrativePromise}
+          snapshot={snapshot}
+        />
 
-      {showEmptyState ? (
-        <section
-          className="mission-control-empty-organization daily-briefing-empty"
-          aria-labelledby="daily-briefing-empty-heading"
-        >
-          <p className="eyebrow">QUIET PERIOD</p>
-          <h2 id="daily-briefing-empty-heading">No operational activity in this briefing</h2>
-          <p>
-            The deterministic snapshot contains no attention items, project highlights,
-            upcoming work, or recent changes for the current briefing window.
-          </p>
-        </section>
-      ) : (
-        <div className="mission-control-layout daily-briefing-layout">
-          <div className="mission-control-primary-column">
-            <DailyBriefingAttentionList items={snapshot.attentionItems} narrative={narrative} />
-            <DailyBriefingUpcomingWork items={snapshot.upcomingWork} narrative={narrative} />
+        {showEmptyState ? (
+          <section
+            className="mission-control-empty-organization daily-briefing-empty"
+            aria-labelledby="daily-briefing-empty-heading"
+          >
+            <p className="eyebrow">QUIET PERIOD</p>
+            <h2 id="daily-briefing-empty-heading">No operational activity in this briefing</h2>
+            <p>
+              The deterministic snapshot contains no attention items, project highlights,
+              upcoming work, or recent changes for the current briefing window.
+            </p>
+          </section>
+        ) : (
+          <div className="mission-control-layout daily-briefing-layout">
+            <div className="mission-control-primary-column">
+              <DailyBriefingAttentionList
+                items={snapshot.attentionItems}
+                narrativePromise={narrativePromise}
+              />
+              <DailyBriefingUpcomingWork
+                items={snapshot.upcomingWork}
+                narrativePromise={narrativePromise}
+              />
+            </div>
+
+            <div className="mission-control-secondary-column">
+              <DailyBriefingProjectHighlights
+                narrativePromise={narrativePromise}
+                projects={snapshot.projectHighlights}
+              />
+              <DailyBriefingRecentChanges
+                changes={snapshot.recentChanges}
+                narrativePromise={narrativePromise}
+              />
+            </div>
           </div>
-
-          <div className="mission-control-secondary-column">
-            <DailyBriefingProjectHighlights
-              narrative={narrative}
-              projects={snapshot.projectHighlights}
-            />
-            <DailyBriefingRecentChanges changes={snapshot.recentChanges} narrative={narrative} />
-          </div>
-        </div>
-      )}
+        )}
+      </div>
     </main>
   );
 }

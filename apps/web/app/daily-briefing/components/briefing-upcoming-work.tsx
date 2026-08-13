@@ -1,14 +1,12 @@
-import type {
-  DailyBriefingNarrative,
-  DailyBriefingUpcomingItem,
-} from '@synaptria/application';
+import type { DailyBriefingUpcomingItem } from '@synaptria/application';
 import Link from 'next/link';
+import { Suspense } from 'react';
 
+import type { DailyBriefingNarrativeResult } from '../../../lib/daily-briefing-loader';
 import { UPCOMING_WORK_HEADING } from './daily-briefing-ui-constants';
+import { DailyBriefingGroundedItemNarrative } from './daily-briefing-narrative-stream';
 import {
   DAILY_BRIEFING_EMPTY_UPCOMING_MESSAGE,
-  findNarrativeForEvidenceKey,
-  formatEvidenceSourceCount,
   formatOptionalMissionControlDate,
   getDailyBriefingUpcomingHref,
   upcomingWorkEvidenceKey,
@@ -16,12 +14,12 @@ import {
 
 export interface DailyBriefingUpcomingWorkProps {
   readonly items: readonly DailyBriefingUpcomingItem[];
-  readonly narrative: DailyBriefingNarrative | null;
+  readonly narrativePromise?: Promise<DailyBriefingNarrativeResult>;
 }
 
 export function DailyBriefingUpcomingWork({
   items,
-  narrative,
+  narrativePromise,
 }: DailyBriefingUpcomingWorkProps) {
   return (
     <section
@@ -39,25 +37,13 @@ export function DailyBriefingUpcomingWork({
         <p className="mission-control-empty-state">{DAILY_BRIEFING_EMPTY_UPCOMING_MESSAGE}</p>
       ) : (
         <ul className="mission-control-upcoming-list">
-          {items.map((item) => {
-            const matchedNarrative =
-              narrative === null
-                ? undefined
-                : findNarrativeForEvidenceKey(
-                    narrative.upcomingWorkItems,
-                    upcomingWorkEvidenceKey(item),
-                  );
-
-            return (
-              <DailyBriefingUpcomingRow
-                key={`${item.kind}:${item.entityId}`}
-                item={item}
-                {...(matchedNarrative === undefined
-                  ? {}
-                  : { narrative: matchedNarrative })}
-              />
-            );
-          })}
+          {items.map((item) => (
+            <DailyBriefingUpcomingRow
+              key={`${item.kind}:${item.entityId}`}
+              item={item}
+              {...(narrativePromise === undefined ? {} : { narrativePromise })}
+            />
+          ))}
         </ul>
       )}
     </section>
@@ -66,14 +52,12 @@ export function DailyBriefingUpcomingWork({
 
 function DailyBriefingUpcomingRow({
   item,
-  narrative,
+  narrativePromise,
 }: {
   readonly item: DailyBriefingUpcomingItem;
-  readonly narrative?: { readonly text: string; readonly evidenceKeys: readonly string[] };
+  readonly narrativePromise?: Promise<DailyBriefingNarrativeResult>;
 }) {
   const href = getDailyBriefingUpcomingHref(item);
-  const sourceCount =
-    narrative === undefined ? null : formatEvidenceSourceCount(narrative.evidenceKeys);
 
   const content = (
     <>
@@ -91,12 +75,15 @@ function DailyBriefingUpcomingRow({
         {item.milestoneName === undefined ? '' : ` · ${item.milestoneName}`}
       </p>
       <p className="mission-control-item-status">{item.status}</p>
-      {narrative !== undefined ? (
-        <p className="daily-briefing-narrative-secondary">{narrative.text}</p>
-      ) : null}
-      {sourceCount !== null ? (
-        <p className="daily-briefing-source-count">{sourceCount}</p>
-      ) : null}
+      {narrativePromise === undefined ? null : (
+        <Suspense fallback={null}>
+          <DailyBriefingGroundedItemNarrative
+            narrativePromise={narrativePromise}
+            evidenceKey={upcomingWorkEvidenceKey(item)}
+            items="upcomingWorkItems"
+          />
+        </Suspense>
+      )}
     </>
   );
 

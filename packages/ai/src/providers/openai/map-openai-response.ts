@@ -107,6 +107,9 @@ function normalizeUsage(response: OpenAIResponsesCreateResult) {
     ...(response.usage?.total_tokens === undefined
       ? {}
       : { totalTokens: response.usage.total_tokens }),
+    ...(response.usage?.output_tokens_details?.reasoning_tokens === undefined
+      ? {}
+      : { reasoningTokens: response.usage.output_tokens_details.reasoning_tokens }),
   };
 }
 

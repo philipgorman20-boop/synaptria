@@ -11,12 +11,14 @@ import type {
   DailyBriefingEvidenceItem,
   DailyBriefingProjectHighlight,
   DailyBriefingRecentChange,
+  DailyBriefingUpcomingItem,
 } from './types';
 
 export function buildDailyBriefingEvidence(input: {
   readonly organizationId: OrganizationId;
   readonly attentionItems: readonly MissionControlAttentionItem[];
   readonly projectHighlights: readonly DailyBriefingProjectHighlight[];
+  readonly upcomingWork: readonly DailyBriefingUpcomingItem[];
   readonly recentChanges: readonly DailyBriefingRecentChange[];
 }): readonly DailyBriefingEvidenceItem[] {
   const evidence = new Map<string, DailyBriefingEvidenceItem>();
@@ -35,6 +37,15 @@ export function buildDailyBriefingEvidence(input: {
       organizationId: input.organizationId,
       entityType: 'Project',
       entityId: project.projectId,
+      source: 'missionControl',
+    });
+  }
+
+  for (const item of input.upcomingWork) {
+    addEntityEvidence(evidence, {
+      organizationId: input.organizationId,
+      entityType: item.kind === 'milestone' ? 'Milestone' : 'Task',
+      entityId: item.entityId,
       source: 'missionControl',
     });
   }

@@ -1,7 +1,10 @@
-import type { DailyBriefingNarrative, DailyBriefingSnapshot } from '@synaptria/application';
+import type { DailyBriefingSnapshot } from '@synaptria/application';
+import { Suspense, type ReactNode } from 'react';
 
 import { RestrictedDataNotice } from '../../dashboard/components/restricted-data-notice';
 import { COMPLETENESS_HEADING } from './daily-briefing-ui-constants';
+import { DailyBriefingCompletenessNoteContent } from './daily-briefing-narrative-stream';
+import type { DailyBriefingNarrativeResult } from '../../../lib/daily-briefing-loader';
 import {
   formatCompletenessStatus,
   formatRestrictedSlicesForBriefing,
@@ -9,23 +12,33 @@ import {
 
 export interface DailyBriefingCompletenessPanelProps {
   readonly snapshot: DailyBriefingSnapshot;
-  readonly narrative: DailyBriefingNarrative | null;
+  readonly narrativePromise?: Promise<DailyBriefingNarrativeResult>;
+  readonly completenessNoteSlot?: ReactNode;
 }
 
 export function DailyBriefingCompletenessPanel({
   snapshot,
-  narrative,
+  narrativePromise,
+  completenessNoteSlot,
 }: DailyBriefingCompletenessPanelProps) {
   const { completeness, metadata } = snapshot;
   const showRestricted = metadata.restrictedSlices.length > 0;
   const showDegradationNotes = completeness.degradationNotes.length > 0;
-  const completenessNote = narrative?.completenessNote;
+  const streamingNoteSlot =
+    narrativePromise === undefined
+      ? completenessNoteSlot
+      : (
+          <Suspense fallback={null}>
+            <DailyBriefingCompletenessNoteContent narrativePromise={narrativePromise} />
+          </Suspense>
+        );
 
   if (
     completeness.status === 'complete' &&
     !showRestricted &&
     !showDegradationNotes &&
-    completenessNote === undefined
+    narrativePromise === undefined &&
+    completenessNoteSlot === undefined
   ) {
     return null;
   }
@@ -60,12 +73,7 @@ export function DailyBriefingCompletenessPanel({
         </ul>
       ) : null}
 
-      {completenessNote !== undefined ? (
-        <aside className="daily-briefing-completeness-note" aria-label="AI completeness note">
-          <p className="daily-briefing-note-label">AI note</p>
-          <p className="daily-briefing-narrative-secondary">{completenessNote}</p>
-        </aside>
-      ) : null}
+      {streamingNoteSlot ?? null}
     </section>
   );
 }

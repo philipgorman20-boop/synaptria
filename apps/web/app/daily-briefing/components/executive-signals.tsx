@@ -16,7 +16,7 @@ export function DailyBriefingExecutiveSignals({
 }: DailyBriefingExecutiveSignalsProps) {
   return (
     <section
-      className="mission-control-kpis daily-briefing-signals"
+      className="daily-briefing-signals"
       aria-labelledby="daily-briefing-signals-heading"
     >
       <h2 id="daily-briefing-signals-heading" className="daily-briefing-section-heading">

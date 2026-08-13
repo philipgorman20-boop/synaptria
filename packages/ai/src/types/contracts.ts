@@ -8,6 +8,13 @@ import type { JsonSchema } from '../schema/json-schema';
 
 export type AIProviderOutputMode = 'text' | 'structured';
 
+export type AIProviderReasoningEffort =
+  | 'none'
+  | 'minimal'
+  | 'low'
+  | 'medium'
+  | 'high';
+
 export interface AIProviderTextOutputRequest {
   readonly mode: 'text';
 }
@@ -25,6 +32,7 @@ export type AIProviderOutputRequest =
 export interface AIProviderGenerationOptions {
   readonly temperature?: number;
   readonly maxOutputTokens?: number;
+  readonly reasoningEffort?: AIProviderReasoningEffort;
 }
 
 export interface AIProviderDataHandling {
@@ -46,6 +54,7 @@ export interface AIProviderUsage {
   readonly inputTokens?: number;
   readonly outputTokens?: number;
   readonly totalTokens?: number;
+  readonly reasoningTokens?: number;
 }
 
 export interface AIProviderLatency {

@@ -112,6 +112,9 @@ export function buildOpenAIResponsesCreateParams(
     ...(request.generationOptions?.maxOutputTokens === undefined
       ? {}
       : { max_output_tokens: request.generationOptions.maxOutputTokens }),
+    ...(request.generationOptions?.reasoningEffort === undefined
+      ? {}
+      : { reasoning: { effort: request.generationOptions.reasoningEffort } }),
   };
 
   if (request.output.mode !== 'structured') {

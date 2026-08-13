@@ -2,6 +2,8 @@ import type { DailyBriefingSnapshot } from '../types';
 import type { DailyBriefingAIProviderPort } from './ai-provider-port';
 import {
   DAILY_BRIEFING_NARRATIVE_CAPABILITY_ID,
+  DAILY_BRIEFING_NARRATIVE_MAX_OUTPUT_TOKENS,
+  DAILY_BRIEFING_NARRATIVE_REASONING_EFFORT,
   DAILY_BRIEFING_NARRATIVE_SCHEMA_NAME,
 } from './capability';
 import { DAILY_BRIEFING_NARRATIVE_INSTRUCTIONS } from './instructions';
@@ -38,6 +40,10 @@ export class GenerateDailyBriefingNarrativeUseCase {
           schema: DAILY_BRIEFING_NARRATIVE_V0_JSON_SCHEMA,
           schemaName: DAILY_BRIEFING_NARRATIVE_SCHEMA_NAME,
         },
+        generationOptions: {
+          maxOutputTokens: DAILY_BRIEFING_NARRATIVE_MAX_OUTPUT_TOKENS,
+          reasoningEffort: DAILY_BRIEFING_NARRATIVE_REASONING_EFFORT,
+        },
         dataHandling: {
           storeResponse: false,
           classification: 'internal',
@@ -68,7 +74,7 @@ export class GenerateDailyBriefingNarrativeUseCase {
         projectHighlightItems: structured.projectHighlightItems,
         upcomingWorkItems: structured.upcomingWorkItems,
         recentChangeItems: structured.recentChangeItems,
-        ...(structured.completenessNote === undefined
+        ...(structured.completenessNote === null
           ? {}
           : { completenessNote: structured.completenessNote }),
         sourceSnapshotGeneratedAt: input.snapshot.generatedAt,

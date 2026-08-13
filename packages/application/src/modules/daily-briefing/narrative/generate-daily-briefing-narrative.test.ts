@@ -5,7 +5,11 @@ import { ProviderError } from '@synaptria/ai';
 import type { AIProviderRequest, AIProviderResponse } from '@synaptria/ai';
 
 import { ApplicationError } from '../../../shared/application-error';
-import { DAILY_BRIEFING_NARRATIVE_CAPABILITY_ID } from './capability';
+import {
+  DAILY_BRIEFING_NARRATIVE_CAPABILITY_ID,
+  DAILY_BRIEFING_NARRATIVE_MAX_OUTPUT_TOKENS,
+  DAILY_BRIEFING_NARRATIVE_REASONING_EFFORT,
+} from './capability';
 import { GenerateDailyBriefingNarrativeUseCase } from './generate-daily-briefing-narrative';
 import {
   mapDailyBriefingSnapshotToModelInput,
@@ -45,7 +49,7 @@ function structuredProviderResponse(
   };
 }
 
-test('mapDailyBriefingSnapshotToModelInput is deterministic and preserves authoritative facts', () => {
+test('mapDailyBriefingSnapshotToModelInput is deterministic and uses compact narrative projection', () => {
   const snapshot = dailyBriefingSnapshotFixture();
   const first = serializeDailyBriefingNarrativeModelInput(
     mapDailyBriefingSnapshotToModelInput(snapshot),
@@ -58,15 +62,20 @@ test('mapDailyBriefingSnapshotToModelInput is deterministic and preserves author
   const parsed = JSON.parse(first) as ReturnType<typeof mapDailyBriefingSnapshotToModelInput>;
   assert.equal(parsed.capabilityVersion, 'v0');
   assert.equal(parsed.attentionItems.length, 1);
+  assert.equal(parsed.attentionItems[0]?.evidenceKey, 'entity:Task:task-1');
   assert.deepEqual(parsed.evidenceCatalog.map((entry) => entry.key), [
+    'entity:Milestone:milestone-1',
     'entity:Project:project-1',
     'entity:Task:task-1',
     'event:event-1',
   ]);
-  assert.equal(parsed.executiveSignals.overdueTasks, 1);
+  assert.ok(parsed.evidenceCatalog.every((entry) => typeof entry.label === 'string'));
+  assert.deepEqual(parsed.narrativeTargets.attentionEvidenceKeys, ['entity:Task:task-1']);
+  assert.equal('executiveSignals' in parsed, false);
+  assert.equal('organizationId' in parsed, false);
 });
 
-test('narrative schema requires grounded headline, summary, and factual item arrays', () => {
+test('narrative schema requires grounded headline, summary, factual item arrays, and completenessNote', () => {
   assert.deepEqual(DAILY_BRIEFING_NARRATIVE_V0_JSON_SCHEMA.required, [
     'headline',
     'executiveSummary',
@@ -74,8 +83,13 @@ test('narrative schema requires grounded headline, summary, and factual item arr
     'projectHighlightItems',
     'upcomingWorkItems',
     'recentChangeItems',
+    'completenessNote',
   ]);
   assert.equal(DAILY_BRIEFING_NARRATIVE_V0_JSON_SCHEMA.properties?.headline?.type, 'object');
+  assert.deepEqual(
+    DAILY_BRIEFING_NARRATIVE_V0_JSON_SCHEMA.properties?.completenessNote?.type,
+    ['string', 'null'],
+  );
 });
 
 test('successful grounded rendering returns validated headline and summary blocks', async () => {
@@ -100,7 +114,29 @@ test('successful grounded rendering returns validated headline and summary block
   assert.equal(requests[0]?.capabilityId, DAILY_BRIEFING_NARRATIVE_CAPABILITY_ID);
   assert.equal(requests[0]?.output.mode, 'structured');
   assert.equal(requests[0]?.dataHandling.storeResponse, false);
+  assert.equal(
+    requests[0]?.generationOptions?.maxOutputTokens,
+    DAILY_BRIEFING_NARRATIVE_MAX_OUTPUT_TOKENS,
+  );
+  assert.equal(
+    requests[0]?.generationOptions?.reasoningEffort,
+    DAILY_BRIEFING_NARRATIVE_REASONING_EFFORT,
+  );
+  assert.equal(DAILY_BRIEFING_NARRATIVE_MAX_OUTPUT_TOKENS, 3000);
   assert.equal(narrative.generation.model, TEST_MODEL);
+});
+
+test('generateDailyBriefingNarrativeUseCase makes exactly one provider request per execution', async () => {
+  let executeCalls = 0;
+  const useCase = new GenerateDailyBriefingNarrativeUseCase(
+    createMockProvider(async () => {
+      executeCalls += 1;
+      return structuredProviderResponse(groundedNarrativePayload());
+    }),
+  );
+
+  await useCase.execute({ snapshot: dailyBriefingSnapshotFixture() });
+  assert.equal(executeCalls, 1);
 });
 
 test('validateDailyBriefingNarrativeEvidence accepts grounded headline and summary', () => {
@@ -359,8 +395,13 @@ test('degraded snapshots are passed through model input without altering operati
 
   const modelInput = mapDailyBriefingSnapshotToModelInput(snapshot);
   assert.equal(modelInput.completeness.status, 'insufficient');
-  assert.equal(modelInput.executiveSignals.activeProjects, null);
   assert.equal(modelInput.attentionItems.length, 0);
+  assert.deepEqual(modelInput.restrictedSlices, [
+    'projects',
+    'milestones',
+    'tasks',
+    'recentActivity',
+  ]);
 });
 
 test('empty briefing data maps to an empty-but-valid model input', () => {
@@ -417,6 +458,7 @@ test('populated briefings reject zero-evidence headline and summary even when it
           projectHighlightItems: [],
           upcomingWorkItems: [],
           recentChangeItems: [],
+          completenessNote: null,
         },
         snapshot,
       }),

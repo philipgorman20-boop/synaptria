@@ -95,6 +95,15 @@ export function dailyBriefingSnapshotFixture(
         source: 'missionControl',
       },
       {
+        evidenceType: 'operationalEntity',
+        reference: {
+          organizationId: ORGANIZATION_ID,
+          entityType: 'Milestone',
+          entityId: 'milestone-1',
+        },
+        source: 'missionControl',
+      },
+      {
         evidenceType: 'domainEvent',
         reference: { eventId: identifier('event-1', 'DomainEventId') },
         source: 'recentEvents',
@@ -148,6 +157,7 @@ export function emptyGroundedNarrativePayload() {
     projectHighlightItems: [],
     upcomingWorkItems: [],
     recentChangeItems: [],
+    completenessNote: null,
   };
 }
 
@@ -176,7 +186,7 @@ export function groundedNarrativePayload() {
     upcomingWorkItems: [
       {
         text: 'Protocol Draft is due soon on Alpha Study.',
-        evidenceKeys: ['entity:Project:project-1'],
+        evidenceKeys: ['entity:Milestone:milestone-1'],
       },
     ],
     recentChangeItems: [
@@ -185,5 +195,6 @@ export function groundedNarrativePayload() {
         evidenceKeys: ['event:event-1'],
       },
     ],
+    completenessNote: null,
   };
 }

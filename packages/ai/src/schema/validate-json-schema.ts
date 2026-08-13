@@ -1,4 +1,10 @@
-import type { JsonSchema, JsonSchemaValidationIssue, JsonSchemaValidationResult } from './json-schema';
+import type {
+  JsonSchema,
+  JsonSchemaType,
+  JsonSchemaTypeDefinition,
+  JsonSchemaValidationIssue,
+  JsonSchemaValidationResult,
+} from './json-schema';
 
 export function validateJsonAgainstSchema(
   value: unknown,
@@ -14,13 +20,70 @@ export function validateJsonAgainstSchema(
   };
 }
 
+function isJsonSchemaTypeArray(
+  type: JsonSchemaTypeDefinition,
+): type is readonly JsonSchemaType[] {
+  return Array.isArray(type);
+}
+
+function schemaTypes(schema: JsonSchema): readonly JsonSchemaType[] {
+  const { type } = schema;
+  if (isJsonSchemaTypeArray(type)) {
+    return type;
+  }
+
+  return [type];
+}
+
 function validateValue(
   value: unknown,
   schema: JsonSchema,
   path: string,
   issues: JsonSchemaValidationIssue[],
 ): void {
-  switch (schema.type) {
+  const types = schemaTypes(schema);
+
+  if (types.includes('null') && value === null) {
+    return;
+  }
+
+  const nonNullTypes = types.filter((type) => type !== 'null');
+  if (nonNullTypes.length === 0) {
+    if (value !== null) {
+      issues.push({ path, message: 'Expected null.' });
+    }
+    return;
+  }
+
+  if (nonNullTypes.length === 1) {
+    validateSingleType(value, schema, nonNullTypes[0]!, path, issues);
+    return;
+  }
+
+  const branchIssues: JsonSchemaValidationIssue[][] = [];
+  for (const type of nonNullTypes) {
+    const branch: JsonSchemaValidationIssue[] = [];
+    validateSingleType(value, schema, type, path, branch);
+    if (branch.length === 0) {
+      return;
+    }
+    branchIssues.push(branch);
+  }
+
+  issues.push({
+    path,
+    message: `Expected ${types.join(' | ')}.`,
+  });
+}
+
+function validateSingleType(
+  value: unknown,
+  schema: JsonSchema,
+  type: JsonSchemaType,
+  path: string,
+  issues: JsonSchemaValidationIssue[],
+): void {
+  switch (type) {
     case 'string':
       if (typeof value !== 'string') {
         issues.push({ path, message: 'Expected string.' });
@@ -60,6 +123,11 @@ function validateValue(
       }
 
       validateObject(value as Record<string, unknown>, schema, path, issues);
+      return;
+    case 'null':
+      if (value !== null) {
+        issues.push({ path, message: 'Expected null.' });
+      }
       return;
   }
 }

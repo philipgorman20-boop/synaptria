@@ -17,12 +17,18 @@ export interface OpenAIResponsesCreateParams {
   };
   readonly temperature?: number;
   readonly max_output_tokens?: number;
+  readonly reasoning?: {
+    readonly effort: 'none' | 'minimal' | 'low' | 'medium' | 'high';
+  };
 }
 
 export interface OpenAIResponsesUsage {
   readonly input_tokens?: number;
   readonly output_tokens?: number;
   readonly total_tokens?: number;
+  readonly output_tokens_details?: {
+    readonly reasoning_tokens?: number;
+  };
 }
 
 export interface OpenAIResponsesCreateResult {

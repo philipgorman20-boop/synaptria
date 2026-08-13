@@ -1,5 +1,12 @@
 import type { JsonSchema } from '@synaptria/ai';
 
+import {
+  DAILY_BRIEFING_NARRATIVE_ATTENTION_LIMIT,
+  DAILY_BRIEFING_NARRATIVE_PROJECT_HIGHLIGHT_LIMIT,
+  DAILY_BRIEFING_NARRATIVE_RECENT_CHANGE_LIMIT,
+  DAILY_BRIEFING_NARRATIVE_UPCOMING_LIMIT,
+} from '../constants';
+
 const groundedNarrativeBlockSchema: JsonSchema = {
   type: 'object',
   properties: {
@@ -33,24 +40,36 @@ export const DAILY_BRIEFING_NARRATIVE_V0_JSON_SCHEMA: JsonSchema = {
     },
     attentionItems: {
       type: 'array',
+      maxItems: DAILY_BRIEFING_NARRATIVE_ATTENTION_LIMIT,
       items: groundedNarrativeBlockSchema,
+      description:
+        'Optional short narratives for high-priority attention items listed in narrativeTargets.attentionEvidenceKeys.',
     },
     projectHighlightItems: {
       type: 'array',
+      maxItems: DAILY_BRIEFING_NARRATIVE_PROJECT_HIGHLIGHT_LIMIT,
       items: groundedNarrativeBlockSchema,
+      description:
+        'Optional short narratives for project highlights listed in narrativeTargets.projectHighlightEvidenceKeys.',
     },
     upcomingWorkItems: {
       type: 'array',
+      maxItems: DAILY_BRIEFING_NARRATIVE_UPCOMING_LIMIT,
       items: groundedNarrativeBlockSchema,
+      description:
+        'Optional short narratives for upcoming work items listed in narrativeTargets.upcomingWorkEvidenceKeys.',
     },
     recentChangeItems: {
       type: 'array',
+      maxItems: DAILY_BRIEFING_NARRATIVE_RECENT_CHANGE_LIMIT,
       items: groundedNarrativeBlockSchema,
+      description:
+        'Optional short narratives for recent changes listed in narrativeTargets.recentChangeEvidenceKeys.',
     },
     completenessNote: {
-      type: 'string',
+      type: ['string', 'null'],
       description:
-        'Optional note reflecting supplied completeness/degradation context without inventing missing facts.',
+        'Optional note reflecting supplied completeness/degradation context without inventing missing facts. Use null when no note is warranted.',
     },
   },
   required: [
@@ -60,6 +79,7 @@ export const DAILY_BRIEFING_NARRATIVE_V0_JSON_SCHEMA: JsonSchema = {
     'projectHighlightItems',
     'upcomingWorkItems',
     'recentChangeItems',
+    'completenessNote',
   ],
   additionalProperties: false,
 };
@@ -76,7 +96,7 @@ export interface DailyBriefingNarrativeV0StructuredOutput {
   readonly projectHighlightItems: readonly GroundedNarrativeBlock[];
   readonly upcomingWorkItems: readonly GroundedNarrativeBlock[];
   readonly recentChangeItems: readonly GroundedNarrativeBlock[];
-  readonly completenessNote?: string;
+  readonly completenessNote: string | null;
 }
 
 export const DAILY_BRIEFING_NARRATIVE_FACTUAL_ITEM_FIELDS = [
