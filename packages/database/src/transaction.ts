@@ -7,6 +7,7 @@ import { PrismaOrganizationRepository } from './organization/prisma-organization
 
 import { PrismaProgramRepository } from './programs/prisma-program-repository';
 import { PrismaProjectRepository } from './projects/prisma-project-repository';
+import { PrismaRecommendationReviewDecisionRepository } from './recommendation-reviews/prisma-recommendation-review-repository';
 import { PrismaMilestoneRepository } from './milestones/prisma-milestone-repository';
 import { PrismaTaskRepository } from './tasks/prisma-task-repository';
 
@@ -18,7 +19,15 @@ export interface PersistenceRepositories {
   readonly organizations: PrismaOrganizationRepository;
   readonly programs: PrismaProgramRepository;
   readonly projects: PrismaProjectRepository;
+  readonly recommendationReviewDecisions: PrismaRecommendationReviewDecisionRepository;
   readonly tasks: PrismaTaskRepository;
+}
+
+/** Repositories required for recommendation review application transactions. */
+export interface RecommendationReviewPersistenceRepositories {
+  readonly recommendationReviewDecisions: PrismaRecommendationReviewDecisionRepository;
+  readonly audit: PrismaAuditRepository;
+  readonly events: PrismaEventRepository;
 }
 
 /** Repositories required for milestone application transactions. */
@@ -48,8 +57,28 @@ export function createPersistenceRepositories(
     organizations: new PrismaOrganizationRepository(client),
     programs: new PrismaProgramRepository(client),
     projects: new PrismaProjectRepository(client),
+    recommendationReviewDecisions: new PrismaRecommendationReviewDecisionRepository(client),
     tasks: new PrismaTaskRepository(client),
   };
+}
+
+export function selectRecommendationReviewPersistenceRepositories(
+  repositories: PersistenceRepositories,
+): RecommendationReviewPersistenceRepositories {
+  return {
+    recommendationReviewDecisions: repositories.recommendationReviewDecisions,
+    audit: repositories.audit,
+    events: repositories.events,
+  };
+}
+
+export async function withRecommendationReviewTransaction<T>(
+  client: PrismaClient,
+  operation: (repositories: RecommendationReviewPersistenceRepositories) => Promise<T>,
+): Promise<T> {
+  return withDatabaseTransaction(client, (repositories) =>
+    operation(selectRecommendationReviewPersistenceRepositories(repositories)),
+  );
 }
 
 export function selectMilestonePersistenceRepositories(

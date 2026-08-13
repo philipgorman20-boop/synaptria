@@ -112,3 +112,15 @@ test('collection guards enforce any and all semantics', () => {
     AuthorizationDeniedError,
   );
 });
+
+test('AI_REVIEW remains assigned only to owner and admin roles', () => {
+  assert.equal(hasPermission('OWNER', PERMISSIONS.AI_REVIEW), true);
+  assert.equal(hasPermission('ADMIN', PERMISSIONS.AI_REVIEW), true);
+  assert.equal(hasPermission('MEMBER', PERMISSIONS.AI_REVIEW), false);
+  assert.equal(hasPermission('VIEWER', PERMISSIONS.AI_REVIEW), false);
+});
+
+test('members and viewers retain dashboard read access for recommendation review surfaces', () => {
+  assert.equal(hasPermission('MEMBER', PERMISSIONS.DASHBOARD_READ), true);
+  assert.equal(hasPermission('VIEWER', PERMISSIONS.DASHBOARD_READ), true);
+});

@@ -13,6 +13,7 @@ export const routes = {
   opportunities: "/opportunities",
   projects: "/projects",
   programs: "/programs",
+  recommendations: "/recommendations",
   settings: "/settings",
 } as const;
 
