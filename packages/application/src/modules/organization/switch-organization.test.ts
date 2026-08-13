@@ -33,6 +33,7 @@ import type {
   DomainEventId,
   DomainEventStatus,
   EventRepository,
+  OrganizationRecentEventsQuery,
 } from '@synaptria/events';
 
 import type {
@@ -154,6 +155,12 @@ class EventRepositoryStub implements EventRepository {
 
   async findByAggregate(
     _query: AggregateEventQuery,
+  ): Promise<readonly DomainEventEnvelope[]> {
+    return [];
+  }
+
+  async listRecentForOrganization(
+    _query: OrganizationRecentEventsQuery,
   ): Promise<readonly DomainEventEnvelope[]> {
     return [];
   }
