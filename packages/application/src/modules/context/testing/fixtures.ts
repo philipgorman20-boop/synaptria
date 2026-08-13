@@ -21,7 +21,9 @@ import type {
   DomainEventId,
   DomainEventStatus,
   EventRepository,
+  OrganizationRecentEventsQuery,
 } from '@synaptria/events';
+import { filterRecentOrganizationEvents } from '@synaptria/events';
 
 export const NOW = new Date('2026-07-26T16:00:00.000Z');
 export const USER_ID = userId('user-1');
@@ -210,6 +212,12 @@ export class InMemoryEventRepository implements EventRepository {
         event.aggregateType === query.aggregateType &&
         event.aggregateId === query.aggregateId,
     ).slice(0, query.limit);
+  }
+
+  async listRecentForOrganization(
+    query: OrganizationRecentEventsQuery,
+  ): Promise<readonly DomainEventEnvelope[]> {
+    return filterRecentOrganizationEvents(this.events, query);
   }
 
   async updateStatus(

@@ -82,3 +82,10 @@ export interface AggregateEventQuery {
   readonly aggregateId: string;
   readonly limit?: number;
 }
+
+export interface OrganizationRecentEventsQuery {
+  readonly organizationId: OrganizationId;
+  readonly limit: number;
+  readonly eventTypes?: readonly string[];
+  readonly aggregateTypes?: readonly string[];
+}

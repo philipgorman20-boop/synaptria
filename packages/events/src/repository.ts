@@ -3,6 +3,7 @@ import type {
   DomainEventEnvelope,
   DomainEventId,
   DomainEventStatus,
+  OrganizationRecentEventsQuery,
 } from './types';
 
 export interface EventRepository {
@@ -10,6 +11,9 @@ export interface EventRepository {
   appendMany(events: readonly DomainEventEnvelope[]): Promise<readonly DomainEventEnvelope[]>;
   findById(id: DomainEventId): Promise<DomainEventEnvelope | null>;
   findByAggregate(query: AggregateEventQuery): Promise<readonly DomainEventEnvelope[]>;
+  listRecentForOrganization(
+    query: OrganizationRecentEventsQuery,
+  ): Promise<readonly DomainEventEnvelope[]>;
   updateStatus(
     id: DomainEventId,
     status: DomainEventStatus,

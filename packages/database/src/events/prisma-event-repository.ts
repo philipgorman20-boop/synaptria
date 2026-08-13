@@ -10,6 +10,7 @@ import type {
   DomainEventStatus,
   EventJsonObject,
   EventRepository,
+  OrganizationRecentEventsQuery,
 } from '@synaptria/events';
 import {
   identifier,
@@ -89,6 +90,26 @@ export class PrismaEventRepository implements EventRepository {
       ...(query.limit === undefined
         ? {}
         : { take: query.limit }),
+    });
+
+    return rows.map(mapDomainEvent);
+  }
+
+  async listRecentForOrganization(
+    query: OrganizationRecentEventsQuery,
+  ): Promise<readonly DomainEventEnvelope[]> {
+    const rows = await this.client.domainEvent.findMany({
+      where: {
+        organizationId: query.organizationId,
+        ...(query.eventTypes === undefined || query.eventTypes.length === 0
+          ? {}
+          : { eventType: { in: [...query.eventTypes] } }),
+        ...(query.aggregateTypes === undefined || query.aggregateTypes.length === 0
+          ? {}
+          : { aggregateType: { in: [...query.aggregateTypes] } }),
+      },
+      orderBy: [{ createdAt: 'desc' }, { id: 'asc' }],
+      take: query.limit,
     });
 
     return rows.map(mapDomainEvent);

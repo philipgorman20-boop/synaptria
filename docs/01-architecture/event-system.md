@@ -180,6 +180,8 @@ actor activity.
 
 These queries may be implemented through repository extensions or dedicated read models.
 
+Organization-scoped recent-event retrieval is implemented via `EventRepository.listRecentForOrganization` (organization + bounded limit + optional event-type and aggregate-type filters). Time-window reads (e.g. since timestamp) are not implemented yet.
+
 Ordering
 
 Global ordering is rarely necessary.
@@ -286,7 +288,9 @@ Synaptria already persists domain events, but the proactive AI architecture addi
 
 event consumers,
 
-broader organization/time-window event reads,
+organization-scoped recent-event reads (`EventRepository.listRecentForOrganization`),
+
+broader time-window event reads,
 
 explicit replay and idempotency strategy,
 

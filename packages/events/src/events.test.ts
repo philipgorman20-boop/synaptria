@@ -22,6 +22,7 @@ import {
   type DomainEventId,
   type DomainEventStatus,
   type EventRepository,
+  filterRecentOrganizationEvents,
 } from './index';
 
 class SequenceIdGenerator implements IdGenerator {
@@ -56,6 +57,12 @@ class MemoryEventRepository implements EventRepository {
         event.aggregateType === query.aggregateType &&
         event.aggregateId === query.aggregateId,
     );
+  }
+
+  async listRecentForOrganization(
+    query: Parameters<EventRepository['listRecentForOrganization']>[0],
+  ): Promise<readonly DomainEventEnvelope[]> {
+    return filterRecentOrganizationEvents(this.events, query);
   }
 
   async updateStatus(
