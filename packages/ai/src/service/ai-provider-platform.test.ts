@@ -240,6 +240,7 @@ test('normalized usage metadata preserves absent fields explicitly', async () =>
   assert.equal(response.usage.inputTokens, 7);
   assert.equal(response.usage.outputTokens, undefined);
   assert.equal(response.usage.totalTokens, undefined);
+  assert.equal(response.usage.reasoningTokens, undefined);
 });
 
 test('normalized latency is measured with the injected clock', async () => {
@@ -502,6 +503,64 @@ test('JSON Schema is translated for OpenAI Structured Outputs', () => {
       },
     },
   });
+});
+
+test('reasoningEffort maps to OpenAI reasoning.effort without exposing SDK types', () => {
+  const params = buildOpenAIResponsesCreateParams(
+    baseRequest({
+      capabilityId: 'test.text',
+      output: { mode: 'text' },
+      generationOptions: {
+        reasoningEffort: 'low',
+        maxOutputTokens: 3000,
+      },
+    }),
+    TEST_MODEL,
+  );
+
+  assert.deepEqual(params.reasoning, { effort: 'low' });
+  assert.equal(params.max_output_tokens, 3000);
+  assert.equal(params.store, false);
+});
+
+test('reasoning tokens are normalized when OpenAI exposes output_tokens_details', async () => {
+  const { service } = createServiceWithFakeOpenAI(async () =>
+    completedOpenAIResponse({
+      usage: {
+        input_tokens: 100,
+        output_tokens: 500,
+        total_tokens: 600,
+        output_tokens_details: {
+          reasoning_tokens: 320,
+        },
+      },
+    }),
+  );
+
+  const response = await service.execute(
+    baseRequest({ capabilityId: 'test.text', output: { mode: 'text' } }),
+  );
+
+  assert.equal(response.usage.reasoningTokens, 320);
+  assert.equal(response.usage.outputTokens, 500);
+});
+
+test('absent reasoning token details remain undefined in normalized usage', async () => {
+  const { service } = createServiceWithFakeOpenAI(async () =>
+    completedOpenAIResponse({
+      usage: {
+        input_tokens: 100,
+        output_tokens: 500,
+        total_tokens: 600,
+      },
+    }),
+  );
+
+  const response = await service.execute(
+    baseRequest({ capabilityId: 'test.text', output: { mode: 'text' } }),
+  );
+
+  assert.equal(response.usage.reasoningTokens, undefined);
 });
 
 test('public package exports do not expose OpenAI SDK types', async () => {

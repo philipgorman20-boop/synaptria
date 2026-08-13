@@ -90,6 +90,7 @@ export class GetDailyBriefingSnapshotUseCase {
       organizationId: context.organizationId,
       attentionItems,
       projectHighlights,
+      upcomingWork,
       recentChanges,
     });
 

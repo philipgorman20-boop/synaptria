@@ -4,16 +4,20 @@ export type JsonSchemaType =
   | 'number'
   | 'integer'
   | 'boolean'
-  | 'array';
+  | 'array'
+  | 'null';
+
+export type JsonSchemaTypeDefinition = JsonSchemaType | readonly JsonSchemaType[];
 
 /** Narrow JSON Schema subset used for provider-independent structured output. */
 export interface JsonSchema {
-  readonly type: JsonSchemaType;
+  readonly type: JsonSchemaTypeDefinition;
   readonly properties?: Readonly<Record<string, JsonSchema>>;
   readonly required?: readonly string[];
   readonly items?: JsonSchema;
   readonly additionalProperties?: boolean;
   readonly description?: string;
+  readonly maxItems?: number;
 }
 
 export interface JsonSchemaValidationIssue {
@@ -28,7 +32,7 @@ export interface JsonSchemaValidationResult {
 
 export function jsonSchemaToRecord(schema: JsonSchema): Record<string, unknown> {
   const record: Record<string, unknown> = {
-    type: schema.type,
+    type: Array.isArray(schema.type) ? [...schema.type] : schema.type,
   };
 
   if (schema.properties !== undefined) {
@@ -54,6 +58,10 @@ export function jsonSchemaToRecord(schema: JsonSchema): Record<string, unknown> 
 
   if (schema.description !== undefined) {
     record.description = schema.description;
+  }
+
+  if (schema.maxItems !== undefined) {
+    record.maxItems = schema.maxItems;
   }
 
   return record;

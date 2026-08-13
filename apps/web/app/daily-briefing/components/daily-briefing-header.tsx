@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import { routes } from '@synaptria/config';
 import Link from 'next/link';
 
@@ -16,7 +17,7 @@ export interface DailyBriefingHeaderProps {
   readonly organizations: readonly OrganizationSwitcherItem[];
   readonly activeOrganizationId: OrganizationSwitcherItem['id'];
   readonly snapshot: DailyBriefingSnapshot;
-  readonly headline: string;
+  readonly headline: ReactNode;
 }
 
 export function DailyBriefingHeader({

@@ -1,14 +1,12 @@
-import type {
-  DailyBriefingNarrative,
-  DailyBriefingRecentChange,
-} from '@synaptria/application';
+import type { DailyBriefingRecentChange } from '@synaptria/application';
 import Link from 'next/link';
+import { Suspense } from 'react';
 
+import type { DailyBriefingNarrativeResult } from '../../../lib/daily-briefing-loader';
 import { RECENT_CHANGES_HEADING } from './daily-briefing-ui-constants';
+import { DailyBriefingGroundedItemNarrative } from './daily-briefing-narrative-stream';
 import {
   DAILY_BRIEFING_EMPTY_RECENT_CHANGES_MESSAGE,
-  findNarrativeForEvidenceKey,
-  formatEvidenceSourceCount,
   formatMissionControlDateTime,
   getDailyBriefingRecentChangeHref,
   recentChangeEvidenceKey,
@@ -16,12 +14,12 @@ import {
 
 export interface DailyBriefingRecentChangesProps {
   readonly changes: readonly DailyBriefingRecentChange[];
-  readonly narrative: DailyBriefingNarrative | null;
+  readonly narrativePromise?: Promise<DailyBriefingNarrativeResult>;
 }
 
 export function DailyBriefingRecentChanges({
   changes,
-  narrative,
+  narrativePromise,
 }: DailyBriefingRecentChangesProps) {
   return (
     <section
@@ -41,25 +39,13 @@ export function DailyBriefingRecentChanges({
         </p>
       ) : (
         <ul className="mission-control-activity-list">
-          {changes.map((change) => {
-            const matchedNarrative =
-              narrative === null
-                ? undefined
-                : findNarrativeForEvidenceKey(
-                    narrative.recentChangeItems,
-                    recentChangeEvidenceKey(change),
-                  );
-
-            return (
-              <DailyBriefingRecentChangeRow
-                key={change.eventId}
-                change={change}
-                {...(matchedNarrative === undefined
-                  ? {}
-                  : { narrative: matchedNarrative })}
-              />
-            );
-          })}
+          {changes.map((change) => (
+            <DailyBriefingRecentChangeRow
+              key={change.eventId}
+              change={change}
+              {...(narrativePromise === undefined ? {} : { narrativePromise })}
+            />
+          ))}
         </ul>
       )}
     </section>
@@ -68,14 +54,12 @@ export function DailyBriefingRecentChanges({
 
 function DailyBriefingRecentChangeRow({
   change,
-  narrative,
+  narrativePromise,
 }: {
   readonly change: DailyBriefingRecentChange;
-  readonly narrative?: { readonly text: string; readonly evidenceKeys: readonly string[] };
+  readonly narrativePromise?: Promise<DailyBriefingNarrativeResult>;
 }) {
   const href = getDailyBriefingRecentChangeHref(change);
-  const sourceCount =
-    narrative === undefined ? null : formatEvidenceSourceCount(narrative.evidenceKeys);
 
   const content = (
     <>
@@ -86,12 +70,15 @@ function DailyBriefingRecentChangeRow({
         </time>
       </div>
       <p className="mission-control-activity-aggregate">{change.aggregateType}</p>
-      {narrative !== undefined ? (
-        <p className="daily-briefing-narrative-secondary">{narrative.text}</p>
-      ) : null}
-      {sourceCount !== null ? (
-        <p className="daily-briefing-source-count">{sourceCount}</p>
-      ) : null}
+      {narrativePromise === undefined ? null : (
+        <Suspense fallback={null}>
+          <DailyBriefingGroundedItemNarrative
+            narrativePromise={narrativePromise}
+            evidenceKey={recentChangeEvidenceKey(change)}
+            items="recentChangeItems"
+          />
+        </Suspense>
+      )}
     </>
   );
 

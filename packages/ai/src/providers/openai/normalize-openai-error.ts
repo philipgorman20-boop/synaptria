@@ -1,6 +1,20 @@
 import {
+  APIConnectionError,
+  APIConnectionTimeoutError,
+  APIError,
+  AuthenticationError,
+  BadRequestError,
+  InternalServerError,
+  NotFoundError,
+  PermissionDeniedError,
+  RateLimitError,
+  UnprocessableEntityError,
+} from 'openai';
+
+import {
   providerAuthenticationError,
   providerInvalidStructuredOutputError,
+  providerNotFoundError,
   providerRateLimitError,
   providerTimeoutError,
   providerUnavailableError,
@@ -22,15 +36,7 @@ function readName(error: Record<string, unknown>): string | undefined {
   return typeof name === 'string' ? name : undefined;
 }
 
-export function normalizeOpenAIProviderError(error: unknown): ProviderError {
-  if (error instanceof ProviderError) {
-    return error;
-  }
-
-  if (!isRecord(error)) {
-    return providerUnknownError('OpenAI provider request failed.', { providerId: 'openai', cause: error });
-  }
-
+function normalizeLegacyOpenAIProviderError(error: Record<string, unknown>): ProviderError {
   const name = readName(error);
   const status = readStatus(error);
 
@@ -69,6 +75,22 @@ export function normalizeOpenAIProviderError(error: unknown): ProviderError {
     });
   }
 
+  if (status === 400 || status === 422) {
+    return providerInvalidStructuredOutputError('OpenAI provider rejected the request.', {
+      providerId: 'openai',
+      cause: error,
+      ...(status === undefined ? {} : { details: { status } }),
+    });
+  }
+
+  if (status === 404) {
+    return providerNotFoundError('OpenAI provider resource was not found.', {
+      providerId: 'openai',
+      cause: error,
+      ...(status === undefined ? {} : { details: { status } }),
+    });
+  }
+
   if (status !== undefined && status >= 500) {
     return providerUnavailableError('OpenAI provider is unavailable.', {
       providerId: 'openai',
@@ -81,6 +103,100 @@ export function normalizeOpenAIProviderError(error: unknown): ProviderError {
     providerId: 'openai',
     cause: error,
     ...(status === undefined ? {} : { details: { status } }),
+  });
+}
+
+export function normalizeOpenAIProviderError(error: unknown): ProviderError {
+  if (error instanceof ProviderError) {
+    return error;
+  }
+
+  if (error instanceof APIConnectionTimeoutError) {
+    return providerTimeoutError('OpenAI provider request timed out.', {
+      providerId: 'openai',
+      cause: error,
+    });
+  }
+
+  if (error instanceof APIConnectionError) {
+    return providerTimeoutError('OpenAI provider network connection failed.', {
+      providerId: 'openai',
+      cause: error,
+    });
+  }
+
+  if (error instanceof AuthenticationError) {
+    return providerAuthenticationError('OpenAI provider rejected the API credentials.', {
+      providerId: 'openai',
+      cause: error,
+    });
+  }
+
+  if (error instanceof PermissionDeniedError) {
+    return providerAuthenticationError('OpenAI provider rejected the request permissions.', {
+      providerId: 'openai',
+      cause: error,
+    });
+  }
+
+  if (error instanceof RateLimitError) {
+    return providerRateLimitError('OpenAI provider rate limit exceeded.', {
+      providerId: 'openai',
+      cause: error,
+    });
+  }
+
+  if (error instanceof NotFoundError) {
+    return providerNotFoundError('OpenAI provider resource was not found.', {
+      providerId: 'openai',
+      cause: error,
+      details: { status: error.status },
+    });
+  }
+
+  if (error instanceof BadRequestError || error instanceof UnprocessableEntityError) {
+    return providerInvalidStructuredOutputError('OpenAI provider rejected the request.', {
+      providerId: 'openai',
+      cause: error,
+      details: { status: error.status },
+    });
+  }
+
+  if (error instanceof InternalServerError) {
+    return providerUnavailableError('OpenAI provider is unavailable.', {
+      providerId: 'openai',
+      cause: error,
+      details: { status: error.status },
+    });
+  }
+
+  if (error instanceof APIError) {
+    const status = error.status;
+
+    if (status === 408) {
+      return providerTimeoutError('OpenAI provider request timed out.', {
+        providerId: 'openai',
+        cause: error,
+        details: { status },
+      });
+    }
+
+    if (typeof status === 'number' && status >= 500) {
+      return providerUnavailableError('OpenAI provider is unavailable.', {
+        providerId: 'openai',
+        cause: error,
+        details: { status },
+      });
+    }
+  }
+
+  if (isRecord(error)) {
+    return normalizeLegacyOpenAIProviderError(error);
+  }
+
+  return providerUnknownError('OpenAI provider request failed.', {
+    providerId: 'openai',
+    cause: error,
   });
 }
 

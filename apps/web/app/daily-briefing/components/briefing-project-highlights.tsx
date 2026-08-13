@@ -1,14 +1,12 @@
-import type {
-  DailyBriefingNarrative,
-  DailyBriefingProjectHighlight,
-} from '@synaptria/application';
+import type { DailyBriefingProjectHighlight } from '@synaptria/application';
 import Link from 'next/link';
+import { Suspense } from 'react';
 
+import type { DailyBriefingNarrativeResult } from '../../../lib/daily-briefing-loader';
 import { PROJECT_HIGHLIGHTS_HEADING } from './daily-briefing-ui-constants';
+import { DailyBriefingGroundedItemNarrative } from './daily-briefing-narrative-stream';
 import {
   DAILY_BRIEFING_EMPTY_HIGHLIGHTS_MESSAGE,
-  findNarrativeForEvidenceKey,
-  formatEvidenceSourceCount,
   formatMissionControlSeverity,
   formatOptionalMissionControlDate,
   formatProjectHealthState,
@@ -18,12 +16,12 @@ import {
 
 export interface DailyBriefingProjectHighlightsProps {
   readonly projects: readonly DailyBriefingProjectHighlight[];
-  readonly narrative: DailyBriefingNarrative | null;
+  readonly narrativePromise?: Promise<DailyBriefingNarrativeResult>;
 }
 
 export function DailyBriefingProjectHighlights({
   projects,
-  narrative,
+  narrativePromise,
 }: DailyBriefingProjectHighlightsProps) {
   return (
     <section
@@ -41,25 +39,13 @@ export function DailyBriefingProjectHighlights({
         <p className="mission-control-empty-state">{DAILY_BRIEFING_EMPTY_HIGHLIGHTS_MESSAGE}</p>
       ) : (
         <ul className="mission-control-health-list daily-briefing-highlight-list">
-          {projects.map((project) => {
-            const matchedNarrative =
-              narrative === null
-                ? undefined
-                : findNarrativeForEvidenceKey(
-                    narrative.projectHighlightItems,
-                    projectHighlightEvidenceKey(project),
-                  );
-
-            return (
-              <DailyBriefingProjectHighlightRow
-                key={project.projectId}
-                project={project}
-                {...(matchedNarrative === undefined
-                  ? {}
-                  : { narrative: matchedNarrative })}
-              />
-            );
-          })}
+          {projects.map((project) => (
+            <DailyBriefingProjectHighlightRow
+              key={project.projectId}
+              project={project}
+              {...(narrativePromise === undefined ? {} : { narrativePromise })}
+            />
+          ))}
         </ul>
       )}
     </section>
@@ -68,14 +54,11 @@ export function DailyBriefingProjectHighlights({
 
 function DailyBriefingProjectHighlightRow({
   project,
-  narrative,
+  narrativePromise,
 }: {
   readonly project: DailyBriefingProjectHighlight;
-  readonly narrative?: { readonly text: string; readonly evidenceKeys: readonly string[] };
+  readonly narrativePromise?: Promise<DailyBriefingNarrativeResult>;
 }) {
-  const sourceCount =
-    narrative === undefined ? null : formatEvidenceSourceCount(narrative.evidenceKeys);
-
   return (
     <li className="mission-control-health-item daily-briefing-highlight-item">
       <Link
@@ -101,12 +84,15 @@ function DailyBriefingProjectHighlightRow({
         <p className="mission-control-item-details">
           Next milestone {formatOptionalMissionControlDate(project.nextMilestoneDueDate)}
         </p>
-        {narrative !== undefined ? (
-          <p className="daily-briefing-narrative-secondary">{narrative.text}</p>
-        ) : null}
-        {sourceCount !== null ? (
-          <p className="daily-briefing-source-count">{sourceCount}</p>
-        ) : null}
+        {narrativePromise === undefined ? null : (
+          <Suspense fallback={null}>
+            <DailyBriefingGroundedItemNarrative
+              narrativePromise={narrativePromise}
+              evidenceKey={projectHighlightEvidenceKey(project)}
+              items="projectHighlightItems"
+            />
+          </Suspense>
+        )}
       </Link>
     </li>
   );

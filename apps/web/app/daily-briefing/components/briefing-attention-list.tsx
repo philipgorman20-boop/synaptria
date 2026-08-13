@@ -1,16 +1,14 @@
-import type {
-  DailyBriefingAttentionItem,
-  DailyBriefingNarrative,
-} from '@synaptria/application';
+import type { DailyBriefingAttentionItem } from '@synaptria/application';
 import Link from 'next/link';
+import { Suspense } from 'react';
 
+import type { DailyBriefingNarrativeResult } from '../../../lib/daily-briefing-loader';
 import { ATTENTION_HEADING } from './daily-briefing-ui-constants';
+import { DailyBriefingGroundedItemNarrative } from './daily-briefing-narrative-stream';
 import {
   DAILY_BRIEFING_EMPTY_ATTENTION_MESSAGE,
   attentionEvidenceKey,
-  findNarrativeForEvidenceKey,
   formatAttentionType,
-  formatEvidenceSourceCount,
   formatMissionControlSeverity,
   formatOptionalMissionControlDate,
   getAttentionItemHref,
@@ -18,12 +16,12 @@ import {
 
 export interface DailyBriefingAttentionListProps {
   readonly items: readonly DailyBriefingAttentionItem[];
-  readonly narrative: DailyBriefingNarrative | null;
+  readonly narrativePromise?: Promise<DailyBriefingNarrativeResult>;
 }
 
 export function DailyBriefingAttentionList({
   items,
-  narrative,
+  narrativePromise,
 }: DailyBriefingAttentionListProps) {
   return (
     <section
@@ -41,25 +39,13 @@ export function DailyBriefingAttentionList({
         <p className="mission-control-empty-state">{DAILY_BRIEFING_EMPTY_ATTENTION_MESSAGE}</p>
       ) : (
         <ul className="mission-control-attention-list">
-          {items.map((item) => {
-            const matchedNarrative =
-              narrative === null
-                ? undefined
-                : findNarrativeForEvidenceKey(
-                    narrative.attentionItems,
-                    attentionEvidenceKey(item),
-                  );
-
-            return (
-              <DailyBriefingAttentionItemRow
-                key={attentionItemKey(item)}
-                item={item}
-                {...(matchedNarrative === undefined
-                  ? {}
-                  : { narrative: matchedNarrative })}
-              />
-            );
-          })}
+          {items.map((item) => (
+            <DailyBriefingAttentionItemRow
+              key={attentionItemKey(item)}
+              item={item}
+              {...(narrativePromise === undefined ? {} : { narrativePromise })}
+            />
+          ))}
         </ul>
       )}
     </section>
@@ -68,14 +54,13 @@ export function DailyBriefingAttentionList({
 
 function DailyBriefingAttentionItemRow({
   item,
-  narrative,
+  narrativePromise,
 }: {
   readonly item: DailyBriefingAttentionItem;
-  readonly narrative?: { readonly text: string; readonly evidenceKeys: readonly string[] };
+  readonly narrativePromise?: Promise<DailyBriefingNarrativeResult>;
 }) {
   const href = getAttentionItemHref(item);
-  const sourceCount =
-    narrative === undefined ? null : formatEvidenceSourceCount(narrative.evidenceKeys);
+  const evidenceKey = attentionEvidenceKey(item);
 
   const content = (
     <>
@@ -96,12 +81,15 @@ function DailyBriefingAttentionItemRow({
             Due {formatOptionalMissionControlDate(item.dueDate)}
           </p>
         ) : null}
-        {narrative !== undefined ? (
-          <p className="daily-briefing-narrative-secondary">{narrative.text}</p>
-        ) : null}
-        {sourceCount !== null ? (
-          <p className="daily-briefing-source-count">{sourceCount}</p>
-        ) : null}
+        {narrativePromise === undefined ? null : (
+          <Suspense fallback={null}>
+            <DailyBriefingGroundedItemNarrative
+              narrativePromise={narrativePromise}
+              evidenceKey={evidenceKey}
+              items="attentionItems"
+            />
+          </Suspense>
+        )}
       </div>
     </>
   );
