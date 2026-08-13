@@ -10,6 +10,7 @@ export * from './modules/context';
 export * from './modules/events';
 export * from './modules/mission-control';
 export * from './modules/daily-briefing';
+export * from './modules/recommendations';
 export * from './modules/vendors';
 export * from './modules/documents';
 export * from './modules/reporting';
