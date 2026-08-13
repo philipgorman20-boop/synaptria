@@ -372,10 +372,20 @@ export function formatProjectHealthRiskSummary(
   }
 
   if (parts.length === 0) {
-    return 'No overdue or blocked work';
+    return 'No execution risks';
   }
 
   return parts.join(' · ');
+}
+
+export function shouldShowProjectHealthSeverity(
+  projectHealth: MissionControlProjectHealth,
+): boolean {
+  return (
+    projectHealth.healthState !== 'on_track' ||
+    projectHealth.attentionSeverity === 'critical' ||
+    projectHealth.attentionSeverity === 'high'
+  );
 }
 
 export function shouldShowEmptyOrganizationState(

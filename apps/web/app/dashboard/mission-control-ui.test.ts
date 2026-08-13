@@ -25,6 +25,7 @@ import {
   formatAttentionType,
   formatEventTypeLabel,
   formatMissionControlSeverity,
+  formatProjectHealthRiskSummary,
   formatProjectHealthState,
   formatRestrictedSliceLabels,
   getAttentionItemHref,
@@ -38,6 +39,7 @@ import {
   MISSION_CONTROL_KPI_DEFINITIONS,
   MISSION_CONTROL_RESTRICTED_NOTICE,
   shouldShowEmptyOrganizationState,
+  shouldShowProjectHealthSeverity,
 } from './mission-control-format';
 
 const PROJECT_UUID = '550e8400-e29b-41d4-a716-446655440000';
@@ -238,6 +240,69 @@ test('project health links use the existing project detail route', () => {
   };
 
   assert.equal(getProjectHealthHref(projectHealth), `/projects/${PROJECT_UUID}`);
+});
+
+test('project health risk summary uses concise healthy presentation text', () => {
+  assert.equal(
+    formatProjectHealthRiskSummary({
+      projectId: PROJECT_UUID,
+      projectName: 'Alpha Study',
+      status: 'ACTIVE',
+      priority: 'MEDIUM',
+      openMilestones: 1,
+      overdueMilestones: 0,
+      openTasks: 2,
+      overdueTasks: 0,
+      blockedTasks: 0,
+      dueSoonMilestones: 0,
+      dueSoonTasks: 0,
+      recentEventCount: 0,
+      attentionSeverity: 'low',
+      healthState: 'on_track',
+    }),
+    'No execution risks',
+  );
+});
+
+test('project health severity label is shown only when it adds context', () => {
+  assert.equal(
+    shouldShowProjectHealthSeverity({
+      projectId: PROJECT_UUID,
+      projectName: 'Alpha Study',
+      status: 'ACTIVE',
+      priority: 'MEDIUM',
+      openMilestones: 1,
+      overdueMilestones: 1,
+      openTasks: 2,
+      overdueTasks: 1,
+      blockedTasks: 1,
+      dueSoonMilestones: 0,
+      dueSoonTasks: 0,
+      recentEventCount: 1,
+      attentionSeverity: 'critical',
+      healthState: 'at_risk',
+    }),
+    true,
+  );
+  assert.equal(
+    shouldShowProjectHealthSeverity({
+      projectId: PROJECT_UUID,
+      projectName: 'Alpha Study',
+      status: 'ACTIVE',
+      priority: 'MEDIUM',
+      openMilestones: 1,
+      overdueMilestones: 0,
+      openTasks: 2,
+      overdueTasks: 0,
+      blockedTasks: 0,
+      dueSoonMilestones: 0,
+      dueSoonTasks: 0,
+      recentEventCount: 0,
+      attentionSeverity: 'low',
+      healthState: 'on_track',
+    }),
+    false,
+  );
 });
 
 test('recent activity labels avoid raw event JSON', () => {
