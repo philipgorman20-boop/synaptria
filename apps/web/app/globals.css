@@ -1936,3 +1936,58 @@ a.primary-button {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
+
+.action-proposals-page {
+  gap: 1.5rem;
+}
+
+.action-proposals-safety-notice {
+  border: 1px solid var(--border);
+  border-radius: 0.75rem;
+  padding: 0.875rem 1rem;
+}
+
+.action-proposals-items,
+.action-proposal-evidence-list,
+.action-proposal-changes {
+  display: grid;
+  gap: 1rem;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.action-proposal-item {
+  border: 1px solid var(--border);
+  border-radius: 0.75rem;
+  padding: 1rem;
+}
+
+.action-proposal-item-header {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  justify-content: space-between;
+}
+
+.action-proposal-details {
+  display: grid;
+  gap: 0.75rem;
+  margin: 0.75rem 0 0;
+}
+
+.action-proposal-details dt {
+  color: var(--muted-foreground);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  margin-bottom: 0.25rem;
+}
+
+.action-proposal-details dd {
+  margin: 0;
+}
+
+.recommendation-review-proposal-link {
+  margin-top: 0.75rem;
+}

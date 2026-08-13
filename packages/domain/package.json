@@ -12,7 +12,8 @@
     "./shared": "./src/shared/index.ts",
     "./tasks": "./src/tasks/index.ts",
     "./context": "./src/context/index.ts",
-    "./recommendation-reviews": "./src/recommendation-reviews/index.ts"
+    "./recommendation-reviews": "./src/recommendation-reviews/index.ts",
+    "./action-proposals": "./src/action-proposals/index.ts"
   },
   "scripts": {
     "build": "tsc --noEmit",

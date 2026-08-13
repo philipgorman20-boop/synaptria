@@ -9,6 +9,8 @@ import { redirect } from 'next/navigation';
 
 import { RestrictedDataNotice } from '../dashboard/components/restricted-data-notice';
 import { toRecommendationReviewReadContext } from '../../lib/recommendation-review-context';
+import { toActionProposalsReadContext } from '../../lib/action-proposals-context';
+import { getActionProposalsService } from '../../lib/action-proposals-service';
 import { getRecommendationReviewService } from '../../lib/recommendation-review-service';
 import { getOrganizationService } from '../../lib/organization-service';
 import { getRequestContext } from '../../lib/request-context';
@@ -34,7 +36,7 @@ export default async function RecommendationsPage() {
     throw error;
   }
 
-  const [organizationList, snapshot] = await Promise.all([
+  const [organizationList, snapshot, actionProposalsSnapshot] = await Promise.all([
     getOrganizationService().listOrganizations({
       userId: context.userId,
       activeOrganizationId: context.organizationId,
@@ -48,7 +50,20 @@ export default async function RecommendationsPage() {
 
         throw error;
       }),
+    getActionProposalsService()
+      .getActionProposals(toActionProposalsReadContext(context))
+      .catch((error: unknown) => {
+        if (error instanceof AuthorizationDeniedError) {
+          redirect('/no-organization');
+        }
+
+        throw error;
+      }),
   ]);
+
+  const actionProposalRecommendationIds = new Set(
+    actionProposalsSnapshot.proposals.map((item) => item.proposal.recommendationId),
+  );
 
   const canReview = hasPermission(context.role, PERMISSIONS.AI_REVIEW);
   const allReviewed =
@@ -93,7 +108,11 @@ export default async function RecommendationsPage() {
         </aside>
       ) : null}
 
-      <RecommendationReviewQueue canReview={canReview} items={snapshot.items} />
+      <RecommendationReviewQueue
+        actionProposalRecommendationIds={actionProposalRecommendationIds}
+        canReview={canReview}
+        items={snapshot.items}
+      />
     </main>
   );
 }
