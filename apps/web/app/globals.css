@@ -1167,6 +1167,11 @@ a.primary-button {
   border-radius: 4px;
 }
 
+.mission-control-nav {
+  margin: 8px 0 0;
+  font-size: 0.875rem;
+}
+
 .mission-control-empty-state {
   margin: 0;
   color: #4b5563;
@@ -1426,5 +1431,155 @@ a.primary-button {
   .mission-control-empty-actions .secondary-button {
     width: 100%;
     text-align: center;
+  }
+}
+
+.daily-briefing-page {
+  gap: 16px;
+}
+
+.daily-briefing-header h1 {
+  font-size: clamp(1.5rem, 2.4vw, 2rem);
+  line-height: 1.2;
+}
+
+.daily-briefing-window {
+  margin-top: 4px;
+}
+
+.daily-briefing-subtitle,
+.daily-briefing-nav {
+  margin: 0;
+  color: #6b7280;
+  font-size: 0.875rem;
+}
+
+.daily-briefing-nav {
+  margin-top: 8px;
+}
+
+.daily-briefing-ai-status {
+  padding: 10px 12px;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  background: #f9fafb;
+}
+
+.daily-briefing-ai-status p {
+  margin: 0;
+  color: #4b5563;
+  font-size: 0.875rem;
+}
+
+.daily-briefing-summary-panel {
+  border-left: 3px solid #dbeafe;
+}
+
+.daily-briefing-narrative-text {
+  margin: 0;
+  color: #111827;
+  font-size: 0.95rem;
+  line-height: 1.5;
+}
+
+.daily-briefing-narrative-secondary {
+  margin: 8px 0 0;
+  color: #374151;
+  font-size: 0.875rem;
+  line-height: 1.45;
+}
+
+.daily-briefing-source-count {
+  margin: 6px 0 0;
+  color: #6b7280;
+  font-size: 0.75rem;
+}
+
+.daily-briefing-section-heading {
+  margin: 0 0 8px;
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+
+.daily-briefing-signals-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.daily-briefing-signal-card {
+  min-height: 88px;
+}
+
+.daily-briefing-layout {
+  margin-top: 4px;
+}
+
+.daily-briefing-highlight-list,
+.mission-control-health-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.daily-briefing-highlight-item,
+.mission-control-health-item {
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 10px 12px;
+}
+
+.daily-briefing-health-meta,
+.mission-control-health-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 6px;
+}
+
+.daily-briefing-completeness-status {
+  margin: 0 0 8px;
+  font-size: 0.875rem;
+}
+
+.daily-briefing-degradation-notes {
+  margin: 8px 0 0;
+  padding-left: 18px;
+  color: #4b5563;
+  font-size: 0.875rem;
+}
+
+.daily-briefing-completeness-note {
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid #e5e7eb;
+}
+
+.daily-briefing-note-label {
+  margin: 0 0 4px;
+  color: #6b7280;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.daily-briefing-restricted-detail {
+  margin: 6px 0 0;
+  color: #6b7280;
+  font-size: 0.8125rem;
+}
+
+@media (max-width: 960px) {
+  .daily-briefing-signals-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 560px) {
+  .daily-briefing-signals-grid {
+    grid-template-columns: 1fr;
   }
 }

@@ -7,7 +7,7 @@
     "start": "next start",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
-    "test": "node --import tsx --test lib/**/*.test.ts app/actions/**/*.test.ts app/dashboard/**/*.test.ts app/programs/**/*.test.ts app/projects/**/*.test.ts",
+    "test": "node --import tsx --test lib/**/*.test.ts app/actions/**/*.test.ts app/dashboard/**/*.test.ts app/daily-briefing/**/*.test.ts app/programs/**/*.test.ts app/projects/**/*.test.ts",
     "lint:fix": "eslint . --fix"
   },
   "dependencies": {
