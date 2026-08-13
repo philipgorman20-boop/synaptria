@@ -14,6 +14,7 @@ export const routes = {
   projects: "/projects",
   programs: "/programs",
   recommendations: "/recommendations",
+  actionProposals: "/action-proposals",
   settings: "/settings",
 } as const;
 

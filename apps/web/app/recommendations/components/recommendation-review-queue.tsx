@@ -12,15 +12,18 @@ import {
   getRecommendationEntityHref,
   getRecommendationEvidenceHref,
 } from '../../../lib/recommendations-format';
+import { getActionProposalInspectionHref } from '../../../lib/action-proposals-format';
 
 export interface RecommendationReviewQueueProps {
   readonly items: readonly RecommendationReviewItem[];
   readonly canReview: boolean;
+  readonly actionProposalRecommendationIds?: ReadonlySet<string>;
 }
 
 export function RecommendationReviewQueue({
   items,
   canReview,
+  actionProposalRecommendationIds,
 }: RecommendationReviewQueueProps) {
   return (
     <section
@@ -45,6 +48,9 @@ export function RecommendationReviewQueue({
               canReview={canReview}
               item={item}
               key={item.recommendation.id}
+              {...(actionProposalRecommendationIds === undefined
+                ? {}
+                : { actionProposalRecommendationIds })}
             />
           ))}
         </ul>
@@ -56,15 +62,20 @@ export function RecommendationReviewQueue({
 function RecommendationReviewQueueItem({
   item,
   canReview,
+  actionProposalRecommendationIds,
 }: {
   readonly item: RecommendationReviewItem;
   readonly canReview: boolean;
+  readonly actionProposalRecommendationIds?: ReadonlySet<string>;
 }) {
   const { recommendation, review } = item;
   const targetHref = getRecommendationEntityHref(recommendation.targetEntity);
   const targetLabel = formatEntityReferenceLabel(recommendation.targetEntity);
   const reviewStatusLabel = formatRecommendationReviewStatus(review.status);
   const showActions = canReview && review.status === 'pending';
+  const showActionProposalLink =
+    review.status === 'accepted' &&
+    actionProposalRecommendationIds?.has(recommendation.id) === true;
 
   return (
     <li className="recommendation-review-item" data-review-status={review.status}>
@@ -151,6 +162,17 @@ function RecommendationReviewQueueItem({
           </div>
         ) : null}
       </dl>
+
+      {showActionProposalLink ? (
+        <p className="recommendation-review-proposal-link">
+          <Link
+            className="mission-control-inline-link"
+            href={getActionProposalInspectionHref(recommendation.id)}
+          >
+            Inspect action proposal
+          </Link>
+        </p>
+      ) : null}
 
       {showActions ? (
         <div className="recommendation-review-actions">
