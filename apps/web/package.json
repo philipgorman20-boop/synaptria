@@ -22,6 +22,7 @@
     "react-dom": "^19.1.0",
     "@synaptria/core": "workspace:*",
     "@synaptria/application": "workspace:*",
+    "@synaptria/ai": "workspace:*",
     "@synaptria/domain": "workspace:*",
     "@synaptria/permissions": "workspace:*"
   },
