@@ -15,6 +15,7 @@ export interface ListRecentOrganizationEventsInput {
   readonly limit: number;
   readonly eventTypes?: readonly string[];
   readonly aggregateTypes?: readonly string[];
+  readonly occurredAtOnOrAfter?: Date;
 }
 
 export interface ListRecentOrganizationEventsOutput {
@@ -46,6 +47,9 @@ export class ListRecentOrganizationEventsUseCase {
       ...(input.aggregateTypes === undefined || input.aggregateTypes.length === 0
         ? {}
         : { aggregateTypes: input.aggregateTypes }),
+      ...(input.occurredAtOnOrAfter === undefined
+        ? {}
+        : { occurredAtOnOrAfter: input.occurredAtOnOrAfter }),
     });
 
     return { events };

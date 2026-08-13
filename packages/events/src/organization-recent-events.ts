@@ -23,6 +23,11 @@ export function filterRecentOrganizationEvents(
       (event) =>
         aggregateTypeFilter === null || aggregateTypeFilter.has(event.aggregateType),
     )
+    .filter(
+      (event) =>
+        query.occurredAtOnOrAfter === undefined ||
+        event.occurredAt.getTime() >= query.occurredAtOnOrAfter.getTime(),
+    )
     .sort(compareDomainEventsByOccurredAtDescThenId)
     .slice(0, query.limit);
 }
