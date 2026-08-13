@@ -13,8 +13,9 @@
     "build": "tsc --noEmit",
     "lint": "tsc --noEmit",
     "typecheck": "tsc --noEmit",
-    "test": "node --import tsx --test src/**/*.test.ts",
-    "db:seed": "tsx prisma/seed.ts"
+    "test": "node --import tsx --test src/**/*.test.ts prisma/mission-control-demo/**/*.test.ts",
+    "db:seed": "tsx prisma/seed.ts",
+    "db:seed:mission-control": "tsx prisma/seed-mission-control-demo.ts"
   },
   "dependencies": {
     "@prisma/client": "^6.12.0",
