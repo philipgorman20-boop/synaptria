@@ -2,10 +2,23 @@
   "name": "@synaptria/ai",
   "version": "0.0.0",
   "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
   "scripts": {
-    "build": "node -e \"console.log('Not implemented')\"",
-    "lint": "node -e \"console.log('Not implemented')\"",
-    "typecheck": "node -e \"console.log('Not implemented')\"",
-    "test": "node -e \"console.log('No tests yet')\""
+    "build": "tsc --noEmit",
+    "lint": "tsc --noEmit",
+    "typecheck": "tsc --noEmit",
+    "test": "node --import tsx --test src/**/*.test.ts"
+  },
+  "dependencies": {
+    "@synaptria/core": "workspace:*",
+    "openai": "^6.8.1"
+  },
+  "devDependencies": {
+    "@types/node": "^22.15.30",
+    "tsx": "^4.20.3",
+    "typescript": "^5.8.3"
   }
 }
