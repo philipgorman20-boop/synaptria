@@ -73,6 +73,7 @@ export const PROVENANCE_RETRIEVAL_METHODS = [
   'repository.read',
   'repository.list',
   'eventRepository.findByAggregate',
+  'eventRepository.listRecentForOrganization',
   'memoryProvider.retrieve',
 ] as const;
 

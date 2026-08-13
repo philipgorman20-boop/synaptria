@@ -86,6 +86,7 @@ export interface ProvenanceRecord {
     | 'repository.read'
     | 'repository.list'
     | 'eventRepository.findByAggregate'
+    | 'eventRepository.listRecentForOrganization'
     | 'memoryProvider.retrieve';
   readonly retrievedAt: Date;
   readonly permissionScope: readonly string[];

@@ -964,3 +964,467 @@ a.primary-button {
     justify-content: flex-start;
   }
 }
+
+.mission-control-page.dashboard {
+  padding-top: 48px;
+  padding-bottom: 48px;
+}
+
+.mission-control-page {
+  display: grid;
+  gap: 12px;
+}
+
+.mission-control-page:has(> .mission-control-empty-organization) {
+  align-content: start;
+}
+
+.mission-control-header {
+  align-items: center;
+  gap: 20px;
+}
+
+.mission-control-heading {
+  flex: 1 1 58%;
+  min-width: min(480px, 100%);
+}
+
+.mission-control-header .dashboard-controls {
+  flex: 0 1 auto;
+  align-items: flex-end;
+}
+
+.mission-control-header .eyebrow {
+  margin: 0;
+}
+
+.mission-control-header h1 {
+  max-width: none;
+  font-size: clamp(1.75rem, 2.5vw, 2.125rem);
+  line-height: 1.12;
+  margin: 4px 0 2px;
+  white-space: nowrap;
+}
+
+.mission-control-subtitle {
+  margin: 0;
+  color: #4b5563;
+  line-height: 1.4;
+  font-size: 0.92rem;
+  max-width: 640px;
+}
+
+.mission-control-header .create-organization-button {
+  border: 1px solid #d1d5db;
+  border-radius: 10px;
+  background: white;
+  color: #111827;
+  font-weight: 650;
+  padding: 10px 16px;
+}
+
+.mission-control-header .create-organization-button:hover {
+  background: #f9fafb;
+}
+
+.mission-control-header .sign-out-button {
+  background: white;
+  color: #4b5563;
+  border: 1px solid #e5e7eb;
+  font-weight: 600;
+  padding: 10px 16px;
+}
+
+.mission-control-header .sign-out-button:hover {
+  background: #f9fafb;
+  color: #111827;
+}
+
+.mission-control-restricted-notice {
+  width: min(1080px, 100%);
+  margin: 0 auto;
+  padding: 12px 14px;
+  border: 1px solid #dbeafe;
+  border-radius: 10px;
+  background: #eff6ff;
+  color: #1e3a8a;
+}
+
+.mission-control-restricted-notice p {
+  margin: 0;
+  line-height: 1.5;
+  font-size: 0.9rem;
+}
+
+.mission-control-kpis {
+  width: min(1080px, 100%);
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 10px;
+}
+
+.mission-control-kpi-link {
+  color: inherit;
+  text-decoration: none;
+}
+
+.mission-control-kpi-link:focus-visible {
+  outline: 2px solid #2563eb;
+  outline-offset: 3px;
+  border-radius: 12px;
+}
+
+.mission-control-kpi-card {
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  padding: 10px 12px;
+  display: grid;
+  gap: 2px;
+  min-height: 100%;
+  transition: border-color 120ms ease, box-shadow 120ms ease;
+}
+
+.mission-control-kpi-link:hover .mission-control-kpi-card,
+.mission-control-kpi-link:focus-visible .mission-control-kpi-card {
+  border-color: #cbd5e1;
+  box-shadow: 0 6px 18px rgb(15 23 42 / 5%);
+}
+
+.mission-control-kpi-label {
+  color: #6b7280;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.mission-control-kpi-value {
+  font-size: 1.5rem;
+  line-height: 1.05;
+}
+
+.mission-control-kpi-context {
+  color: #9ca3af;
+  font-size: 0.78rem;
+}
+
+.mission-control-layout {
+  width: min(1080px, 100%);
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: minmax(0, 1.65fr) minmax(0, 1fr);
+  gap: 20px;
+  align-items: start;
+}
+
+.mission-control-primary-column,
+.mission-control-secondary-column {
+  display: grid;
+  gap: 20px;
+  min-width: 0;
+}
+
+.mission-control-panel {
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 14px;
+  padding: 18px 20px;
+}
+
+.mission-control-panel-header {
+  margin-bottom: 14px;
+}
+
+.mission-control-panel-header h2 {
+  margin: 0;
+  font-size: 1.15rem;
+}
+
+.mission-control-panel-description {
+  margin: 6px 0 0;
+  color: #6b7280;
+  font-size: 0.88rem;
+  line-height: 1.45;
+}
+
+.mission-control-panel-footer {
+  margin: 12px 0 0;
+  color: #6b7280;
+  font-size: 0.85rem;
+}
+
+.mission-control-inline-link {
+  color: #1d4ed8;
+  font-weight: 650;
+  text-decoration: none;
+}
+
+.mission-control-inline-link:focus-visible {
+  outline: 2px solid #2563eb;
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+.mission-control-empty-state {
+  margin: 0;
+  color: #4b5563;
+  line-height: 1.55;
+  font-size: 0.92rem;
+}
+
+.mission-control-empty-organization {
+  width: min(1080px, 100%);
+  margin: 0 auto;
+  padding: 18px 20px 20px;
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 14px;
+  align-self: start;
+  height: auto;
+  min-height: 0;
+}
+
+.mission-control-empty-organization h2 {
+  margin: 0 0 8px;
+  font-size: 1.2rem;
+}
+
+.mission-control-empty-organization p {
+  margin: 0;
+  color: #4b5563;
+  line-height: 1.6;
+  max-width: 640px;
+}
+
+.mission-control-empty-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.mission-control-attention-list,
+.mission-control-upcoming-list,
+.mission-control-activity-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 10px;
+}
+
+.mission-control-attention-item,
+.mission-control-upcoming-item,
+.mission-control-activity-item {
+  border: 1px solid #eef2f7;
+  border-radius: 10px;
+  padding: 12px 14px;
+  background: #fafbfc;
+}
+
+.mission-control-item-link {
+  display: block;
+  color: inherit;
+  text-decoration: none;
+}
+
+.mission-control-item-link:focus-visible {
+  outline: 2px solid #2563eb;
+  outline-offset: 2px;
+  border-radius: 8px;
+}
+
+.mission-control-item-link:hover .mission-control-item-title {
+  color: #1d4ed8;
+}
+
+.mission-control-attention-meta,
+.mission-control-upcoming-meta,
+.mission-control-activity-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.mission-control-severity-badge,
+.mission-control-health-badge {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  padding: 3px 8px;
+  text-transform: uppercase;
+  border: 1px solid transparent;
+}
+
+.mission-control-severity-badge[data-severity='critical'] {
+  background: #fef2f2;
+  color: #991b1b;
+  border-color: #fecaca;
+}
+
+.mission-control-severity-badge[data-severity='high'] {
+  background: #fff7ed;
+  color: #9a3412;
+  border-color: #fed7aa;
+}
+
+.mission-control-severity-badge[data-severity='medium'] {
+  background: #fffbeb;
+  color: #92400e;
+  border-color: #fde68a;
+}
+
+.mission-control-severity-badge[data-severity='low'] {
+  background: #f3f4f6;
+  color: #374151;
+  border-color: #e5e7eb;
+}
+
+.mission-control-type-label,
+.mission-control-entity-type,
+.mission-control-activity-type {
+  color: #6b7280;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.mission-control-item-title {
+  display: block;
+  font-size: 0.98rem;
+  line-height: 1.35;
+}
+
+.mission-control-item-reason,
+.mission-control-item-context,
+.mission-control-item-status,
+.mission-control-activity-aggregate {
+  margin: 4px 0 0;
+  color: #4b5563;
+  font-size: 0.86rem;
+  line-height: 1.45;
+}
+
+.mission-control-item-details,
+.mission-control-upcoming-due,
+.mission-control-activity-meta time {
+  color: #6b7280;
+  font-size: 0.82rem;
+}
+
+.mission-control-table-wrapper {
+  overflow-x: auto;
+}
+
+.mission-control-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.88rem;
+}
+
+.mission-control-table th,
+.mission-control-table td {
+  padding: 10px 8px;
+  border-bottom: 1px solid #eef2f7;
+  text-align: left;
+  vertical-align: top;
+}
+
+.mission-control-table th {
+  color: #6b7280;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.mission-control-table-link {
+  color: #111827;
+  font-weight: 650;
+  text-decoration: none;
+}
+
+.mission-control-table-link:hover {
+  color: #1d4ed8;
+}
+
+.mission-control-table-link:focus-visible {
+  outline: 2px solid #2563eb;
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+.mission-control-health-badge[data-health='at_risk'] {
+  background: #fef2f2;
+  color: #991b1b;
+  border-color: #fecaca;
+}
+
+.mission-control-health-badge[data-health='watch'] {
+  background: #fffbeb;
+  color: #92400e;
+  border-color: #fde68a;
+}
+
+.mission-control-health-badge[data-health='on_track'] {
+  background: #ecfdf5;
+  color: #065f46;
+  border-color: #a7f3d0;
+}
+
+.mission-control-health-severity {
+  display: block;
+  margin-top: 4px;
+  color: #6b7280;
+  font-size: 0.75rem;
+}
+
+@media (min-width: 960px) {
+  .mission-control-kpis {
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 900px) {
+  .mission-control-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .mission-control-heading {
+    min-width: 0;
+  }
+}
+
+@media (max-width: 700px) {
+  .mission-control-header {
+    align-items: flex-start;
+  }
+
+  .mission-control-header h1 {
+    white-space: normal;
+  }
+}
+
+@media (max-width: 560px) {
+  .mission-control-kpis {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .mission-control-empty-actions {
+    flex-direction: column;
+  }
+
+  .mission-control-empty-actions .primary-button,
+  .mission-control-empty-actions .secondary-button {
+    width: 100%;
+    text-align: center;
+  }
+}

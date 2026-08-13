@@ -39,6 +39,7 @@ import type {
   DomainEventId,
   DomainEventStatus,
   EventRepository,
+  OrganizationRecentEventsQuery,
 } from '@synaptria/events';
 
 import { ApplicationError } from '../../shared/application-error';
@@ -195,6 +196,12 @@ class InMemoryEventRepository implements EventRepository {
 
   async findByAggregate(
     _query: AggregateEventQuery,
+  ): Promise<readonly DomainEventEnvelope[]> {
+    return [];
+  }
+
+  async listRecentForOrganization(
+    _query: OrganizationRecentEventsQuery,
   ): Promise<readonly DomainEventEnvelope[]> {
     return [];
   }

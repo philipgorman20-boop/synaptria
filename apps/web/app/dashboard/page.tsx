@@ -3,57 +3,26 @@ import {
   OrganizationMembershipRequiredError,
   type ResolvedOrganizationContext,
 } from '@synaptria/auth';
-import { appConfig, primaryNavigation, routes } from '@synaptria/config';
-import { Card, Stack } from '@synaptria/ui';
-import Link from 'next/link';
+import { AuthorizationDeniedError } from '@synaptria/core/errors';
+import { PERMISSIONS, hasPermission } from '@synaptria/permissions';
 import { redirect } from 'next/navigation';
 
+import { getMissionControlService } from '../../lib/mission-control-service';
+import { toMissionControlContext } from '../../lib/mission-control-context';
 import { getOrganizationService } from '../../lib/organization-service';
 import { getRequestContext } from '../../lib/request-context';
 
-import { signOutCurrentUser } from '../actions/auth';
-import { CreateOrganizationDialog } from './components/create-organization-dialog';
-import { OrganizationSwitcher } from './components/organization-switcher';
-
-const executionModules = [
-  {
-    label: 'Programs',
-    href: routes.programs,
-    description: 'Portfolio-level program management',
-  },
-  {
-    label: 'Projects',
-    href: routes.projects,
-    description: 'Scientific and operational projects',
-  },
-  {
-    label: 'Milestones',
-    href: routes.projects,
-    description: 'Phase gates and delivery checkpoints within projects',
-  },
-  {
-    label: 'Tasks',
-    href: routes.projects,
-    description: 'Actionable work items within milestone execution',
-  },
-] as const;
-
-const implementedModuleRoutes = new Set<string>([
-  routes.dashboard,
-  routes.programs,
-  routes.projects,
-]);
-
-const plannedModules = primaryNavigation.filter(
-  (item) => !implementedModuleRoutes.has(item.href),
-);
-
-const metricCards = [
-  { label: 'Programs', value: 'View portfolio', href: routes.programs },
-  { label: 'Projects', value: 'View projects', href: routes.projects },
-  { label: 'Open risks', value: '0' },
-  { label: 'Pending decisions', value: '0' },
-] as const;
+import { AttentionList } from './components/attention-list';
+import {
+  MissionControlEmptyOrganization,
+  MissionControlHeader,
+} from './components/mission-control-header';
+import { MissionControlKpis } from './components/mission-control-kpis';
+import { ProjectHealthList } from './components/project-health-list';
+import { RecentActivityFeed } from './components/recent-activity-feed';
+import { RestrictedDataNotice } from './components/restricted-data-notice';
+import { UpcomingWork } from './components/upcoming-work';
+import { shouldShowEmptyOrganizationState } from './mission-control-format';
 
 export default async function DashboardPage() {
   let context: ResolvedOrganizationContext;
@@ -72,101 +41,65 @@ export default async function DashboardPage() {
     throw error;
   }
 
-  const organizationList = await getOrganizationService().listOrganizations({
-    userId: context.userId,
-    activeOrganizationId: context.organizationId,
-  });
+  const [organizationList, snapshot] = await Promise.all([
+    getOrganizationService().listOrganizations({
+      userId: context.userId,
+      activeOrganizationId: context.organizationId,
+    }),
+    getMissionControlService()
+      .getSnapshot(toMissionControlContext(context))
+      .catch((error: unknown) => {
+        if (error instanceof AuthorizationDeniedError) {
+          redirect('/no-organization');
+        }
+
+        throw error;
+      }),
+  ]);
+
+  const canManagePrograms = hasPermission(context.role, PERMISSIONS.PROGRAMS_MANAGE);
+  const canManageProjects = hasPermission(context.role, PERMISSIONS.PROJECTS_MANAGE);
+  const showEmptyOrganization = shouldShowEmptyOrganizationState(snapshot);
 
   return (
-    <main className="dashboard">
-      <header className="dashboard-header">
-        <div className="dashboard-heading">
-          <p className="eyebrow">WORKSPACE</p>
-          <h1>Executive dashboard</h1>
-          <p>
-            Welcome to the {appConfig.name} operating workspace. You are working
-            in {context.organizationName} as {context.role.toLowerCase()}.
-          </p>
-        </div>
+    <main className="dashboard mission-control-page">
+      <MissionControlHeader
+        activeOrganizationId={context.organizationId}
+        organizations={organizationList.organizations.map((item) => ({
+          id: item.organization.id,
+          name: item.organization.name,
+          role: item.membership.role,
+        }))}
+      />
 
-        <div className="dashboard-controls">
-          <OrganizationSwitcher
-            activeOrganizationId={context.organizationId}
-            organizations={organizationList.organizations.map((item) => ({
-              id: item.organization.id,
-              name: item.organization.name,
-              role: item.membership.role,
-            }))}
-          />
+      <RestrictedDataNotice restrictedSlices={snapshot.metadata.restrictedSlices} />
 
-          <div className="dashboard-button-row">
-            <CreateOrganizationDialog />
+      <MissionControlKpis
+        summary={snapshot.summary}
+        restrictedSlices={snapshot.metadata.restrictedSlices}
+      />
 
-            <form action={signOutCurrentUser}>
-              <button className="sign-out-button" type="submit">
-                Sign out
-              </button>
-            </form>
+      {showEmptyOrganization ? (
+        <MissionControlEmptyOrganization
+          canManagePrograms={canManagePrograms}
+          canManageProjects={canManageProjects}
+        />
+      ) : (
+        <div className="mission-control-layout">
+          <div className="mission-control-primary-column">
+            <AttentionList items={snapshot.attentionItems} />
+            <UpcomingWork
+              milestoneSignals={snapshot.milestoneSignals}
+              taskSignals={snapshot.taskSignals}
+            />
+          </div>
+
+          <div className="mission-control-secondary-column">
+            <ProjectHealthList projectHealth={snapshot.projectHealth} />
+            <RecentActivityFeed recentActivity={snapshot.recentActivity} />
           </div>
         </div>
-      </header>
-
-      <section className="grid" aria-label="Workspace metrics">
-        {metricCards.map((card) =>
-          'href' in card ? (
-            <Link key={card.label} className="dashboard-metric-link" href={card.href}>
-              <Card>
-                <Stack gap={12}>
-                  <span>{card.label}</span>
-                  <strong>{card.value}</strong>
-                </Stack>
-              </Card>
-            </Link>
-          ) : (
-            <Card key={card.label}>
-              <Stack gap={12}>
-                <span>{card.label}</span>
-                <strong>{card.value}</strong>
-              </Stack>
-            </Card>
-          ),
-        )}
-      </section>
-
-      <section
-        className="dashboard-section"
-        aria-labelledby="execution-modules-heading"
-      >
-        <h2 id="execution-modules-heading">Portfolio &amp; execution</h2>
-
-        <div className="module-list">
-          {executionModules.map((item) => (
-            <Link key={item.label} className="module-list-link" href={item.href}>
-              <Card>
-                <Stack gap={8}>
-                  <strong>{item.label}</strong>
-                  <span>{item.description}</span>
-                </Stack>
-              </Card>
-            </Link>
-          ))}
-        </div>
-      </section>
-
-      <section className="dashboard-section">
-        <h2>Planned modules</h2>
-
-        <div className="module-list">
-          {plannedModules.map((item) => (
-            <Card key={item.href}>
-              <Stack gap={8}>
-                <strong>{item.label}</strong>
-                <span>{item.description}</span>
-              </Stack>
-            </Card>
-          ))}
-        </div>
-      </section>
+      )}
     </main>
   );
 }
