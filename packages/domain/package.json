@@ -10,7 +10,8 @@
     "./projects": "./src/projects/index.ts",
     "./milestones": "./src/milestones/index.ts",
     "./shared": "./src/shared/index.ts",
-    "./tasks": "./src/tasks/index.ts"
+    "./tasks": "./src/tasks/index.ts",
+    "./context": "./src/context/index.ts"
   },
   "scripts": {
     "build": "tsc --noEmit",
