@@ -29,6 +29,7 @@
   },
   "dependencies": {
     "@synaptria/audit": "workspace:*",
+    "@synaptria/ai": "workspace:*",
     "@synaptria/core": "workspace:*",
     "@synaptria/domain": "workspace:*",
     "@synaptria/events": "workspace:*",

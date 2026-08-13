@@ -109,6 +109,9 @@ importers:
 
   packages/application:
     dependencies:
+      '@synaptria/ai':
+        specifier: workspace:*
+        version: link:../ai
       '@synaptria/audit':
         specifier: workspace:*
         version: link:../audit

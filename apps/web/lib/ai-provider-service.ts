@@ -1,14 +1,25 @@
 import { SystemClock } from '@synaptria/core';
 import { createAIProviderService } from '@synaptria/ai';
+import { DAILY_BRIEFING_NARRATIVE_CAPABILITY_ID } from '@synaptria/application';
+
+const configuredModel =
+  process.env.OPENAI_MODEL === undefined || process.env.OPENAI_MODEL.trim().length === 0
+    ? undefined
+    : process.env.OPENAI_MODEL.trim();
 
 const routing =
-  process.env.OPENAI_MODEL === undefined || process.env.OPENAI_MODEL.trim().length === 0
+  configuredModel === undefined
     ? { routes: {} }
     : {
-        routes: {},
+        routes: {
+          [DAILY_BRIEFING_NARRATIVE_CAPABILITY_ID]: {
+            providerId: 'openai' as const,
+            model: configuredModel,
+          },
+        },
         defaultRoute: {
           providerId: 'openai' as const,
-          model: process.env.OPENAI_MODEL.trim(),
+          model: configuredModel,
         },
       };
 
