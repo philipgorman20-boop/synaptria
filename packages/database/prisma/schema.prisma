@@ -410,6 +410,11 @@ enum DomainEventStatus {
   DEAD_LETTER
 }
 
+enum RecommendationReviewDecisionType {
+  ACCEPTED
+  DISMISSED
+}
+
 enum ApiKeyStatus {
   ACTIVE
   REVOKED
@@ -517,6 +522,7 @@ model User {
   createdLedgerTxns LedgerTransaction[] @relation("LedgerTransactionCreator")
   postedLedgerTxns  LedgerTransaction[] @relation("LedgerTransactionPoster")
   initiatedAiRuns   AiRun[]             @relation("AiRunInitiator")
+  recommendationReviewDecisions RecommendationReviewDecision[] @relation("RecommendationReviewDecisionReviewer")
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -624,8 +630,30 @@ model Organization {
   ledgerEntries      LedgerEntry[]
   aiRuns             AiRun[]
 
+  recommendationReviewDecisions RecommendationReviewDecision[]
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+model RecommendationReviewDecision {
+  id               String                           @id @default(uuid())
+  organizationId   String
+  recommendationId String
+  decision         RecommendationReviewDecisionType
+  reviewedByUserId String
+  reviewedAt       DateTime                         @default(now())
+  dismissalReason  String?
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  reviewedBy   User         @relation("RecommendationReviewDecisionReviewer", fields: [reviewedByUserId], references: [id], onDelete: Restrict)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([organizationId, recommendationId])
+  @@index([organizationId, reviewedAt])
+  @@index([reviewedByUserId])
 }
 
 model Membership {

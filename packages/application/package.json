@@ -16,6 +16,7 @@
     "./mission-control": "./src/modules/mission-control/index.ts",
     "./daily-briefing": "./src/modules/daily-briefing/index.ts",
     "./recommendations": "./src/modules/recommendations/index.ts",
+    "./recommendation-reviews": "./src/modules/recommendation-reviews/index.ts",
     "./vendors": "./src/modules/vendors/index.ts",
     "./documents": "./src/modules/documents/index.ts",
     "./reporting": "./src/modules/reporting/index.ts",

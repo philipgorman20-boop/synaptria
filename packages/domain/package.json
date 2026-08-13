@@ -11,7 +11,8 @@
     "./milestones": "./src/milestones/index.ts",
     "./shared": "./src/shared/index.ts",
     "./tasks": "./src/tasks/index.ts",
-    "./context": "./src/context/index.ts"
+    "./context": "./src/context/index.ts",
+    "./recommendation-reviews": "./src/recommendation-reviews/index.ts"
   },
   "scripts": {
     "build": "tsc --noEmit",
