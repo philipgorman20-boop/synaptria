@@ -50,32 +50,28 @@ function AttentionListItem({ item }: { readonly item: MissionControlAttentionIte
   const dueDateLabel = formatOptionalMissionControlDate(item.dueDate);
 
   const content = (
-    <>
-      <div className="mission-control-attention-meta">
-        <span
-          className="mission-control-severity-badge"
-          data-severity={item.severity}
-        >
-          {severityLabel}
-        </span>
-        <span className="mission-control-type-label">{typeLabel}</span>
-      </div>
-      <div className="mission-control-attention-body">
-        <strong className="mission-control-item-title">{item.title}</strong>
-        <p className="mission-control-item-reason">{item.reason}</p>
+    <div className="mission-control-attention-row">
+      <div className="mission-control-attention-row-top">
+        <div className="mission-control-attention-labels">
+          <span
+            className="mission-control-severity-badge"
+            data-severity={item.severity}
+          >
+            {severityLabel}
+          </span>
+          <span className="mission-control-type-label">{typeLabel}</span>
+        </div>
         {item.dueDate !== undefined ? (
-          <p className="mission-control-item-details">Due {dueDateLabel}</p>
+          <span className="mission-control-attention-due">Due {dueDateLabel}</span>
         ) : null}
       </div>
-    </>
+      <strong className="mission-control-item-title">{item.title}</strong>
+      <p className="mission-control-item-reason">{item.reason}</p>
+    </div>
   );
 
   if (href === null) {
-    return (
-      <li className="mission-control-attention-item">
-        {content}
-      </li>
-    );
+    return <li className="mission-control-attention-item">{content}</li>;
   }
 
   return (

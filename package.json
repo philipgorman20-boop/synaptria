@@ -11,7 +11,8 @@
     "format": "prettier --write .",
     "db:generate": "pnpm --filter @synaptria/database db:generate",
     "db:migrate": "pnpm --filter @synaptria/database db:migrate",
-    "db:studio": "pnpm --filter @synaptria/database db:studio"
+    "db:studio": "pnpm --filter @synaptria/database db:studio",
+    "db:seed:mission-control": "pnpm --filter @synaptria/database db:seed:mission-control"
   },
   "devDependencies": {
     "prettier": "^3.6.2",

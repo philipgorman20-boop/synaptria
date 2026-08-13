@@ -12,6 +12,7 @@ import {
   getProjectHealthOverflowCount,
   MISSION_CONTROL_EMPTY_PROJECT_HEALTH_MESSAGE,
   MISSION_CONTROL_PROJECT_HEALTH_LIMIT,
+  shouldShowProjectHealthSeverity,
 } from '../mission-control-format';
 
 export interface ProjectHealthListProps {
@@ -40,24 +41,11 @@ export function ProjectHealthList({ projectHealth }: ProjectHealthListProps) {
         </p>
       ) : (
         <>
-          <div className="mission-control-table-wrapper">
-            <table className="mission-control-table">
-              <thead>
-                <tr>
-                  <th scope="col">Project</th>
-                  <th scope="col">Health</th>
-                  <th scope="col">Risk</th>
-                  <th scope="col">Blocked</th>
-                  <th scope="col">Next milestone</th>
-                </tr>
-              </thead>
-              <tbody>
-                {visibleProjects.map((project) => (
-                  <ProjectHealthRow key={project.projectId} project={project} />
-                ))}
-              </tbody>
-            </table>
-          </div>
+          <ul className="mission-control-project-health-list">
+            {visibleProjects.map((project) => (
+              <ProjectHealthItem key={project.projectId} project={project} />
+            ))}
+          </ul>
           {overflowCount > 0 ? (
             <p className="mission-control-panel-footer">
               {overflowCount} more project{overflowCount === 1 ? '' : 's'} not shown.{' '}
@@ -72,44 +60,43 @@ export function ProjectHealthList({ projectHealth }: ProjectHealthListProps) {
   );
 }
 
-function ProjectHealthRow({
+function ProjectHealthItem({
   project,
 }: {
   readonly project: MissionControlProjectHealth;
 }) {
   const healthLabel = formatProjectHealthState(project.healthState);
-  const severityLabel = formatMissionControlSeverity(project.attentionSeverity);
   const riskSummary = formatProjectHealthRiskSummary(project);
   const nextMilestone = formatOptionalMissionControlDate(project.nextMilestoneDueDate);
-  const blockedLabel =
-    project.blockedTasks === 0
-      ? 'None'
-      : project.blockedTasks === 1
-        ? '1 task'
-        : `${project.blockedTasks} tasks`;
+  const showSeverity = shouldShowProjectHealthSeverity(project);
 
   return (
-    <tr>
-      <td>
+    <li className="mission-control-project-health-item">
+      <div className="mission-control-project-health-header">
         <Link
-          className="mission-control-table-link"
+          className="mission-control-project-health-link"
           href={getProjectHealthHref(project)}
         >
           {project.projectName}
         </Link>
-      </td>
-      <td>
-        <span
-          className="mission-control-health-badge"
-          data-health={project.healthState}
-        >
-          {healthLabel}
-        </span>
-        <span className="mission-control-health-severity">{severityLabel}</span>
-      </td>
-      <td>{riskSummary}</td>
-      <td>{blockedLabel}</td>
-      <td>{nextMilestone}</td>
-    </tr>
+        <div className="mission-control-project-health-badges">
+          {showSeverity ? (
+            <span className="mission-control-project-health-severity">
+              {formatMissionControlSeverity(project.attentionSeverity)}
+            </span>
+          ) : null}
+          <span
+            className="mission-control-health-badge"
+            data-health={project.healthState}
+          >
+            {healthLabel}
+          </span>
+        </div>
+      </div>
+      <p className="mission-control-project-health-risk">{riskSummary}</p>
+      <p className="mission-control-project-health-next">
+        Next milestone: {nextMilestone}
+      </p>
+    </li>
   );
 }

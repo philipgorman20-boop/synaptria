@@ -1114,7 +1114,7 @@ a.primary-button {
   width: min(1080px, 100%);
   margin: 0 auto;
   display: grid;
-  grid-template-columns: minmax(0, 1.65fr) minmax(0, 1fr);
+  grid-template-columns: minmax(0, 1.45fr) minmax(0, 1fr);
   gap: 20px;
   align-items: start;
 }
@@ -1210,7 +1210,15 @@ a.primary-button {
   margin-top: 14px;
 }
 
-.mission-control-attention-list,
+.mission-control-attention-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  border: 1px solid #eef2f7;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
 .mission-control-upcoming-list,
 .mission-control-activity-list {
   list-style: none;
@@ -1220,13 +1228,63 @@ a.primary-button {
   gap: 10px;
 }
 
-.mission-control-attention-item,
+.mission-control-attention-item {
+  border-bottom: 1px solid #eef2f7;
+  background: white;
+}
+
+.mission-control-attention-item:last-child {
+  border-bottom: 0;
+}
+
 .mission-control-upcoming-item,
 .mission-control-activity-item {
   border: 1px solid #eef2f7;
   border-radius: 10px;
   padding: 12px 14px;
   background: #fafbfc;
+}
+
+.mission-control-attention-row {
+  padding: 10px 12px;
+}
+
+.mission-control-attention-row-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 4px;
+}
+
+.mission-control-attention-labels {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.mission-control-attention-due {
+  flex: 0 0 auto;
+  color: #6b7280;
+  font-size: 0.78rem;
+  white-space: nowrap;
+}
+
+.mission-control-attention-item .mission-control-item-title {
+  font-size: 0.92rem;
+  line-height: 1.3;
+}
+
+.mission-control-attention-item .mission-control-item-reason {
+  margin: 2px 0 0;
+  font-size: 0.82rem;
+  line-height: 1.4;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
 .mission-control-item-link {
@@ -1253,6 +1311,84 @@ a.primary-button {
   align-items: center;
   gap: 8px;
   margin-bottom: 6px;
+}
+
+.mission-control-project-health-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0;
+  border: 1px solid #eef2f7;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.mission-control-project-health-item {
+  padding: 12px 14px;
+  background: white;
+  border-bottom: 1px solid #eef2f7;
+}
+
+.mission-control-project-health-item:last-child {
+  border-bottom: 0;
+}
+
+.mission-control-project-health-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.mission-control-project-health-link {
+  color: #111827;
+  font-weight: 650;
+  font-size: 0.92rem;
+  line-height: 1.35;
+  text-decoration: none;
+  min-width: 0;
+}
+
+.mission-control-project-health-link:hover {
+  color: #1d4ed8;
+}
+
+.mission-control-project-health-link:focus-visible {
+  outline: 2px solid #2563eb;
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+.mission-control-project-health-badges {
+  display: flex;
+  flex: 0 0 auto;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 6px;
+}
+
+.mission-control-project-health-severity {
+  color: #6b7280;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.mission-control-project-health-risk {
+  margin: 6px 0 0;
+  color: #4b5563;
+  font-size: 0.82rem;
+  line-height: 1.4;
+}
+
+.mission-control-project-health-next {
+  margin: 4px 0 0;
+  color: #6b7280;
+  font-size: 0.78rem;
+  line-height: 1.35;
 }
 
 .mission-control-severity-badge,
@@ -1405,6 +1541,20 @@ a.primary-button {
 
   .mission-control-heading {
     min-width: 0;
+  }
+
+  .mission-control-project-health-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .mission-control-project-health-badges {
+    justify-content: flex-start;
+  }
+
+  .mission-control-attention-row-top {
+    align-items: flex-start;
+    flex-direction: column;
   }
 }
 
