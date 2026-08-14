@@ -40,6 +40,7 @@ export function dailyBriefingSnapshotFixture(
         milestoneId: 'milestone-1',
       },
     ],
+    taskSignals: [],
     projectHighlights: [
       {
         projectId: 'project-1',
@@ -136,6 +137,7 @@ export function emptyDailyBriefingSnapshotFixture(): DailyBriefingSnapshot {
       changedProjectCount: 0,
     },
     attentionItems: [],
+    taskSignals: [],
     projectHighlights: [],
     upcomingWork: [],
     recentChanges: [],

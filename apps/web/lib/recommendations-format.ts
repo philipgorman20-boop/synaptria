@@ -21,6 +21,8 @@ export function formatRecommendationType(type: RecommendationType): string {
       return 'Near-term workload';
     case 'review_concentrated_execution_risk':
       return 'Execution risk';
+    case 'escalate_blocked_overdue_task_priority':
+      return 'Blocked overdue task priority';
     default:
       return type;
   }

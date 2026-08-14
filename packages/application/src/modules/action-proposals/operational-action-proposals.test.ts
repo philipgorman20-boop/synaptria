@@ -15,6 +15,7 @@ import {
 } from './evaluate-operational-mapping';
 import {
   loadAuthoritativeCurrentState,
+  resolveActionProposalValidation,
   resolveActionProposalValidationFromCurrentState,
 } from './resolve-action-proposal-validation';
 import type {
@@ -256,4 +257,167 @@ test('advisory proposals remain not applicable for operational precondition vali
   );
 
   assert.deepEqual(validation, { status: 'NOT_APPLICABLE', issues: [] });
+});
+
+function operationalPrioritySnapshot() {
+  return generateRecommendationsFromDailyBriefingSnapshot(
+    dailyBriefingSnapshotFixture({
+      attentionItems: [],
+      taskSignals: [
+        {
+          taskId: 'task-blocked-overdue',
+          taskName: 'Assay transfer',
+          milestoneId: 'milestone-1',
+          milestoneName: 'Protocol Draft',
+          projectId: 'project-1',
+          projectName: 'Alpha Study',
+          status: 'BLOCKED',
+          priority: 'MEDIUM',
+          plannedEndDate: '2026-07-20T12:00:00.000Z',
+          overdue: true,
+          dueSoon: false,
+          blocked: true,
+        },
+      ],
+      projectHighlights: [
+        {
+          projectId: 'project-1',
+          projectName: 'Alpha Study',
+          healthState: 'at_risk',
+          attentionSeverity: 'high',
+          overdueTasks: 1,
+          blockedTasks: 1,
+          overdueMilestones: 0,
+          dueSoonMilestones: 0,
+          dueSoonTasks: 0,
+          recentEventCount: 1,
+        },
+      ],
+      evidence: [
+        {
+          evidenceType: 'operationalEntity',
+          reference: {
+            organizationId: ORGANIZATION_ID,
+            entityType: 'Task',
+            entityId: 'task-blocked-overdue',
+          },
+          source: 'missionControl',
+        },
+        {
+          evidenceType: 'operationalEntity',
+          reference: {
+            organizationId: ORGANIZATION_ID,
+            entityType: 'Project',
+            entityId: 'project-1',
+          },
+          source: 'missionControl',
+        },
+      ],
+    }),
+  );
+}
+
+test('accepted operational priority recommendation produces OPERATIONAL action proposal', async () => {
+  const snapshot = operationalPrioritySnapshot();
+  const recommendation = snapshot.recommendations.find(
+    (item) => item.type === 'escalate_blocked_overdue_task_priority',
+  );
+  assert.ok(recommendation);
+
+  const built = await buildActionProposalFromAcceptedRecommendation(recommendation, {
+    organizationId: ORGANIZATION_ID,
+    stateReaders: createStateReaders({
+      taskId: taskId('task-blocked-overdue'),
+      organizationId: ORGANIZATION_ID,
+      status: 'BLOCKED',
+      priority: 'MEDIUM',
+      plannedEndDate: null,
+      updatedAt: '2026-07-26T12:00:00.000Z',
+    }),
+  });
+
+  assert.ok(built);
+  assert.equal(built.mappingKind, 'OPERATIONAL');
+  assert.equal(built.proposal.proposalKind, 'OPERATIONAL');
+  assert.equal(built.proposal.actionType, 'ESCALATE_BLOCKED_OVERDUE_TASK_PRIORITY');
+  assert.deepEqual(built.proposal.proposedChanges, [
+    {
+      field: 'priority',
+      currentValue: 'MEDIUM',
+      proposedValue: 'HIGH',
+    },
+  ]);
+  assert.deepEqual(built.proposal.preconditions, [
+    { field: 'priority', expectedValue: 'MEDIUM' },
+    { field: 'updatedAt', expectedValue: '2026-07-26T12:00:00.000Z' },
+  ]);
+  assert.ok(
+    built.proposal.proposedChanges.every((change) => change.field !== 'updatedAt'),
+  );
+});
+
+test('operational priority proposal validation becomes stale when priority or updatedAt drift', async () => {
+  const snapshot = operationalPrioritySnapshot();
+  const recommendation = snapshot.recommendations.find(
+    (item) => item.type === 'escalate_blocked_overdue_task_priority',
+  );
+  assert.ok(recommendation);
+
+  const taskState = {
+    taskId: taskId('task-blocked-overdue'),
+    organizationId: ORGANIZATION_ID,
+    status: 'BLOCKED',
+    priority: 'MEDIUM',
+    plannedEndDate: null,
+    updatedAt: '2026-07-26T12:00:00.000Z',
+  };
+
+  const built = await buildActionProposalFromAcceptedRecommendation(recommendation, {
+    organizationId: ORGANIZATION_ID,
+    stateReaders: createStateReaders(taskState),
+  });
+  assert.ok(built);
+
+  const current = await resolveActionProposalValidation(
+    built.proposal,
+    ORGANIZATION_ID,
+    createStateReaders(taskState),
+  );
+  assert.deepEqual(current, { status: 'CURRENT', issues: [] });
+
+  const stalePriority = await resolveActionProposalValidation(
+    built.proposal,
+    ORGANIZATION_ID,
+    createStateReaders({ ...taskState, priority: 'HIGH' }),
+  );
+  assert.equal(stalePriority.status, 'STALE');
+
+  const staleUpdatedAt = await resolveActionProposalValidation(
+    built.proposal,
+    ORGANIZATION_ID,
+    createStateReaders({ ...taskState, updatedAt: '2026-07-26T13:00:00.000Z' }),
+  );
+  assert.equal(staleUpdatedAt.status, 'STALE');
+});
+
+test('operational-eligible recommendation does not fall back to advisory when operational build fails', async () => {
+  const snapshot = operationalPrioritySnapshot();
+  const recommendation = snapshot.recommendations.find(
+    (item) => item.type === 'escalate_blocked_overdue_task_priority',
+  );
+  assert.ok(recommendation);
+
+  const built = await buildActionProposalFromAcceptedRecommendation(recommendation, {
+    organizationId: ORGANIZATION_ID,
+    stateReaders: createStateReaders({
+      taskId: taskId('task-blocked-overdue'),
+      organizationId: ORGANIZATION_ID,
+      status: 'BLOCKED',
+      priority: 'HIGH',
+      plannedEndDate: null,
+      updatedAt: '2026-07-26T12:00:00.000Z',
+    }),
+  });
+
+  assert.equal(built, null);
 });

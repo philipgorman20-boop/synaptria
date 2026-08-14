@@ -5,6 +5,7 @@ export * from './build-advisory-action-proposal';
 export * from './build-action-proposal-from-recommendation';
 export * from './build-action-proposal-id';
 export * from './build-operational-action-proposal';
+export * from './build-operational-task-priority-proposal';
 export * from './constants';
 export * from './evaluate-operational-mapping';
 export * from './get-action-proposals';

@@ -5,10 +5,32 @@ export interface OperationalMappingEvaluation {
   readonly reason: string;
 }
 
+function hasTaskPriorityMutation(recommendation: Recommendation): boolean {
+  return (
+    recommendation.proposedMutation !== undefined &&
+    recommendation.proposedMutation.entityType === 'Task' &&
+    recommendation.proposedMutation.field === 'priority'
+  );
+}
+
 export function evaluateOperationalMapping(
   recommendation: Recommendation,
 ): OperationalMappingEvaluation {
   switch (recommendation.type) {
+    case 'escalate_blocked_overdue_task_priority':
+      if (hasTaskPriorityMutation(recommendation)) {
+        return {
+          eligible: true,
+          reason:
+            'Recommendation includes an explicit Task.priority mutation with a bounded proposed value.',
+        };
+      }
+
+      return {
+        eligible: false,
+        reason:
+          'Operational task priority escalation requires structured Task.priority mutation metadata.',
+      };
     case 'resolve_blocked_critical_task':
       return {
         eligible: false,
