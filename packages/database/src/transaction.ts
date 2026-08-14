@@ -8,6 +8,7 @@ import { PrismaOrganizationRepository } from './organization/prisma-organization
 import { PrismaProgramRepository } from './programs/prisma-program-repository';
 import { PrismaProjectRepository } from './projects/prisma-project-repository';
 import { PrismaRecommendationReviewDecisionRepository } from './recommendation-reviews/prisma-recommendation-review-repository';
+import { PrismaActionExecutionRequestRepository } from './action-executions/prisma-action-execution-request-repository';
 import { PrismaMilestoneRepository } from './milestones/prisma-milestone-repository';
 import { PrismaTaskRepository } from './tasks/prisma-task-repository';
 
@@ -20,7 +21,15 @@ export interface PersistenceRepositories {
   readonly programs: PrismaProgramRepository;
   readonly projects: PrismaProjectRepository;
   readonly recommendationReviewDecisions: PrismaRecommendationReviewDecisionRepository;
+  readonly actionExecutionRequests: PrismaActionExecutionRequestRepository;
   readonly tasks: PrismaTaskRepository;
+}
+
+/** Repositories required for action execution application transactions. */
+export interface ActionExecutionPersistenceRepositories {
+  readonly actionExecutionRequests: PrismaActionExecutionRequestRepository;
+  readonly audit: PrismaAuditRepository;
+  readonly events: PrismaEventRepository;
 }
 
 /** Repositories required for recommendation review application transactions. */
@@ -58,8 +67,28 @@ export function createPersistenceRepositories(
     programs: new PrismaProgramRepository(client),
     projects: new PrismaProjectRepository(client),
     recommendationReviewDecisions: new PrismaRecommendationReviewDecisionRepository(client),
+    actionExecutionRequests: new PrismaActionExecutionRequestRepository(client),
     tasks: new PrismaTaskRepository(client),
   };
+}
+
+export function selectActionExecutionPersistenceRepositories(
+  repositories: PersistenceRepositories,
+): ActionExecutionPersistenceRepositories {
+  return {
+    actionExecutionRequests: repositories.actionExecutionRequests,
+    audit: repositories.audit,
+    events: repositories.events,
+  };
+}
+
+export async function withActionExecutionTransaction<T>(
+  client: PrismaClient,
+  operation: (repositories: ActionExecutionPersistenceRepositories) => Promise<T>,
+): Promise<T> {
+  return withDatabaseTransaction(client, (repositories) =>
+    operation(selectActionExecutionPersistenceRepositories(repositories)),
+  );
 }
 
 export function selectRecommendationReviewPersistenceRepositories(

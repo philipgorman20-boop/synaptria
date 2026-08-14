@@ -6,13 +6,22 @@ export { PrismaEventRepository } from './events/prisma-event-repository';
 export type { EventDatabaseClient } from './events/prisma-event-repository';
 export {
   createPersistenceRepositories,
+  selectActionExecutionPersistenceRepositories,
   selectMilestonePersistenceRepositories,
   selectRecommendationReviewPersistenceRepositories,
   selectTaskPersistenceRepositories,
+  withActionExecutionTransaction,
   withDatabaseTransaction,
   withMilestoneTransaction,
   withRecommendationReviewTransaction,
   withTaskTransaction,
+} from './transaction';
+export type {
+  ActionExecutionPersistenceRepositories,
+  MilestonePersistenceRepositories,
+  PersistenceRepositories,
+  RecommendationReviewPersistenceRepositories,
+  TaskPersistenceRepositories,
 } from './transaction';
 export * from './milestones';
 export * from './tasks';
@@ -20,12 +29,7 @@ export * from './organization';
 export * from './programs';
 export * from './projects';
 export * from './recommendation-reviews';
-export type {
-  MilestonePersistenceRepositories,
-  PersistenceRepositories,
-  RecommendationReviewPersistenceRepositories,
-  TaskPersistenceRepositories,
-} from './transaction';
+export * from './action-executions';
 
 const globalForPrisma = globalThis as unknown as { prisma?: PrismaClient };
 

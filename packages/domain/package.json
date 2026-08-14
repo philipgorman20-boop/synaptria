@@ -13,7 +13,8 @@
     "./tasks": "./src/tasks/index.ts",
     "./context": "./src/context/index.ts",
     "./recommendation-reviews": "./src/recommendation-reviews/index.ts",
-    "./action-proposals": "./src/action-proposals/index.ts"
+    "./action-proposals": "./src/action-proposals/index.ts",
+    "./action-executions": "./src/action-executions/index.ts"
   },
   "scripts": {
     "build": "tsc --noEmit",

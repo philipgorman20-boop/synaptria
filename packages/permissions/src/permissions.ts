@@ -40,6 +40,8 @@ export const PERMISSIONS = {
   AI_USE: 'ai.use',
   AI_REVIEW: 'ai.review',
 
+  ACTIONS_CONFIRM: 'actions.confirm',
+
   AUDIT_READ: 'audit.read',
   API_KEYS_MANAGE: 'api_keys.manage',
 } as const;
