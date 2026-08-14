@@ -50,6 +50,15 @@ export function formatActionProposalPreconditionValidationStatus(
   }
 }
 
+export function formatActionProposalChangeField(field: string): string {
+  switch (field) {
+    case 'priority':
+      return 'Priority';
+    default:
+      return field;
+  }
+}
+
 export function formatActionProposalScalarValue(value: ActionProposal['proposedChanges'][number]['currentValue']): string {
   if (value === null) {
     return 'None';
@@ -68,6 +77,8 @@ export function formatActionProposalActionType(actionType: ActionProposal['actio
       return 'Workload rebalance review';
     case 'REQUEST_PROJECT_RISK_REVIEW':
       return 'Project risk review';
+    case 'ESCALATE_BLOCKED_OVERDUE_TASK_PRIORITY':
+      return 'Task priority escalation';
     default:
       return actionType;
   }

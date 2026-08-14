@@ -86,6 +86,10 @@ export class GetDailyBriefingSnapshotUseCase {
       limit: DAILY_BRIEFING_UPCOMING_LIMIT,
     });
 
+    const taskSignals = isSliceRestricted('tasks', restrictedSlices)
+      ? []
+      : missionControl.taskSignals;
+
     const evidence = buildDailyBriefingEvidence({
       organizationId: context.organizationId,
       attentionItems,
@@ -105,6 +109,7 @@ export class GetDailyBriefingSnapshotUseCase {
         recentChanges,
       }),
       attentionItems,
+      taskSignals,
       projectHighlights,
       upcomingWork,
       recentChanges,

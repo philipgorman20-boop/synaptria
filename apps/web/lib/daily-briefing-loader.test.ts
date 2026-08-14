@@ -46,6 +46,7 @@ function snapshotFixture(): DailyBriefingSnapshot {
       changedProjectCount: 0,
     },
     attentionItems: [],
+    taskSignals: [],
     projectHighlights: [],
     upcomingWork: [],
     recentChanges: [],

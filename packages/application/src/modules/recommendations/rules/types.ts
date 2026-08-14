@@ -3,7 +3,7 @@ import type { EntityReference } from '@synaptria/domain/context';
 
 import type { DailyBriefingSnapshot } from '../../daily-briefing/types';
 import type { RecommendationRuleId } from '../constants';
-import type { Recommendation } from '../types';
+import type { Recommendation, RecommendationProposedMutation } from '../types';
 
 export interface RecommendationRuleContext {
   readonly snapshot: DailyBriefingSnapshot;
@@ -19,6 +19,7 @@ export interface RecommendationRuleCandidate {
   readonly priority: Recommendation['priority'];
   readonly targetEntity: EntityReference;
   readonly proposedActionDescription: string;
+  readonly proposedMutation?: RecommendationProposedMutation;
   readonly evidenceEntities: readonly EntityReference[];
   readonly corroboratingSignalCount: number;
 }

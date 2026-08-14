@@ -4,6 +4,7 @@ import type { ActionProposal } from '@synaptria/domain/action-proposals';
 import type { Recommendation } from '../recommendations/types';
 import { buildAdvisoryActionProposalFromRecommendation } from './build-advisory-action-proposal';
 import { buildOperationalActionProposal } from './build-operational-action-proposal';
+import { buildOperationalTaskPriorityProposalFromRecommendation } from './build-operational-task-priority-proposal';
 import { evaluateOperationalMapping } from './evaluate-operational-mapping';
 import type { ActionProposalActionType } from './constants';
 import type { ActionProposalStateReaders } from './state-readers/types';
@@ -21,18 +22,19 @@ export interface BuildActionProposalResult {
 
 /**
  * Attempts an operational mapping first when eligible, otherwise falls back to advisory.
- * Current recommendation rules do not supply deterministic proposed values, so all
- * live mappings remain advisory until an explicit operational builder is added.
+ * Recommendations with a valid, explicit, allowlisted proposedMutation may produce an
+ * OPERATIONAL Action Proposal; recommendation types without such a deterministic proposed
+ * mutation remain ADVISORY. Proposed field values are never inferred from recommendation prose.
  */
 export async function buildActionProposalFromAcceptedRecommendation(
   recommendation: Recommendation,
-  _context: BuildActionProposalFromRecommendationContext,
+  context: BuildActionProposalFromRecommendationContext,
 ): Promise<BuildActionProposalResult | null> {
   const operationalEvaluation = evaluateOperationalMapping(recommendation);
   if (operationalEvaluation.eligible) {
     const operationalProposal = await buildOperationalActionProposalForRecommendation(
       recommendation,
-      _context,
+      context,
     );
 
     if (operationalProposal !== null) {
@@ -41,6 +43,8 @@ export async function buildActionProposalFromAcceptedRecommendation(
         mappingKind: 'OPERATIONAL',
       };
     }
+
+    return null;
   }
 
   const advisoryProposal = buildAdvisoryActionProposalFromRecommendation(recommendation);
@@ -57,11 +61,14 @@ export async function buildActionProposalFromAcceptedRecommendation(
 
 async function buildOperationalActionProposalForRecommendation(
   recommendation: Recommendation,
-  _context: BuildActionProposalFromRecommendationContext,
+  context: BuildActionProposalFromRecommendationContext,
 ): Promise<ActionProposal | null> {
-  void _context;
-  void recommendation;
-  return null;
+  switch (recommendation.type) {
+    case 'escalate_blocked_overdue_task_priority':
+      return buildOperationalTaskPriorityProposalFromRecommendation(recommendation, context);
+    default:
+      return null;
+  }
 }
 
 export function buildOperationalActionProposalForTests(

@@ -7,6 +7,7 @@ import type {
 import type {
   MissionControlAttentionItem,
   MissionControlRestrictedSlice,
+  MissionControlTaskSignal,
 } from '../mission-control/types';
 import type {
   MissionControlProjectHealthState,
@@ -38,6 +39,8 @@ export interface DailyBriefingExecutiveSignals {
 }
 
 export type DailyBriefingAttentionItem = MissionControlAttentionItem;
+
+export type DailyBriefingTaskSignal = MissionControlTaskSignal;
 
 export interface DailyBriefingProjectHighlight {
   readonly projectId: string;
@@ -105,6 +108,7 @@ export interface DailyBriefingSnapshot {
   readonly briefingWindow: DailyBriefingWindow;
   readonly executiveSignals: DailyBriefingExecutiveSignals;
   readonly attentionItems: readonly DailyBriefingAttentionItem[];
+  readonly taskSignals: readonly DailyBriefingTaskSignal[];
   readonly projectHighlights: readonly DailyBriefingProjectHighlight[];
   readonly upcomingWork: readonly DailyBriefingUpcomingItem[];
   readonly recentChanges: readonly DailyBriefingRecentChange[];

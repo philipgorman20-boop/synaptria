@@ -1,7 +1,9 @@
 import type { OrganizationId } from '@synaptria/core';
 import type { EntityReference } from '@synaptria/domain/context';
+import type { Priority } from '@synaptria/domain/shared';
 
 import type { MissionControlRestrictedSlice, MissionControlSeverity } from '../mission-control/constants';
+import type { MissionControlTaskSignal } from '../mission-control/types';
 import type { DailyBriefingCompleteness, DailyBriefingEvidenceItem } from '../daily-briefing/types';
 import type {
   RecommendationConfidence,
@@ -11,6 +13,14 @@ import type {
 } from './constants';
 
 export type RecommendationEvidenceItem = DailyBriefingEvidenceItem;
+
+export interface RecommendationTaskPriorityMutation {
+  readonly entityType: 'Task';
+  readonly field: 'priority';
+  readonly proposedValue: Priority;
+}
+
+export type RecommendationProposedMutation = RecommendationTaskPriorityMutation;
 
 export interface RecommendationProposedAction {
   readonly description: string;
@@ -31,6 +41,7 @@ export interface Recommendation {
   readonly priority: MissionControlSeverity;
   readonly targetEntity: EntityReference;
   readonly proposedAction: RecommendationProposedAction;
+  readonly proposedMutation?: RecommendationProposedMutation;
   readonly evidence: readonly RecommendationEvidenceItem[];
   readonly confidence: RecommendationConfidence;
   readonly generatedAt: Date;

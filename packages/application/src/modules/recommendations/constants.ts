@@ -11,6 +11,7 @@ export const RECOMMENDATION_TYPES = [
   'escalate_overdue_milestone',
   'rebalance_near_term_workload',
   'review_concentrated_execution_risk',
+  'escalate_blocked_overdue_task_priority',
 ] as const;
 
 export type RecommendationType = (typeof RECOMMENDATION_TYPES)[number];
@@ -20,6 +21,7 @@ export const RECOMMENDATION_RULE_IDS = [
   'recommendations.escalate-overdue-milestone.v0',
   'recommendations.rebalance-near-term-workload.v0',
   'recommendations.review-concentrated-execution-risk.v0',
+  'recommendations.escalate-blocked-overdue-task-priority.v0',
 ] as const;
 
 export type RecommendationRuleId = (typeof RECOMMENDATION_RULE_IDS)[number];

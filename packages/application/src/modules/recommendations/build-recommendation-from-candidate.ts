@@ -36,6 +36,9 @@ export function buildRecommendationFromCandidate(input: {
     proposedAction: {
       description: input.candidate.proposedActionDescription,
     },
+    ...(input.candidate.proposedMutation === undefined
+      ? {}
+      : { proposedMutation: input.candidate.proposedMutation }),
     evidence,
     confidence,
     generatedAt: input.generatedAt,

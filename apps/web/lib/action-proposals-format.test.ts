@@ -10,6 +10,7 @@ import {
   ACTION_PROPOSALS_SUBTITLE,
   ACTION_PROPOSALS_TITLE,
   formatActionProposalActionType,
+  formatActionProposalChangeField,
   formatActionProposalEntityLabel,
   formatActionProposalKind,
   formatActionProposalPreconditionValidationStatus,
@@ -93,6 +94,7 @@ test('formatters expose readable action proposal labels', () => {
   );
   assert.equal(formatActionProposalKind('ADVISORY'), 'Advisory review');
   assert.equal(formatActionProposalKind('OPERATIONAL'), 'Operational change');
+  assert.equal(formatActionProposalChangeField('priority'), 'Priority');
   assert.equal(formatActionProposalPreconditionValidationStatus('CURRENT'), 'Current');
   assert.equal(formatActionProposalPreconditionValidationStatus('STALE'), 'Stale');
   assert.equal(

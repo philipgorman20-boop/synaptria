@@ -3,6 +3,7 @@ import Link from 'next/link';
 
 import {
   formatActionProposalActionType,
+  formatActionProposalChangeField,
   formatActionProposalEntityLabel,
   formatActionProposalKind,
   formatActionProposalPreconditionValidationStatus,
@@ -121,7 +122,7 @@ function ActionProposalItem({ item }: { readonly item: ActionProposalListItem })
               <ul className="action-proposal-changes">
                 {proposal.proposedChanges.map((change) => (
                   <li key={change.field}>
-                    <strong>{change.field}</strong>
+                    <strong>{formatActionProposalChangeField(change.field)}</strong>
                     <span className="action-proposal-change-values">
                       Current: {formatActionProposalScalarValue(change.currentValue)} · Proposed:{' '}
                       {formatActionProposalScalarValue(change.proposedValue)}
