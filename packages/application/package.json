@@ -18,6 +18,7 @@
     "./recommendations": "./src/modules/recommendations/index.ts",
     "./recommendation-reviews": "./src/modules/recommendation-reviews/index.ts",
     "./action-proposals": "./src/modules/action-proposals/index.ts",
+    "./action-executions": "./src/modules/action-executions/index.ts",
     "./vendors": "./src/modules/vendors/index.ts",
     "./documents": "./src/modules/documents/index.ts",
     "./reporting": "./src/modules/reporting/index.ts",

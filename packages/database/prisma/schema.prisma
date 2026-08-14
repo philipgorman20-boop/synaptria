@@ -415,6 +415,11 @@ enum RecommendationReviewDecisionType {
   DISMISSED
 }
 
+enum ActionExecutionRequestStatus {
+  PENDING_CONFIRMATION
+  CONFIRMED
+}
+
 enum ApiKeyStatus {
   ACTIVE
   REVOKED
@@ -523,6 +528,8 @@ model User {
   postedLedgerTxns  LedgerTransaction[] @relation("LedgerTransactionPoster")
   initiatedAiRuns   AiRun[]             @relation("AiRunInitiator")
   recommendationReviewDecisions RecommendationReviewDecision[] @relation("RecommendationReviewDecisionReviewer")
+  requestedActionExecutionRequests ActionExecutionRequest[] @relation("ActionExecutionRequestRequester")
+  confirmedActionExecutionRequests ActionExecutionRequest[] @relation("ActionExecutionRequestConfirmer")
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -631,9 +638,46 @@ model Organization {
   aiRuns             AiRun[]
 
   recommendationReviewDecisions RecommendationReviewDecision[]
+  actionExecutionRequests       ActionExecutionRequest[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+model ActionExecutionRequest {
+  id                   String                       @id @default(uuid())
+  organizationId       String
+  actionProposalId     String
+  recommendationId     String
+  actionType           String
+  targetEntityType     String
+  targetEntityId       String
+  proposedChanges      Json
+  preconditions        Json
+  status               ActionExecutionRequestStatus @default(PENDING_CONFIRMATION)
+  requestedByUserId    String
+  requestedAt          DateTime                     @default(now())
+  confirmedByUserId    String?
+  confirmedAt          DateTime?
+  createIdempotencyKey String
+  confirmIdempotencyKey String?
+  snapshotFingerprint  String
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  requestedBy  User         @relation("ActionExecutionRequestRequester", fields: [requestedByUserId], references: [id], onDelete: Restrict)
+  confirmedBy  User?        @relation("ActionExecutionRequestConfirmer", fields: [confirmedByUserId], references: [id], onDelete: Restrict)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([organizationId, snapshotFingerprint])
+  @@unique([organizationId, createIdempotencyKey])
+  @@unique([organizationId, confirmIdempotencyKey])
+  @@index([organizationId, actionProposalId])
+  @@index([organizationId, status])
+  @@index([organizationId, requestedAt])
+  @@index([requestedByUserId])
+  @@index([confirmedByUserId])
 }
 
 model RecommendationReviewDecision {

@@ -124,3 +124,10 @@ test('members and viewers retain dashboard read access for recommendation review
   assert.equal(hasPermission('MEMBER', PERMISSIONS.DASHBOARD_READ), true);
   assert.equal(hasPermission('VIEWER', PERMISSIONS.DASHBOARD_READ), true);
 });
+
+test('actions confirm permission is limited to owner and admin roles', () => {
+  assert.equal(hasPermission('OWNER', PERMISSIONS.ACTIONS_CONFIRM), true);
+  assert.equal(hasPermission('ADMIN', PERMISSIONS.ACTIONS_CONFIRM), true);
+  assert.equal(hasPermission('MEMBER', PERMISSIONS.ACTIONS_CONFIRM), false);
+  assert.equal(hasPermission('VIEWER', PERMISSIONS.ACTIONS_CONFIRM), false);
+});
