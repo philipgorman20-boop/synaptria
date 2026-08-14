@@ -1,5 +1,8 @@
 import type { OrganizationId } from '@synaptria/core';
-import type { ActionProposal } from '@synaptria/domain/action-proposals';
+import type {
+  ActionProposal,
+  ActionProposalPreconditionValidation,
+} from '@synaptria/domain/action-proposals';
 import type { EntityReference } from '@synaptria/domain/context';
 
 import type { DailyBriefingCompleteness } from '../daily-briefing/types';
@@ -21,6 +24,7 @@ export interface ActionProposalSourceContext {
 export interface ActionProposalListItem {
   readonly proposal: ActionProposal;
   readonly source: ActionProposalSourceContext;
+  readonly validation: ActionProposalPreconditionValidation;
 }
 
 export interface ActionProposalsSnapshot {

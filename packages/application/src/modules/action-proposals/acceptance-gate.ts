@@ -1,11 +1,15 @@
+import type { OrganizationId } from '@synaptria/core';
+
 import type { RecommendationReviewDecision } from '@synaptria/domain/recommendation-reviews';
 
 import type { Recommendation } from '../recommendations/types';
 import { compareRecommendations } from '../recommendations/sort-recommendations';
 import {
-  buildActionProposalFromRecommendation,
+  buildActionProposalFromAcceptedRecommendation,
   isSupportedActionProposalRecommendation,
 } from './build-action-proposal-from-recommendation';
+import { resolveActionProposalValidation } from './resolve-action-proposal-validation';
+import type { ActionProposalStateReaders } from './state-readers/types';
 import type { ActionProposalListItem } from './types';
 
 export function findAcceptedRecommendationIds(
@@ -27,29 +31,46 @@ export function selectAcceptedRecommendations(
   );
 }
 
-export function buildActionProposalsFromAcceptedRecommendations(
+export async function buildActionProposalsFromAcceptedRecommendations(
   recommendations: readonly Recommendation[],
-): readonly ActionProposalListItem[] {
+  organizationId: OrganizationId,
+  stateReaders: ActionProposalStateReaders,
+): Promise<readonly ActionProposalListItem[]> {
   const accepted = [...recommendations].sort(compareRecommendations);
+  const items: ActionProposalListItem[] = [];
 
-  return accepted
-    .filter(isSupportedActionProposalRecommendation)
-    .map((recommendation) => {
-      const proposal = buildActionProposalFromRecommendation(recommendation);
-      if (proposal === null) {
-        return null;
-      }
+  for (const recommendation of accepted) {
+    if (!isSupportedActionProposalRecommendation(recommendation)) {
+      continue;
+    }
 
-      return {
-        proposal,
-        source: {
-          recommendationId: recommendation.id,
-          targetEntity: recommendation.targetEntity,
-          evidence: recommendation.evidence,
-        },
-      };
-    })
-    .filter((item): item is ActionProposalListItem => item !== null);
+    const built = await buildActionProposalFromAcceptedRecommendation(recommendation, {
+      organizationId,
+      stateReaders,
+    });
+
+    if (built === null) {
+      continue;
+    }
+
+    const validation = await resolveActionProposalValidation(
+      built.proposal,
+      organizationId,
+      stateReaders,
+    );
+
+    items.push({
+      proposal: built.proposal,
+      source: {
+        recommendationId: recommendation.id,
+        targetEntity: recommendation.targetEntity,
+        evidence: recommendation.evidence,
+      },
+      validation,
+    });
+  }
+
+  return items;
 }
 
 export function isRecommendationAccepted(

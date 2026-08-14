@@ -20,6 +20,7 @@ import {
 } from './get-action-proposals';
 import type { RecommendationReviewDecisionReader } from './recommendation-review-decision-reader';
 import type { RecommendationSnapshotReader } from './recommendation-snapshot-reader';
+import type { ActionProposalStateReaders } from './state-readers/types';
 
 const ORGANIZATION_ID = organizationId('org-1');
 const USER_ID = userId('user-1');
@@ -125,12 +126,21 @@ class InMemoryRecommendationReviewDecisionReader implements RecommendationReview
   }
 }
 
+function createStateReaders(): ActionProposalStateReaders {
+  return {
+    tasks: { findById: async () => null },
+    milestones: { findById: async () => null },
+    projects: { findById: async () => null },
+  };
+}
+
 function createReaders(input: {
   snapshot: RecommendationsSnapshot;
   decisions?: readonly RecommendationReviewDecision[];
 }): {
   recommendationSnapshotReader: RecommendationSnapshotReader;
   recommendationReviewDecisionReader: RecommendationReviewDecisionReader;
+  stateReaders: ActionProposalStateReaders;
 } {
   return {
     recommendationSnapshotReader: {
@@ -139,6 +149,7 @@ function createReaders(input: {
     recommendationReviewDecisionReader: new InMemoryRecommendationReviewDecisionReader(
       input.decisions ?? [],
     ),
+    stateReaders: createStateReaders(),
   };
 }
 
@@ -168,6 +179,7 @@ test('accepted supported recommendation produces a deterministic action proposal
   assert.equal(first.actionType, 'REQUEST_TASK_BLOCKER_REVIEW');
   assert.equal(first.proposalKind, 'ADVISORY');
   assert.deepEqual(first.proposedChanges, []);
+  assert.deepEqual(first.preconditions, []);
   assert.equal(first.id, buildActionProposalId(recommendation.id));
 });
 
@@ -194,6 +206,7 @@ test('all supported recommendation types produce advisory proposals without fabr
   assert.equal(blockedProposal.actionType, 'REQUEST_TASK_BLOCKER_REVIEW');
   assert.equal(blockedProposal.proposalKind, 'ADVISORY');
   assert.deepEqual(blockedProposal.proposedChanges, []);
+  assert.deepEqual(blockedProposal.preconditions, []);
 
   const overdueSnapshot = generateRecommendationsFromDailyBriefingSnapshot(
     dailyBriefingSnapshotFixture({
@@ -467,5 +480,10 @@ test('proposal generation does not invoke operational repositories or execution 
   const result = await new GetActionProposalsUseCase(readers).execute(READ_CONTEXT);
   assert.equal(result.proposals[0]?.proposal.status, 'PROPOSED');
   assert.deepEqual(result.proposals[0]?.proposal.proposedChanges, []);
+  assert.deepEqual(result.proposals[0]?.proposal.preconditions, []);
   assert.equal(result.proposals[0]?.source.recommendationId, recommendationId);
+  assert.deepEqual(result.proposals[0]?.validation, {
+    status: 'NOT_APPLICABLE',
+    issues: [],
+  });
 });

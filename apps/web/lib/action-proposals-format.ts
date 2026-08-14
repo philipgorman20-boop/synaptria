@@ -28,9 +28,34 @@ export function formatActionProposalKind(kind: ActionProposal['proposalKind']): 
   switch (kind) {
     case 'ADVISORY':
       return 'Advisory review';
+    case 'OPERATIONAL':
+      return 'Operational change';
     default:
       return kind;
   }
+}
+
+export function formatActionProposalPreconditionValidationStatus(
+  status: ActionProposalListItem['validation']['status'],
+): string {
+  switch (status) {
+    case 'CURRENT':
+      return 'Current';
+    case 'STALE':
+      return 'Stale';
+    case 'NOT_APPLICABLE':
+      return 'Not applicable';
+    default:
+      return status;
+  }
+}
+
+export function formatActionProposalScalarValue(value: ActionProposal['proposedChanges'][number]['currentValue']): string {
+  if (value === null) {
+    return 'None';
+  }
+
+  return String(value);
 }
 
 export function formatActionProposalActionType(actionType: ActionProposal['actionType']): string {

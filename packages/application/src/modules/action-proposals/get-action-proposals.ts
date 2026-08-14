@@ -14,12 +14,19 @@ import {
   type ActionProposalsAccessPolicy,
 } from './access-policy';
 import {
-  buildActionProposalFromRecommendation,
+  buildActionProposalFromAcceptedRecommendation,
   buildUnsupportedActionProposalResult,
   isSupportedActionProposalRecommendation,
 } from './build-action-proposal-from-recommendation';
+import { resolveActionProposalValidation } from './resolve-action-proposal-validation';
 import type { RecommendationSnapshotReader } from './recommendation-snapshot-reader';
 import type { RecommendationReviewDecisionReader } from './recommendation-review-decision-reader';
+import {
+  RepositoryMilestoneActionProposalStateReader,
+  RepositoryProjectActionProposalStateReader,
+  RepositoryTaskActionProposalStateReader,
+  type ActionProposalStateReaders,
+} from './state-readers';
 import type { ActionProposalLookupResult, ActionProposalsSnapshot } from './types';
 
 export interface GetActionProposalsContext {
@@ -30,7 +37,22 @@ export interface GetActionProposalsContext {
 export interface GetActionProposalsDependencies {
   readonly recommendationSnapshotReader: RecommendationSnapshotReader;
   readonly recommendationReviewDecisionReader: RecommendationReviewDecisionReader;
+  readonly stateReaders: ActionProposalStateReaders;
   readonly accessPolicy?: ActionProposalsAccessPolicy;
+}
+
+export function createRepositoryActionProposalStateReaders(repositories: {
+  readonly tasks: ConstructorParameters<typeof RepositoryTaskActionProposalStateReader>[0];
+  readonly milestones: ConstructorParameters<
+    typeof RepositoryMilestoneActionProposalStateReader
+  >[0];
+  readonly projects: ConstructorParameters<typeof RepositoryProjectActionProposalStateReader>[0];
+}): ActionProposalStateReaders {
+  return {
+    tasks: new RepositoryTaskActionProposalStateReader(repositories.tasks),
+    milestones: new RepositoryMilestoneActionProposalStateReader(repositories.milestones),
+    projects: new RepositoryProjectActionProposalStateReader(repositories.projects),
+  };
 }
 
 export class GetActionProposalsUseCase {
@@ -65,7 +87,11 @@ export class GetActionProposalsUseCase {
       acceptedRecommendationIds,
     );
 
-    const proposals = buildActionProposalsFromAcceptedRecommendations(acceptedRecommendations);
+    const proposals = await buildActionProposalsFromAcceptedRecommendations(
+      acceptedRecommendations,
+      context.organizationId,
+      this.dependencies.stateReaders,
+    );
 
     return {
       generatedAt: recommendationsSnapshot.generatedAt,
@@ -84,6 +110,7 @@ export class GetActionProposalsUseCase {
 export interface GetActionProposalDependencies {
   readonly recommendationSnapshotReader: RecommendationSnapshotReader;
   readonly recommendationReviewDecisionReader: RecommendationReviewDecisionReader;
+  readonly stateReaders: ActionProposalStateReaders;
   readonly accessPolicy?: ActionProposalsAccessPolicy;
 }
 
@@ -149,14 +176,18 @@ export class GetActionProposalUseCase {
       );
     }
 
-    const proposal = buildActionProposalFromRecommendation(recommendation);
-    if (proposal === null) {
+    const built = await buildActionProposalFromAcceptedRecommendation(recommendation, {
+      organizationId: context.organizationId,
+      stateReaders: this.dependencies.stateReaders,
+    });
+
+    if (built === null) {
       return buildUnsupportedActionProposalResult(
         normalizedRecommendationId,
         'Insufficient evidence to construct an action proposal.',
       );
     }
 
-    return proposal;
+    return built.proposal;
   }
 }

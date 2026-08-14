@@ -5,6 +5,8 @@ import {
   formatActionProposalActionType,
   formatActionProposalEntityLabel,
   formatActionProposalKind,
+  formatActionProposalPreconditionValidationStatus,
+  formatActionProposalScalarValue,
   formatActionProposalStatus,
   getActionProposalEvidenceHref,
   getActionProposalRecommendationHref,
@@ -53,12 +55,14 @@ export function ActionProposalsList({ items }: ActionProposalsListProps) {
 }
 
 function ActionProposalItem({ item }: { readonly item: ActionProposalListItem }) {
-  const { proposal, source } = item;
+  const { proposal, source, validation } = item;
   const targetHref = getActionProposalTargetHref(item);
+  const isOperational = proposal.proposalKind === 'OPERATIONAL';
 
   return (
     <li
       className="action-proposal-item"
+      data-proposal-kind={proposal.proposalKind}
       id={encodeURIComponent(proposal.recommendationId)}
     >
       <div className="action-proposal-item-header">
@@ -66,7 +70,17 @@ function ActionProposalItem({ item }: { readonly item: ActionProposalListItem })
           {formatActionProposalActionType(proposal.actionType)}
         </span>
         <span className="action-proposal-status-badge">{formatActionProposalStatus(proposal.status)}</span>
-        <span className="action-proposal-kind-badge">{formatActionProposalKind(proposal.proposalKind)}</span>
+        <span className="action-proposal-kind-badge" data-proposal-kind={proposal.proposalKind}>
+          {formatActionProposalKind(proposal.proposalKind)}
+        </span>
+        {isOperational ? (
+          <span
+            className="action-proposal-validation-badge"
+            data-validation-status={validation.status}
+          >
+            {formatActionProposalPreconditionValidationStatus(validation.status)}
+          </span>
+        ) : null}
       </div>
 
       <h3 className="action-proposal-title">{proposal.title}</h3>
@@ -97,9 +111,9 @@ function ActionProposalItem({ item }: { readonly item: ActionProposalListItem })
           </dd>
         </div>
         <div>
-          <dt>Proposed changes</dt>
+          <dt>{isOperational ? 'Operational changes' : 'Proposed changes'}</dt>
           <dd>
-            {proposal.proposedChanges.length === 0 ? (
+            {!isOperational ? (
               <p className="action-proposal-advisory-note">
                 Advisory review proposal with no operational field mutations represented.
               </p>
@@ -107,14 +121,39 @@ function ActionProposalItem({ item }: { readonly item: ActionProposalListItem })
               <ul className="action-proposal-changes">
                 {proposal.proposedChanges.map((change) => (
                   <li key={change.field}>
-                    <strong>{change.field}</strong>: {String(change.currentValue)} →{' '}
-                    {String(change.proposedValue)}
+                    <strong>{change.field}</strong>
+                    <span className="action-proposal-change-values">
+                      Current: {formatActionProposalScalarValue(change.currentValue)} · Proposed:{' '}
+                      {formatActionProposalScalarValue(change.proposedValue)}
+                    </span>
                   </li>
                 ))}
               </ul>
             )}
           </dd>
         </div>
+        {isOperational ? (
+          <div>
+            <dt>Precondition status</dt>
+            <dd>
+              <p className="action-proposal-validation-summary">
+                {formatActionProposalPreconditionValidationStatus(validation.status)}
+              </p>
+              {validation.issues.length > 0 ? (
+                <ul className="action-proposal-validation-issues">
+                  {validation.issues.map((issue) => (
+                    <li key={issue}>{issue}</li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="action-proposal-validation-note">
+                  Authoritative target state still matches proposal preconditions. Nothing executes
+                  from this surface.
+                </p>
+              )}
+            </dd>
+          </div>
+        ) : null}
         <div>
           <dt>Evidence</dt>
           <dd>
