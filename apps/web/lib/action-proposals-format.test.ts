@@ -12,6 +12,8 @@ import {
   formatActionProposalActionType,
   formatActionProposalEntityLabel,
   formatActionProposalKind,
+  formatActionProposalPreconditionValidationStatus,
+  formatActionProposalScalarValue,
   getActionProposalEvidenceHref,
   getActionProposalInspectionHref,
 } from './action-proposals-format';
@@ -27,9 +29,20 @@ const PROPOSAL = {
   title: 'Advisory review: Blocked task',
   description: 'Review the blocking dependency.',
   proposedChanges: [],
+  preconditions: [],
   evidenceKeys: ['entity:Task:task-1'],
   status: 'PROPOSED',
   createdAt: new Date('2026-07-26T12:00:00.000Z'),
+} satisfies ActionProposal;
+
+const OPERATIONAL_PROPOSAL = {
+  ...PROPOSAL,
+  proposalKind: 'OPERATIONAL',
+  title: 'Operational change: Unblock task',
+  proposedChanges: [
+    { field: 'status', currentValue: 'BLOCKED', proposedValue: 'IN_PROGRESS' },
+  ],
+  preconditions: [{ field: 'status', expectedValue: 'BLOCKED' }],
 } satisfies ActionProposal;
 
 const LIST_ITEM = {
@@ -62,6 +75,10 @@ const LIST_ITEM = {
       },
     ],
   },
+  validation: {
+    status: 'NOT_APPLICABLE',
+    issues: [],
+  },
 } satisfies ActionProposalListItem;
 
 test('action proposals surface copy states that no actions are executed', () => {
@@ -75,6 +92,13 @@ test('formatters expose readable action proposal labels', () => {
     'Task blocker review',
   );
   assert.equal(formatActionProposalKind('ADVISORY'), 'Advisory review');
+  assert.equal(formatActionProposalKind('OPERATIONAL'), 'Operational change');
+  assert.equal(formatActionProposalPreconditionValidationStatus('CURRENT'), 'Current');
+  assert.equal(formatActionProposalPreconditionValidationStatus('STALE'), 'Stale');
+  assert.equal(
+    formatActionProposalPreconditionValidationStatus('NOT_APPLICABLE'),
+    'Not applicable',
+  );
   assert.equal(getActionProposalInspectionHref('rec-1'), '/action-proposals#rec-1');
 });
 
@@ -106,4 +130,11 @@ test('task evidence falls back to linked project route when direct entity route 
 
 test('advisory proposals reserve proposedChanges for future operational field mutations', () => {
   assert.deepEqual(PROPOSAL.proposedChanges, []);
+  assert.deepEqual(PROPOSAL.preconditions, []);
+});
+
+test('operational scalar formatting supports inspection display', () => {
+  assert.equal(formatActionProposalScalarValue('BLOCKED'), 'BLOCKED');
+  assert.equal(formatActionProposalScalarValue(null), 'None');
+  assert.equal(OPERATIONAL_PROPOSAL.proposedChanges[0]?.currentValue, 'BLOCKED');
 });

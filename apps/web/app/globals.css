@@ -1988,6 +1988,46 @@ a.primary-button {
   margin: 0;
 }
 
+.action-proposal-validation-badge,
+.action-proposal-kind-badge {
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 0.125rem 0.625rem;
+}
+
+.action-proposal-kind-badge[data-proposal-kind='ADVISORY'] {
+  background: #eef2ff;
+  color: #3730a3;
+}
+
+.action-proposal-kind-badge[data-proposal-kind='OPERATIONAL'] {
+  background: #ecfdf5;
+  color: #047857;
+}
+
+.action-proposal-validation-badge[data-validation-status='CURRENT'] {
+  background: #ecfdf5;
+  color: #047857;
+}
+
+.action-proposal-validation-badge[data-validation-status='STALE'] {
+  background: #fef2f2;
+  color: #b91c1c;
+}
+
+.action-proposal-change-values {
+  color: var(--muted-foreground);
+  display: block;
+  font-size: 0.875rem;
+  margin-top: 0.125rem;
+}
+
+.action-proposal-validation-issues {
+  margin: 0.5rem 0 0;
+  padding-left: 1.25rem;
+}
+
 .recommendation-review-proposal-link {
   margin-top: 0.75rem;
 }
