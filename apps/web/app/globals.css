@@ -2582,15 +2582,38 @@ a.primary-button {
 
 .app-shell {
   display: flex;
+  flex-direction: column;
   min-height: 100vh;
+}
+
+.app-banner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 72px;
+  background: #ffffff;
+  border-bottom: 1px solid #e2e8f0;
+  flex: 0 0 72px;
+}
+
+.app-banner-logo {
+  object-fit: contain;
+  height: 48px;
+  width: auto;
+}
+
+.app-shell-body {
+  display: flex;
+  flex: 1;
+  min-height: 0;
 }
 
 .app-sidebar {
   width: 232px;
   flex: 0 0 232px;
   position: sticky;
-  top: 0;
-  height: 100vh;
+  top: 72px;
+  height: calc(100vh - 72px);
   overflow-y: auto;
   background: #ffffff;
   border-right: 1px solid #e2e8f0;

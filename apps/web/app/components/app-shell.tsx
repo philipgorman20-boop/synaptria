@@ -1,6 +1,7 @@
 'use client';
 
 import type { ReactNode } from 'react';
+import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 
@@ -52,6 +53,17 @@ export function AppShell({ children }: { readonly children: ReactNode }) {
 
   return (
     <div className="app-shell">
+      <header className="app-banner">
+        <Image
+          src="/connectos-logo.webp"
+          alt="ConnectOS by Synaptria"
+          width={160}
+          height={60}
+          className="app-banner-logo"
+          priority
+        />
+      </header>
+      <div className="app-shell-body">
       <nav className="app-sidebar" aria-label="Main navigation">
         <div className="app-sidebar-header">
           <Link href="/dashboard" className="app-logo-link">
@@ -86,6 +98,7 @@ export function AppShell({ children }: { readonly children: ReactNode }) {
       </nav>
 
       <div className="app-main">{children}</div>
+      </div>
     </div>
   );
 }
