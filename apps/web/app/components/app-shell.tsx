@@ -67,7 +67,14 @@ export function AppShell({ children }: { readonly children: ReactNode }) {
       <nav className="app-sidebar" aria-label="Main navigation">
         <div className="app-sidebar-header">
           <Link href="/dashboard" className="app-logo-link">
-            <span className="app-logo-mark" aria-hidden="true">S</span>
+            <Image
+              src="/synaptria-icon.png"
+              alt=""
+              width={32}
+              height={32}
+              className="app-logo-icon"
+              priority
+            />
             <span className="app-logo-name">Synaptria</span>
           </Link>
         </div>

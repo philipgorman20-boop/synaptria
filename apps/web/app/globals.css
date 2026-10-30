@@ -2641,6 +2641,11 @@ a.primary-button {
   color: inherit;
 }
 
+.app-logo-icon {
+  flex: 0 0 32px;
+  border-radius: 8px;
+}
+
 .app-logo-mark {
   width: 30px;
   height: 30px;
