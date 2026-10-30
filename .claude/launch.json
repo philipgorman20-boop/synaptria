@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "synaptria-dev",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": ["dev", "--filter", "@synaptria/web"],
+      "port": 3000
+    }
+  ]
+}

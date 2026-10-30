@@ -1,0 +1,38 @@
+{
+  "name": "@synaptria/domain",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./organization": "./src/organization/index.ts",
+    "./programs": "./src/programs/index.ts",
+    "./projects": "./src/projects/index.ts",
+    "./milestones": "./src/milestones/index.ts",
+    "./shared": "./src/shared/index.ts",
+    "./tasks": "./src/tasks/index.ts",
+    "./context": "./src/context/index.ts",
+    "./recommendation-reviews": "./src/recommendation-reviews/index.ts",
+    "./action-proposals": "./src/action-proposals/index.ts",
+    "./action-executions": "./src/action-executions/index.ts",
+    "./risks": "./src/risks/index.ts",
+    "./decisions": "./src/decisions/index.ts",
+    "./vendors": "./src/vendors/index.ts",
+    "./documents": "./src/documents/index.ts",
+    "./budgets": "./src/budgets/index.ts"
+  },
+  "scripts": {
+    "build": "tsc --noEmit",
+    "lint": "tsc --noEmit",
+    "typecheck": "tsc --noEmit",
+    "test": "node --import tsx --test src/**/*.test.ts"
+  },
+  "dependencies": {
+    "@synaptria/core": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "^22.20.1",
+    "tsx": "^4.23.1",
+    "typescript": "^5.8.3"
+  }
+}

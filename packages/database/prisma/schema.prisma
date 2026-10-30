@@ -1,0 +1,2416 @@
+// Synaptria production domain schema v3
+// Generated as a clean target architecture. Validate before creating migrations.
+// Tenant-owned records carry organizationId to support application-level isolation
+// and future PostgreSQL row-level-security policies.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================================
+// ENUMS
+// ============================================================
+
+enum MembershipRole {
+  OWNER
+  ADMIN
+  MEMBER
+  VIEWER
+}
+
+enum Priority {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+enum RecordStatus {
+  DRAFT
+  ACTIVE
+  INACTIVE
+  ARCHIVED
+}
+
+enum ProgramStatus {
+  CONCEPT
+  DISCOVERY
+  PRECLINICAL
+  IND_ENABLING
+  CLINICAL
+  PARTNERED
+  ON_HOLD
+  COMPLETED
+  TERMINATED
+}
+
+enum ProjectStatus {
+  PLANNED
+  ACTIVE
+  ON_HOLD
+  COMPLETED
+  CANCELLED
+}
+
+enum MilestoneStatus {
+  PLANNED
+  IN_PROGRESS
+  BLOCKED
+  COMPLETED
+  CANCELLED
+}
+
+enum TaskStatus {
+  TODO
+  IN_PROGRESS
+  BLOCKED
+  COMPLETED
+  CANCELLED
+}
+
+enum DeliverableStatus {
+  NOT_STARTED
+  IN_PROGRESS
+  IN_REVIEW
+  ACCEPTED
+  REJECTED
+  CANCELLED
+}
+
+enum DependencyType {
+  FINISH_TO_START
+  START_TO_START
+  FINISH_TO_FINISH
+  START_TO_FINISH
+}
+
+enum RiskStatus {
+  OPEN
+  MITIGATING
+  ACCEPTED
+  CLOSED
+}
+
+enum RiskCategory {
+  SCIENTIFIC
+  CLINICAL
+  REGULATORY
+  CMC
+  MANUFACTURING
+  FINANCIAL
+  VENDOR
+  OPERATIONAL
+  LEGAL
+  IP
+  PEOPLE
+  OTHER
+}
+
+enum RiskProbability {
+  RARE
+  UNLIKELY
+  POSSIBLE
+  LIKELY
+  ALMOST_CERTAIN
+}
+
+enum RiskImpact {
+  NEGLIGIBLE
+  MINOR
+  MODERATE
+  MAJOR
+  SEVERE
+}
+
+enum DecisionStatus {
+  PROPOSED
+  APPROVED
+  REJECTED
+  SUPERSEDED
+}
+
+enum AccountType {
+  CHECKING
+  SAVINGS
+  MONEY_MARKET
+  INVESTMENT
+  OTHER
+}
+
+enum FundingRoundType {
+  PRE_SEED
+  SEED
+  SERIES_A
+  SERIES_B
+  SERIES_C
+  SERIES_D_PLUS
+  BRIDGE
+  SAFE
+  CONVERTIBLE_NOTE
+  DEBT
+  OTHER
+}
+
+enum FundingRoundStatus {
+  PLANNED
+  OPEN
+  CLOSED
+  CANCELLED
+}
+
+enum GrantStatus {
+  IDENTIFIED
+  APPLYING
+  SUBMITTED
+  AWARDED
+  ACTIVE
+  COMPLETED
+  REJECTED
+  CANCELLED
+}
+
+enum RevenueType {
+  LICENSE_UPFRONT
+  MILESTONE
+  ROYALTY
+  COLLABORATION
+  SERVICE
+  GRANT_REIMBURSEMENT
+  OTHER
+}
+
+enum BudgetStatus {
+  DRAFT
+  APPROVED
+  ACTIVE
+  CLOSED
+  ARCHIVED
+}
+
+enum BudgetPeriodType {
+  MONTHLY
+  QUARTERLY
+  ANNUAL
+  CUSTOM
+}
+
+enum BudgetCategoryOutflowType {
+  OPERATIONAL
+  DISCRETIONARY
+}
+
+enum FundingEventType {
+  SEED
+  SERIES_A
+  SERIES_B
+  SERIES_C
+  SERIES_D
+  GRANT
+  REVENUE
+  LOAN
+  CONVERTIBLE_NOTE
+  SAFE
+  OTHER
+}
+
+enum FundingEventStatus {
+  COMMITTED
+  RECEIVED
+}
+
+enum ExpenseStatus {
+  PLANNED
+  SUBMITTED
+  APPROVED
+  PAID
+  VOIDED
+}
+
+enum CommitmentStatus {
+  PROPOSED
+  APPROVED
+  ACTIVE
+  FULFILLED
+  CANCELLED
+}
+
+enum ForecastStatus {
+  DRAFT
+  ACTIVE
+  SUPERSEDED
+  ARCHIVED
+}
+
+enum ScenarioType {
+  BASE
+  UPSIDE
+  DOWNSIDE
+  CUSTOM
+}
+
+enum ForecastLineType {
+  OPENING_CASH
+  CASH_INFLOW
+  CASH_OUTFLOW
+  CLOSING_CASH
+}
+
+enum VendorStatus {
+  PROSPECTIVE
+  QUALIFYING
+  APPROVED
+  ACTIVE
+  SUSPENDED
+  INACTIVE
+  ARCHIVED
+}
+
+enum VendorCategory {
+  CRO
+  CDMO
+  CONSULTANT
+  LEGAL
+  REGULATORY
+  CLINICAL
+  SOFTWARE
+  EQUIPMENT
+  LAB_SUPPLIES
+  FACILITIES
+  FINANCE
+  HR
+  OTHER
+}
+
+enum ContractStatus {
+  DRAFT
+  IN_REVIEW
+  ACTIVE
+  EXPIRED
+  TERMINATED
+}
+
+enum QuoteStatus {
+  REQUESTED
+  RECEIVED
+  UNDER_REVIEW
+  ACCEPTED
+  REJECTED
+  EXPIRED
+}
+
+enum PurchaseOrderStatus {
+  DRAFT
+  ISSUED
+  PARTIALLY_INVOICED
+  FULLY_INVOICED
+  CLOSED
+  CANCELLED
+}
+
+enum InvoiceStatus {
+  DRAFT
+  RECEIVED
+  UNDER_REVIEW
+  APPROVED
+  SCHEDULED
+  PAID
+  DISPUTED
+  VOIDED
+}
+
+enum DocumentType {
+  GENERAL
+  CONTRACT
+  SOW
+  QUOTE
+  PURCHASE_ORDER
+  INVOICE
+  PROTOCOL
+  REPORT
+  PRESENTATION
+  MEETING_NOTES
+  BOARD_MATERIAL
+  INVESTOR_MATERIAL
+  REGULATORY
+  IP
+  POLICY
+  OTHER
+}
+
+enum DocumentStatus {
+  DRAFT
+  ACTIVE
+  SUPERSEDED
+  ARCHIVED
+}
+
+enum DocumentLinkType {
+  SUPPORTS
+  REFERENCES
+  GENERATED_FROM
+  SUPERSEDES
+  RELATED_TO
+}
+
+enum AIExtractionType {
+  DOCUMENT_SUMMARY
+  PROPOSAL_TERMS
+  CONTRACT_TERMS
+  INVOICE_FIELDS
+  MEETING_ACTIONS
+  MILESTONES
+  RISKS
+  DECISIONS
+  CUSTOM
+}
+
+enum AIExtractionStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  FAILED
+  REJECTED
+}
+
+enum ExecutiveReportType {
+  WEEKLY
+  MONTHLY
+  QUARTERLY
+  BOARD
+  INVESTOR
+  PROGRAM_REVIEW
+  FINANCE_REVIEW
+  CUSTOM
+}
+
+enum ExecutiveReportStatus {
+  DRAFT
+  GENERATED
+  APPROVED
+  PUBLISHED
+  ARCHIVED
+}
+
+enum MembershipStatus {
+  INVITED
+  ACTIVE
+  SUSPENDED
+  REMOVED
+}
+
+enum AuditAction {
+  CREATE
+  UPDATE
+  DELETE
+  RESTORE
+  LOGIN
+  LOGOUT
+  EXPORT
+  IMPORT
+  APPROVE
+  REJECT
+  PUBLISH
+  ARCHIVE
+  CUSTOM
+}
+
+enum ActorType {
+  USER
+  API_KEY
+  SYSTEM
+  AI_AGENT
+}
+
+enum DomainEventStatus {
+  PENDING
+  PROCESSING
+  PUBLISHED
+  FAILED
+  DEAD_LETTER
+}
+
+enum RecommendationReviewDecisionType {
+  ACCEPTED
+  DISMISSED
+}
+
+enum ActionExecutionRequestStatus {
+  PENDING_CONFIRMATION
+  CONFIRMED
+}
+
+enum ApiKeyStatus {
+  ACTIVE
+  REVOKED
+  EXPIRED
+}
+
+enum LedgerAccountType {
+  ASSET
+  LIABILITY
+  EQUITY
+  REVENUE
+  EXPENSE
+}
+
+enum LedgerAccountSubtype {
+  CASH
+  ACCOUNTS_RECEIVABLE
+  PREPAID_EXPENSE
+  FIXED_ASSET
+  ACCOUNTS_PAYABLE
+  ACCRUED_EXPENSE
+  DEBT
+  DEFERRED_REVENUE
+  CONTRIBUTED_CAPITAL
+  RETAINED_EARNINGS
+  OPERATING_REVENUE
+  GRANT_REVENUE
+  OTHER_REVENUE
+  RESEARCH_AND_DEVELOPMENT
+  GENERAL_AND_ADMINISTRATIVE
+  CLINICAL
+  CMC
+  REGULATORY
+  OTHER_EXPENSE
+}
+
+enum LedgerTransactionStatus {
+  DRAFT
+  POSTED
+  VOIDED
+  REVERSED
+}
+
+enum LedgerEntrySide {
+  DEBIT
+  CREDIT
+}
+
+enum AiRunStatus {
+  QUEUED
+  RUNNING
+  SUCCEEDED
+  FAILED
+  CANCELLED
+  REQUIRES_REVIEW
+}
+
+enum AiProvider {
+  OPENAI
+  ANTHROPIC
+  GOOGLE
+  AZURE_OPENAI
+  LOCAL
+  OTHER
+}
+
+// ============================================================
+// AUTHENTICATION AND ORGANIZATION
+// ============================================================
+
+model User {
+  id            String    @id @default(uuid())
+  name          String?
+  displayName   String?
+  email         String    @unique
+  emailVerified DateTime?
+  image         String?
+
+  accounts    Account[]
+  sessions    Session[]
+  memberships Membership[]
+  teamMembers TeamMember[]
+
+  ownedPrograms       Program[]         @relation("ProgramOwner")
+  ownedProjects       Project[]         @relation("ProjectOwner")
+  ownedDeliverables   Deliverable[]     @relation("DeliverableOwner")
+  ownedRisks          Risk[]            @relation("RiskOwner")
+  createdRisks        Risk[]            @relation("RiskCreator")
+  decisionOwners      Decision[]        @relation("DecisionOwner")
+  createdDecisions    Decision[]        @relation("DecisionCreator")
+  createdExpenses     Expense[]         @relation("ExpenseCreator")
+  approvedExpenses    Expense[]         @relation("ExpenseApprover")
+  createdCommitments  Commitment[]      @relation("CommitmentCreator")
+  approvedCommitments Commitment[]      @relation("CommitmentApprover")
+  vendorOwners        Vendor[]          @relation("VendorOwner")
+  vendorContacts      VendorContact[]   @relation("VendorContactUser")
+  createdDocuments    Document[]        @relation("DocumentCreator")
+  uploadedVersions    DocumentVersion[] @relation("DocumentVersionUploader")
+  reviewedExtractions AIExtraction[]    @relation("AIExtractionReviewer")
+  createdReports      ExecutiveReport[] @relation("ExecutiveReportCreator")
+  approvedReports     ExecutiveReport[] @relation("ExecutiveReportApprover")
+
+  createdApiKeys    ApiKey[]            @relation("ApiKeyCreator")
+  auditEvents       AuditEvent[]        @relation("AuditEventUser")
+  createdLedgerTxns LedgerTransaction[] @relation("LedgerTransactionCreator")
+  postedLedgerTxns  LedgerTransaction[] @relation("LedgerTransactionPoster")
+  initiatedAiRuns   AiRun[]             @relation("AiRunInitiator")
+  recommendationReviewDecisions RecommendationReviewDecision[] @relation("RecommendationReviewDecisionReviewer")
+  requestedActionExecutionRequests ActionExecutionRequest[] @relation("ActionExecutionRequestRequester")
+  confirmedActionExecutionRequests ActionExecutionRequest[] @relation("ActionExecutionRequestConfirmer")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Account {
+  id                String  @id @default(uuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@index([userId])
+}
+
+model Session {
+  id           String   @id @default(uuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+model Organization {
+  id                   String    @id @default(uuid())
+  name                 String
+  slug                 String    @unique
+  legalName            String?
+  defaultCurrency      String    @default("USD") @db.VarChar(3)
+  fiscalYearStartMonth Int       @default(1)
+  timezone             String    @default("America/New_York")
+  countryCode          String    @default("US") @db.VarChar(2)
+  settings             Json?
+  deletedAt            DateTime?
+
+  memberships Membership[]
+  teams       Team[]
+
+  programs     Program[]
+  projects     Project[]
+  milestones   Milestone[]
+  tasks        Task[]
+  deliverables Deliverable[]
+  dependencies Dependency[]
+  risks        Risk[]
+  decisions    Decision[]
+
+  cashAccounts       CashAccount[]
+  investors          Investor[]
+  fundingRounds      FundingRound[]
+  fundingCommitments FundingCommitment[]
+  grants             Grant[]
+  revenueEvents      RevenueEvent[]
+  budgets            Budget[]
+  budgetCategories   BudgetCategory[]
+  fundingEvents      FundingEvent[]
+  budgetLines        BudgetLine[]
+  expenses           Expense[]
+  commitments        Commitment[]
+  forecasts          Forecast[]
+  forecastScenarios  ForecastScenario[]
+  forecastLines      ForecastLine[]
+
+  vendors                  Vendor[]
+  vendorContacts           VendorContact[]
+  quotes                   Quote[]
+  contracts                Contract[]
+  statementsOfWork         StatementOfWork[]
+  purchaseOrders           PurchaseOrder[]
+  invoices                 Invoice[]
+  vendorPerformanceReviews VendorPerformanceReview[]
+
+  documents        Document[]
+  documentVersions DocumentVersion[]
+  documentLinks    DocumentLink[]
+  aiExtractions    AIExtraction[]
+  executiveReports ExecutiveReport[]
+
+  apiKeys            ApiKey[]
+  auditEvents        AuditEvent[]
+  domainEvents       DomainEvent[]
+  idempotencyKeys    IdempotencyKey[]
+  ledgerAccounts     LedgerAccount[]
+  ledgerTransactions LedgerTransaction[]
+  ledgerEntries      LedgerEntry[]
+  aiRuns             AiRun[]
+
+  recommendationReviewDecisions RecommendationReviewDecision[]
+  actionExecutionRequests       ActionExecutionRequest[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model ActionExecutionRequest {
+  id                   String                       @id @default(uuid())
+  organizationId       String
+  actionProposalId     String
+  recommendationId     String
+  actionType           String
+  targetEntityType     String
+  targetEntityId       String
+  proposedChanges      Json
+  preconditions        Json
+  status               ActionExecutionRequestStatus @default(PENDING_CONFIRMATION)
+  requestedByUserId    String
+  requestedAt          DateTime                     @default(now())
+  confirmedByUserId    String?
+  confirmedAt          DateTime?
+  createIdempotencyKey String
+  confirmIdempotencyKey String?
+  snapshotFingerprint  String
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  requestedBy  User         @relation("ActionExecutionRequestRequester", fields: [requestedByUserId], references: [id], onDelete: Restrict)
+  confirmedBy  User?        @relation("ActionExecutionRequestConfirmer", fields: [confirmedByUserId], references: [id], onDelete: Restrict)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([organizationId, snapshotFingerprint])
+  @@unique([organizationId, createIdempotencyKey])
+  @@unique([organizationId, confirmIdempotencyKey])
+  @@index([organizationId, actionProposalId])
+  @@index([organizationId, status])
+  @@index([organizationId, requestedAt])
+  @@index([requestedByUserId])
+  @@index([confirmedByUserId])
+}
+
+model RecommendationReviewDecision {
+  id               String                           @id @default(uuid())
+  organizationId   String
+  recommendationId String
+  decision         RecommendationReviewDecisionType
+  reviewedByUserId String
+  reviewedAt       DateTime                         @default(now())
+  dismissalReason  String?
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  reviewedBy   User         @relation("RecommendationReviewDecisionReviewer", fields: [reviewedByUserId], references: [id], onDelete: Restrict)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([organizationId, recommendationId])
+  @@index([organizationId, reviewedAt])
+  @@index([reviewedByUserId])
+}
+
+model Membership {
+  id             String           @id @default(uuid())
+  organizationId String
+  userId         String
+  role           MembershipRole   @default(MEMBER)
+  status         MembershipStatus @default(ACTIVE)
+  invitedAt      DateTime?
+  joinedAt       DateTime?
+  suspendedAt    DateTime?
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([organizationId, userId])
+  @@index([organizationId, status])
+  @@index([userId])
+}
+
+model Team {
+  id             String  @id @default(uuid())
+  organizationId String
+  name           String
+  description    String?
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  members      TeamMember[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([organizationId, name])
+  @@index([organizationId])
+}
+
+model TeamMember {
+  id     String @id @default(uuid())
+  teamId String
+  userId String
+
+  team Team @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@unique([teamId, userId])
+  @@index([userId])
+}
+
+// ============================================================
+// PROGRAMS AND EXECUTION
+// ============================================================
+
+model Program {
+  id             String        @id @default(uuid())
+  organizationId String
+  ownerId        String?
+  name           String
+  code           String?
+  description    String?
+  indication     String?
+  modality       String?
+  target         String?
+  status         ProgramStatus @default(CONCEPT)
+  priority       Priority      @default(MEDIUM)
+  startDate      DateTime?
+  targetEndDate  DateTime?
+  completedAt    DateTime?
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  owner        User?        @relation("ProgramOwner", fields: [ownerId], references: [id], onDelete: SetNull)
+
+  projects         Project[]
+  deliverables     Deliverable[]
+  risks            Risk[]
+  decisions        Decision[]
+  budgetLines      BudgetLine[]
+  expenses         Expense[]
+  commitments      Commitment[]
+  revenueEvents    RevenueEvent[]
+  forecastLines    ForecastLine[]
+  vendorReviews    VendorPerformanceReview[]
+  documents        Document[]
+  executiveReports ExecutiveReport[]
+
+  apiKeys            ApiKey[]
+  auditEvents        AuditEvent[]
+  domainEvents       DomainEvent[]
+  idempotencyKeys    IdempotencyKey[]
+  ledgerAccounts     LedgerAccount[]
+  ledgerTransactions LedgerTransaction[]
+  ledgerEntries      LedgerEntry[]
+  aiRuns             AiRun[]
+
+  deletedAt DateTime?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  @@unique([organizationId, name])
+  @@unique([organizationId, code])
+  @@index([organizationId, status])
+  @@index([ownerId])
+  @@index([organizationId, deletedAt])
+}
+
+model Project {
+  id              String        @id @default(uuid())
+  organizationId  String
+  programId       String?
+  ownerId         String?
+  vendorId        String?
+  name            String
+  code            String?
+  description     String?
+  status          ProjectStatus @default(PLANNED)
+  priority        Priority      @default(MEDIUM)
+  percentComplete Int           @default(0)
+  startDate       DateTime?
+  targetEndDate   DateTime?
+  completedAt     DateTime?
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  program      Program?     @relation(fields: [programId], references: [id], onDelete: SetNull)
+  owner        User?        @relation("ProjectOwner", fields: [ownerId], references: [id], onDelete: SetNull)
+  vendor       Vendor?      @relation(fields: [vendorId], references: [id], onDelete: SetNull)
+
+  milestones       Milestone[]
+  deliverables     Deliverable[]
+  risks            Risk[]
+  decisions        Decision[]
+  budgetLines      BudgetLine[]
+  expenses         Expense[]
+  commitments      Commitment[]
+  quotes           Quote[]
+  contracts        Contract[]
+  statementsOfWork StatementOfWork[]
+  purchaseOrders   PurchaseOrder[]
+  invoices         Invoice[]
+  forecastLines    ForecastLine[]
+  documents        Document[]
+  executiveReports ExecutiveReport[]
+  ledgerEntries    LedgerEntry[]
+
+  predecessorDependencies Dependency[] @relation("DependencyPredecessor")
+  successorDependencies   Dependency[] @relation("DependencySuccessor")
+
+  deletedAt DateTime?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  @@unique([organizationId, name])
+  @@unique([organizationId, code])
+  @@index([organizationId, status])
+  @@index([programId])
+  @@index([ownerId])
+  @@index([vendorId])
+  @@index([targetEndDate])
+  @@index([organizationId, deletedAt])
+}
+
+model Milestone {
+  id               String          @id @default(uuid())
+  organizationId   String
+  projectId        String
+  name             String
+  description      String?
+  status           MilestoneStatus @default(PLANNED)
+  priority         Priority        @default(MEDIUM)
+  plannedStartDate DateTime?
+  plannedEndDate   DateTime?
+  actualStartDate  DateTime?
+  actualEndDate    DateTime?
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  project      Project      @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  deliverables  Deliverable[]
+  risks         Risk[]
+  decisions     Decision[]
+  budgetLines   BudgetLine[]
+  expenses      Expense[]
+  commitments   Commitment[]
+  forecastLines ForecastLine[]
+  documents     Document[]
+  tasks         Task[]
+
+  deletedAt DateTime?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  @@index([organizationId, status])
+  @@index([projectId])
+  @@index([plannedEndDate])
+  @@index([organizationId, deletedAt])
+}
+
+model Task {
+  id               String     @id @default(uuid())
+  organizationId   String
+  milestoneId      String
+  name             String
+  description      String?
+  status           TaskStatus @default(TODO)
+  priority         Priority   @default(MEDIUM)
+  plannedStartDate DateTime?
+  plannedEndDate   DateTime?
+  actualStartDate  DateTime?
+  actualEndDate    DateTime?
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  milestone    Milestone    @relation(fields: [milestoneId], references: [id], onDelete: Cascade)
+
+  deletedAt DateTime?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  @@index([organizationId, status])
+  @@index([milestoneId])
+  @@index([plannedEndDate])
+  @@index([organizationId, deletedAt])
+}
+
+model Deliverable {
+  id             String            @id @default(uuid())
+  organizationId String
+  programId      String?
+  projectId      String?
+  milestoneId    String?
+  ownerId        String?
+  vendorId       String?
+  name           String
+  description    String?
+  status         DeliverableStatus @default(NOT_STARTED)
+  dueDate        DateTime?
+  acceptedAt     DateTime?
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  program      Program?     @relation(fields: [programId], references: [id], onDelete: Cascade)
+  project      Project?     @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  milestone    Milestone?   @relation(fields: [milestoneId], references: [id], onDelete: SetNull)
+  owner        User?        @relation("DeliverableOwner", fields: [ownerId], references: [id], onDelete: SetNull)
+  vendor       Vendor?      @relation(fields: [vendorId], references: [id], onDelete: SetNull)
+
+  sowDeliverables StatementOfWorkDeliverable[]
+  documents       Document[]
+
+  deletedAt DateTime?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  @@index([organizationId, status])
+  @@index([programId])
+  @@index([projectId])
+  @@index([milestoneId])
+  @@index([ownerId])
+  @@index([vendorId])
+  @@index([dueDate])
+  @@index([organizationId, deletedAt])
+}
+
+model Dependency {
+  id                   String         @id @default(uuid())
+  organizationId       String
+  predecessorProjectId String
+  successorProjectId   String
+  type                 DependencyType @default(FINISH_TO_START)
+  lagDays              Int            @default(0)
+  notes                String?
+
+  organization       Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  predecessorProject Project      @relation("DependencyPredecessor", fields: [predecessorProjectId], references: [id], onDelete: Cascade)
+  successorProject   Project      @relation("DependencySuccessor", fields: [successorProjectId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([predecessorProjectId, successorProjectId, type])
+  @@index([organizationId])
+  @@index([successorProjectId])
+}
+
+model Risk {
+  id              String          @id @default(uuid())
+  organizationId  String
+  programId       String?
+  projectId       String?
+  milestoneId     String?
+  ownerId         String?
+  createdById     String?
+  title           String
+  description     String?
+  category        RiskCategory
+  status          RiskStatus      @default(OPEN)
+  probability     RiskProbability @default(POSSIBLE)
+  impact          RiskImpact      @default(MODERATE)
+  mitigationPlan  String?
+  contingencyPlan String?
+  reviewDate      DateTime?
+  closedAt        DateTime?
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  program      Program?     @relation(fields: [programId], references: [id], onDelete: Cascade)
+  project      Project?     @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  milestone    Milestone?   @relation(fields: [milestoneId], references: [id], onDelete: SetNull)
+  owner        User?        @relation("RiskOwner", fields: [ownerId], references: [id], onDelete: SetNull)
+  createdBy    User?        @relation("RiskCreator", fields: [createdById], references: [id], onDelete: SetNull)
+
+  documents Document[]
+
+  deletedAt DateTime?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  @@index([organizationId, status])
+  @@index([organizationId, category])
+  @@index([programId])
+  @@index([projectId])
+  @@index([milestoneId])
+  @@index([ownerId])
+  @@index([reviewDate])
+  @@index([organizationId, deletedAt])
+}
+
+model Decision {
+  id             String         @id @default(uuid())
+  organizationId String
+  programId      String?
+  projectId      String?
+  milestoneId    String?
+  ownerId        String?
+  createdById    String?
+  title          String
+  context        String?
+  decision       String?
+  rationale      String?
+  alternatives   String?
+  status         DecisionStatus @default(PROPOSED)
+  decisionDate   DateTime?
+  effectiveDate  DateTime?
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  program      Program?     @relation(fields: [programId], references: [id], onDelete: Cascade)
+  project      Project?     @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  milestone    Milestone?   @relation(fields: [milestoneId], references: [id], onDelete: SetNull)
+  owner        User?        @relation("DecisionOwner", fields: [ownerId], references: [id], onDelete: SetNull)
+  createdBy    User?        @relation("DecisionCreator", fields: [createdById], references: [id], onDelete: SetNull)
+
+  documents Document[]
+
+  deletedAt DateTime?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  @@index([organizationId, status])
+  @@index([programId])
+  @@index([projectId])
+  @@index([milestoneId])
+  @@index([ownerId])
+  @@index([decisionDate])
+  @@index([organizationId, deletedAt])
+}
+
+// ============================================================
+// FINANCE
+// ============================================================
+
+model CashAccount {
+  id               String       @id @default(uuid())
+  organizationId   String
+  name             String
+  institution      String?
+  accountType      AccountType  @default(CHECKING)
+  currency         String       @default("USD") @db.VarChar(3)
+  currentBalance   Decimal      @default(0) @db.Decimal(18, 2)
+  balanceAsOf      DateTime?
+  isRestricted     Boolean      @default(false)
+  restrictionNotes String?
+  status           RecordStatus @default(ACTIVE)
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  expenses      Expense[]
+  revenueEvents RevenueEvent[]
+  invoices      Invoice[]
+
+  deletedAt DateTime?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  ledgerAccount LedgerAccount?
+
+  @@unique([organizationId, name])
+  @@index([organizationId, status])
+  @@index([organizationId, deletedAt])
+}
+
+model Investor {
+  id             String       @id @default(uuid())
+  organizationId String
+  name           String
+  contactName    String?
+  email          String?
+  phone          String?
+  website        String?
+  notes          String?
+  status         RecordStatus @default(ACTIVE)
+
+  organization Organization        @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  commitments  FundingCommitment[]
+
+  deletedAt DateTime?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  @@unique([organizationId, name])
+  @@index([organizationId, status])
+  @@index([organizationId, deletedAt])
+}
+
+model FundingRound {
+  id                 String             @id @default(uuid())
+  organizationId     String
+  name               String
+  type               FundingRoundType
+  status             FundingRoundStatus @default(PLANNED)
+  targetAmount       Decimal?           @db.Decimal(18, 2)
+  raisedAmount       Decimal            @default(0) @db.Decimal(18, 2)
+  currency           String             @default("USD") @db.VarChar(3)
+  openDate           DateTime?
+  closeDate          DateTime?
+  valuationPreMoney  Decimal?           @db.Decimal(18, 2)
+  valuationPostMoney Decimal?           @db.Decimal(18, 2)
+  notes              String?
+
+  organization Organization        @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  commitments  FundingCommitment[]
+  documents    Document[]
+
+  deletedAt DateTime?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  @@unique([organizationId, name])
+  @@index([organizationId, status])
+  @@index([closeDate])
+  @@index([organizationId, deletedAt])
+}
+
+model FundingCommitment {
+  id              String    @id @default(uuid())
+  organizationId  String
+  fundingRoundId  String
+  investorId      String
+  committedAmount Decimal   @db.Decimal(18, 2)
+  receivedAmount  Decimal   @default(0) @db.Decimal(18, 2)
+  currency        String    @default("USD") @db.VarChar(3)
+  committedAt     DateTime?
+  receivedAt      DateTime?
+  notes           String?
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  fundingRound FundingRound @relation(fields: [fundingRoundId], references: [id], onDelete: Cascade)
+  investor     Investor     @relation(fields: [investorId], references: [id], onDelete: Restrict)
+
+  deletedAt DateTime?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  @@unique([fundingRoundId, investorId])
+  @@index([organizationId])
+  @@index([investorId])
+  @@index([organizationId, deletedAt])
+}
+
+model Grant {
+  id                 String      @id @default(uuid())
+  organizationId     String
+  name               String
+  agency             String?
+  programName        String?
+  awardNumber        String?
+  status             GrantStatus @default(IDENTIFIED)
+  requestedAmount    Decimal?    @db.Decimal(18, 2)
+  awardedAmount      Decimal?    @db.Decimal(18, 2)
+  receivedAmount     Decimal     @default(0) @db.Decimal(18, 2)
+  currency           String      @default("USD") @db.VarChar(3)
+  applicationDueDate DateTime?
+  submittedAt        DateTime?
+  awardDate          DateTime?
+  startDate          DateTime?
+  endDate            DateTime?
+  indirectRate       Decimal?    @db.Decimal(7, 4)
+  notes              String?
+
+  organization  Organization   @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  revenueEvents RevenueEvent[]
+  documents     Document[]
+
+  deletedAt DateTime?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  @@unique([organizationId, name])
+  @@index([organizationId, status])
+  @@index([applicationDueDate])
+  @@index([organizationId, deletedAt])
+}
+
+model RevenueEvent {
+  id             String      @id @default(uuid())
+  organizationId String
+  programId      String?
+  grantId        String?
+  cashAccountId  String?
+  type           RevenueType
+  name           String
+  description    String?
+  amount         Decimal     @db.Decimal(18, 2)
+  currency       String      @default("USD") @db.VarChar(3)
+  expectedDate   DateTime?
+  receivedDate   DateTime?
+  probability    Int         @default(100)
+  isReceived     Boolean     @default(false)
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  program      Program?     @relation(fields: [programId], references: [id], onDelete: SetNull)
+  grant        Grant?       @relation(fields: [grantId], references: [id], onDelete: SetNull)
+  cashAccount  CashAccount? @relation(fields: [cashAccountId], references: [id], onDelete: SetNull)
+
+  deletedAt DateTime?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  @@index([organizationId, type])
+  @@index([programId])
+  @@index([grantId])
+  @@index([expectedDate])
+  @@index([receivedDate])
+  @@index([organizationId, deletedAt])
+}
+
+model BudgetCategory {
+  id             String                    @id @default(uuid())
+  organizationId String
+  parentId       String?
+  name           String
+  code           String?
+  description    String?
+  isActive       Boolean                   @default(true)
+  outflowType    BudgetCategoryOutflowType @default(OPERATIONAL)
+
+  organization Organization     @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  parent       BudgetCategory?  @relation("BudgetCategoryHierarchy", fields: [parentId], references: [id], onDelete: SetNull)
+  children     BudgetCategory[] @relation("BudgetCategoryHierarchy")
+
+  budgetLines   BudgetLine[]
+  expenses      Expense[]
+  commitments   Commitment[]
+  forecastLines ForecastLine[]
+
+  deletedAt DateTime?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  @@unique([organizationId, name])
+  @@unique([organizationId, code])
+  @@index([organizationId, isActive])
+  @@index([parentId])
+  @@index([organizationId, deletedAt])
+}
+
+model Budget {
+  id             String           @id @default(uuid())
+  organizationId String
+  name           String
+  description    String?
+  status         BudgetStatus     @default(DRAFT)
+  periodType     BudgetPeriodType @default(ANNUAL)
+  currency       String           @default("USD") @db.VarChar(3)
+  startDate      DateTime
+  endDate        DateTime
+  approvedAt     DateTime?
+
+  organization Organization       @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  lines        BudgetLine[]
+  scenarios    ForecastScenario[]
+  documents    Document[]
+
+  deletedAt DateTime?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  @@unique([organizationId, name])
+  @@index([organizationId, status])
+  @@index([startDate, endDate])
+  @@index([organizationId, deletedAt])
+}
+
+model BudgetLine {
+  id              String   @id @default(uuid())
+  organizationId  String
+  budgetId        String
+  categoryId      String
+  programId       String?
+  projectId       String?
+  milestoneId     String?
+  name            String
+  notes           String?
+  plannedAmount   Decimal  @default(0) @db.Decimal(18, 2)
+  committedAmount Decimal  @default(0) @db.Decimal(18, 2)
+  actualAmount    Decimal  @default(0) @db.Decimal(18, 2)
+  forecastAmount  Decimal  @default(0) @db.Decimal(18, 2)
+  currency        String   @default("USD") @db.VarChar(3)
+  periodStart     DateTime
+  periodEnd       DateTime
+
+  organization Organization   @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  budget       Budget         @relation(fields: [budgetId], references: [id], onDelete: Cascade)
+  category     BudgetCategory @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+  program      Program?       @relation(fields: [programId], references: [id], onDelete: SetNull)
+  project      Project?       @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  milestone    Milestone?     @relation(fields: [milestoneId], references: [id], onDelete: SetNull)
+
+  expenses      Expense[]
+  commitments   Commitment[]
+  ledgerEntries LedgerEntry[]
+
+  deletedAt DateTime?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  @@index([organizationId, periodStart])
+  @@index([budgetId])
+  @@index([categoryId])
+  @@index([programId])
+  @@index([projectId])
+  @@index([milestoneId])
+  @@index([organizationId, deletedAt])
+}
+
+model Expense {
+  id                String        @id @default(uuid())
+  organizationId    String
+  budgetLineId      String?
+  categoryId        String
+  programId         String?
+  projectId         String?
+  milestoneId       String?
+  vendorId          String?
+  invoiceId         String?
+  cashAccountId     String?
+  createdById       String?
+  approvedById      String?
+  name              String
+  description       String?
+  status            ExpenseStatus @default(PLANNED)
+  amount            Decimal       @db.Decimal(18, 2)
+  currency          String        @default("USD") @db.VarChar(3)
+  expenseDate       DateTime
+  dueDate           DateTime?
+  paidAt            DateTime?
+  approvedAt        DateTime?
+  externalReference String?
+
+  organization Organization   @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  budgetLine   BudgetLine?    @relation(fields: [budgetLineId], references: [id], onDelete: SetNull)
+  category     BudgetCategory @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+  program      Program?       @relation(fields: [programId], references: [id], onDelete: SetNull)
+  project      Project?       @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  milestone    Milestone?     @relation(fields: [milestoneId], references: [id], onDelete: SetNull)
+  vendor       Vendor?        @relation(fields: [vendorId], references: [id], onDelete: SetNull)
+  invoice      Invoice?       @relation(fields: [invoiceId], references: [id], onDelete: SetNull)
+  cashAccount  CashAccount?   @relation(fields: [cashAccountId], references: [id], onDelete: SetNull)
+  createdBy    User?          @relation("ExpenseCreator", fields: [createdById], references: [id], onDelete: SetNull)
+  approvedBy   User?          @relation("ExpenseApprover", fields: [approvedById], references: [id], onDelete: SetNull)
+
+  documents     Document[]
+  ledgerAccount LedgerAccount? @relation(fields: [ledgerAccountId], references: [id])
+
+  deletedAt DateTime?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  ledgerAccountId String?
+
+  @@index([organizationId, status])
+  @@index([organizationId, expenseDate])
+  @@index([budgetLineId])
+  @@index([categoryId])
+  @@index([programId])
+  @@index([projectId])
+  @@index([vendorId])
+  @@index([invoiceId])
+  @@index([cashAccountId])
+  @@index([organizationId, deletedAt])
+}
+
+model Commitment {
+  id              String           @id @default(uuid())
+  organizationId  String
+  budgetLineId    String?
+  categoryId      String
+  programId       String?
+  projectId       String?
+  milestoneId     String?
+  vendorId        String?
+  contractId      String?
+  sowId           String?
+  purchaseOrderId String?
+  createdById     String?
+  approvedById    String?
+  name            String
+  description     String?
+  status          CommitmentStatus @default(PROPOSED)
+  totalAmount     Decimal          @db.Decimal(18, 2)
+  invoicedAmount  Decimal          @default(0) @db.Decimal(18, 2)
+  paidAmount      Decimal          @default(0) @db.Decimal(18, 2)
+  currency        String           @default("USD") @db.VarChar(3)
+  startDate       DateTime?
+  endDate         DateTime?
+  approvedAt      DateTime?
+
+  organization  Organization     @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  budgetLine    BudgetLine?      @relation(fields: [budgetLineId], references: [id], onDelete: SetNull)
+  category      BudgetCategory   @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+  program       Program?         @relation(fields: [programId], references: [id], onDelete: SetNull)
+  project       Project?         @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  milestone     Milestone?       @relation(fields: [milestoneId], references: [id], onDelete: SetNull)
+  vendor        Vendor?          @relation(fields: [vendorId], references: [id], onDelete: SetNull)
+  contract      Contract?        @relation(fields: [contractId], references: [id], onDelete: SetNull)
+  sow           StatementOfWork? @relation(fields: [sowId], references: [id], onDelete: SetNull)
+  purchaseOrder PurchaseOrder?   @relation(fields: [purchaseOrderId], references: [id], onDelete: SetNull)
+  createdBy     User?            @relation("CommitmentCreator", fields: [createdById], references: [id], onDelete: SetNull)
+  approvedBy    User?            @relation("CommitmentApprover", fields: [approvedById], references: [id], onDelete: SetNull)
+
+  deletedAt DateTime?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  @@index([organizationId, status])
+  @@index([budgetLineId])
+  @@index([categoryId])
+  @@index([programId])
+  @@index([projectId])
+  @@index([vendorId])
+  @@index([contractId])
+  @@index([sowId])
+  @@index([purchaseOrderId])
+  @@index([organizationId, deletedAt])
+}
+
+model Forecast {
+  id             String         @id @default(uuid())
+  organizationId String
+  name           String
+  description    String?
+  status         ForecastStatus @default(DRAFT)
+  currency       String         @default("USD") @db.VarChar(3)
+  startDate      DateTime
+  endDate        DateTime
+  asOfDate       DateTime
+
+  organization Organization       @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  scenarios    ForecastScenario[]
+  documents    Document[]
+
+  deletedAt DateTime?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  @@unique([organizationId, name])
+  @@index([organizationId, status])
+  @@index([asOfDate])
+  @@index([organizationId, deletedAt])
+}
+
+model ForecastScenario {
+  id             String       @id @default(uuid())
+  organizationId String
+  forecastId     String
+  budgetId       String?
+  name           String
+  type           ScenarioType @default(BASE)
+  description    String?
+  isPrimary      Boolean      @default(false)
+
+  organization Organization   @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  forecast     Forecast       @relation(fields: [forecastId], references: [id], onDelete: Cascade)
+  budget       Budget?        @relation(fields: [budgetId], references: [id], onDelete: SetNull)
+  lines        ForecastLine[]
+
+  deletedAt DateTime?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  @@unique([forecastId, name])
+  @@index([organizationId])
+  @@index([budgetId])
+  @@index([organizationId, deletedAt])
+}
+
+model ForecastLine {
+  id             String           @id @default(uuid())
+  organizationId String
+  scenarioId     String
+  categoryId     String?
+  programId      String?
+  projectId      String?
+  milestoneId    String?
+  type           ForecastLineType
+  name           String
+  amount         Decimal          @db.Decimal(18, 2)
+  currency       String           @default("USD") @db.VarChar(3)
+  periodStart    DateTime
+  periodEnd      DateTime
+  probability    Int              @default(100)
+  sourceType     String?
+  sourceId       String?
+  notes          String?
+
+  organization Organization     @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  scenario     ForecastScenario @relation(fields: [scenarioId], references: [id], onDelete: Cascade)
+  category     BudgetCategory?  @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  program      Program?         @relation(fields: [programId], references: [id], onDelete: SetNull)
+  project      Project?         @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  milestone    Milestone?       @relation(fields: [milestoneId], references: [id], onDelete: SetNull)
+
+  deletedAt DateTime?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  @@index([organizationId, periodStart])
+  @@index([scenarioId])
+  @@index([categoryId])
+  @@index([programId])
+  @@index([projectId])
+  @@index([milestoneId])
+  @@index([organizationId, deletedAt])
+}
+
+// ============================================================
+// VENDORS AND PROCUREMENT
+// ============================================================
+
+model Vendor {
+  id               String         @id @default(uuid())
+  organizationId   String
+  ownerId          String?
+  name             String
+  legalName        String?
+  category         VendorCategory @default(OTHER)
+  status           VendorStatus   @default(PROSPECTIVE)
+  website          String?
+  email            String?
+  phone            String?
+  addressLine1     String?
+  addressLine2     String?
+  city             String?
+  stateProvince    String?
+  postalCode       String?
+  country          String?
+  taxId            String?
+  paymentTermsDays Int?
+  notes            String?
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  owner        User?        @relation("VendorOwner", fields: [ownerId], references: [id], onDelete: SetNull)
+
+  contacts           VendorContact[]
+  projects           Project[]
+  deliverables       Deliverable[]
+  quotes             Quote[]
+  contracts          Contract[]
+  statementsOfWork   StatementOfWork[]
+  purchaseOrders     PurchaseOrder[]
+  invoices           Invoice[]
+  expenses           Expense[]
+  commitments        Commitment[]
+  performanceReviews VendorPerformanceReview[]
+  documents          Document[]
+  ledgerEntries      LedgerEntry[]
+
+  deletedAt DateTime?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  @@unique([organizationId, name])
+  @@index([organizationId, status])
+  @@index([organizationId, category])
+  @@index([ownerId])
+  @@index([organizationId, deletedAt])
+}
+
+model VendorContact {
+  id             String  @id @default(uuid())
+  organizationId String
+  vendorId       String
+  userId         String?
+  firstName      String
+  lastName       String
+  email          String?
+  phone          String?
+  title          String?
+  department     String?
+  isPrimary      Boolean @default(false)
+  notes          String?
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  vendor       Vendor       @relation(fields: [vendorId], references: [id], onDelete: Cascade)
+  user         User?        @relation("VendorContactUser", fields: [userId], references: [id], onDelete: SetNull)
+
+  quotes           Quote[]
+  contracts        Contract[]
+  statementsOfWork StatementOfWork[]
+
+  deletedAt DateTime?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  @@unique([vendorId, email])
+  @@index([organizationId])
+  @@index([vendorId])
+  @@index([userId])
+  @@index([organizationId, deletedAt])
+}
+
+model Quote {
+  id              String      @id @default(uuid())
+  organizationId  String
+  vendorId        String
+  vendorContactId String?
+  projectId       String?
+  quoteNumber     String?
+  name            String
+  description     String?
+  status          QuoteStatus @default(REQUESTED)
+  amount          Decimal?    @db.Decimal(18, 2)
+  currency        String      @default("USD") @db.VarChar(3)
+  requestedAt     DateTime?
+  receivedAt      DateTime?
+  validUntil      DateTime?
+  acceptedAt      DateTime?
+
+  organization  Organization   @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  vendor        Vendor         @relation(fields: [vendorId], references: [id], onDelete: Restrict)
+  vendorContact VendorContact? @relation(fields: [vendorContactId], references: [id], onDelete: SetNull)
+  project       Project?       @relation(fields: [projectId], references: [id], onDelete: SetNull)
+
+  statementsOfWork StatementOfWork[]
+  purchaseOrders   PurchaseOrder[]
+  documents        Document[]
+
+  deletedAt DateTime?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  @@index([organizationId, status])
+  @@index([vendorId])
+  @@index([vendorContactId])
+  @@index([projectId])
+  @@index([validUntil])
+  @@index([organizationId, deletedAt])
+}
+
+model Contract {
+  id              String         @id @default(uuid())
+  organizationId  String
+  vendorId        String
+  vendorContactId String?
+  projectId       String?
+  contractNumber  String?
+  name            String
+  description     String?
+  status          ContractStatus @default(DRAFT)
+  effectiveDate   DateTime?
+  expirationDate  DateTime?
+  terminationDate DateTime?
+  autoRenews      Boolean        @default(false)
+  noticeDays      Int?
+  totalValue      Decimal?       @db.Decimal(18, 2)
+  currency        String         @default("USD") @db.VarChar(3)
+
+  organization  Organization   @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  vendor        Vendor         @relation(fields: [vendorId], references: [id], onDelete: Restrict)
+  vendorContact VendorContact? @relation(fields: [vendorContactId], references: [id], onDelete: SetNull)
+  project       Project?       @relation(fields: [projectId], references: [id], onDelete: SetNull)
+
+  statementsOfWork StatementOfWork[]
+  purchaseOrders   PurchaseOrder[]
+  invoices         Invoice[]
+  commitments      Commitment[]
+  documents        Document[]
+
+  deletedAt DateTime?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  @@unique([organizationId, contractNumber])
+  @@index([organizationId, status])
+  @@index([vendorId])
+  @@index([vendorContactId])
+  @@index([projectId])
+  @@index([expirationDate])
+  @@index([organizationId, deletedAt])
+}
+
+model StatementOfWork {
+  id              String         @id @default(uuid())
+  organizationId  String
+  vendorId        String
+  vendorContactId String?
+  projectId       String?
+  contractId      String?
+  quoteId         String?
+  sowNumber       String?
+  name            String
+  description     String?
+  status          ContractStatus @default(DRAFT)
+  startDate       DateTime?
+  endDate         DateTime?
+  totalValue      Decimal?       @db.Decimal(18, 2)
+  currency        String         @default("USD") @db.VarChar(3)
+
+  organization  Organization   @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  vendor        Vendor         @relation(fields: [vendorId], references: [id], onDelete: Restrict)
+  vendorContact VendorContact? @relation(fields: [vendorContactId], references: [id], onDelete: SetNull)
+  project       Project?       @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  contract      Contract?      @relation(fields: [contractId], references: [id], onDelete: SetNull)
+  quote         Quote?         @relation(fields: [quoteId], references: [id], onDelete: SetNull)
+
+  deliverables   StatementOfWorkDeliverable[]
+  purchaseOrders PurchaseOrder[]
+  invoices       Invoice[]
+  commitments    Commitment[]
+  documents      Document[]
+
+  deletedAt DateTime?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  @@unique([organizationId, sowNumber])
+  @@index([organizationId, status])
+  @@index([vendorId])
+  @@index([vendorContactId])
+  @@index([projectId])
+  @@index([contractId])
+  @@index([quoteId])
+  @@index([endDate])
+  @@index([organizationId, deletedAt])
+}
+
+model StatementOfWorkDeliverable {
+  id                 String    @id @default(uuid())
+  sowId              String
+  deliverableId      String
+  amount             Decimal?  @db.Decimal(18, 2)
+  currency           String    @default("USD") @db.VarChar(3)
+  dueDate            DateTime?
+  acceptanceCriteria String?
+
+  sow         StatementOfWork @relation(fields: [sowId], references: [id], onDelete: Cascade)
+  deliverable Deliverable     @relation(fields: [deliverableId], references: [id], onDelete: Cascade)
+
+  deletedAt DateTime?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  @@unique([sowId, deliverableId])
+  @@index([deliverableId])
+}
+
+model PurchaseOrder {
+  id                     String              @id @default(uuid())
+  organizationId         String
+  vendorId               String
+  projectId              String?
+  quoteId                String?
+  contractId             String?
+  sowId                  String?
+  poNumber               String
+  name                   String
+  description            String?
+  status                 PurchaseOrderStatus @default(DRAFT)
+  totalAmount            Decimal             @db.Decimal(18, 2)
+  invoicedAmount         Decimal             @default(0) @db.Decimal(18, 2)
+  currency               String              @default("USD") @db.VarChar(3)
+  issuedAt               DateTime?
+  expectedCompletionDate DateTime?
+  closedAt               DateTime?
+
+  organization Organization     @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  vendor       Vendor           @relation(fields: [vendorId], references: [id], onDelete: Restrict)
+  project      Project?         @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  quote        Quote?           @relation(fields: [quoteId], references: [id], onDelete: SetNull)
+  contract     Contract?        @relation(fields: [contractId], references: [id], onDelete: SetNull)
+  sow          StatementOfWork? @relation(fields: [sowId], references: [id], onDelete: SetNull)
+
+  invoices    Invoice[]
+  commitments Commitment[]
+  documents   Document[]
+
+  deletedAt DateTime?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  @@unique([organizationId, poNumber])
+  @@index([organizationId, status])
+  @@index([vendorId])
+  @@index([projectId])
+  @@index([quoteId])
+  @@index([contractId])
+  @@index([sowId])
+  @@index([organizationId, deletedAt])
+}
+
+model Invoice {
+  id              String        @id @default(uuid())
+  organizationId  String
+  vendorId        String
+  projectId       String?
+  contractId      String?
+  sowId           String?
+  purchaseOrderId String?
+  cashAccountId   String?
+  invoiceNumber   String
+  description     String?
+  status          InvoiceStatus @default(RECEIVED)
+  subtotal        Decimal?      @db.Decimal(18, 2)
+  taxAmount       Decimal       @default(0) @db.Decimal(18, 2)
+  totalAmount     Decimal       @db.Decimal(18, 2)
+  paidAmount      Decimal       @default(0) @db.Decimal(18, 2)
+  currency        String        @default("USD") @db.VarChar(3)
+  invoiceDate     DateTime
+  dueDate         DateTime?
+  approvedAt      DateTime?
+  paidAt          DateTime?
+
+  organization  Organization     @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  vendor        Vendor           @relation(fields: [vendorId], references: [id], onDelete: Restrict)
+  project       Project?         @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  contract      Contract?        @relation(fields: [contractId], references: [id], onDelete: SetNull)
+  sow           StatementOfWork? @relation(fields: [sowId], references: [id], onDelete: SetNull)
+  purchaseOrder PurchaseOrder?   @relation(fields: [purchaseOrderId], references: [id], onDelete: SetNull)
+  cashAccount   CashAccount?     @relation(fields: [cashAccountId], references: [id], onDelete: SetNull)
+
+  expenses  Expense[]
+  documents Document[]
+
+  deletedAt DateTime?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  @@unique([vendorId, invoiceNumber])
+  @@index([organizationId, status])
+  @@index([vendorId])
+  @@index([projectId])
+  @@index([contractId])
+  @@index([sowId])
+  @@index([purchaseOrderId])
+  @@index([cashAccountId])
+  @@index([dueDate])
+  @@index([organizationId, deletedAt])
+}
+
+model VendorPerformanceReview {
+  id                 String   @id @default(uuid())
+  organizationId     String
+  vendorId           String
+  programId          String?
+  reviewerName       String?
+  reviewDate         DateTime
+  qualityScore       Int?
+  timelineScore      Int?
+  communicationScore Int?
+  costScore          Int?
+  overallScore       Decimal? @db.Decimal(4, 2)
+  strengths          String?
+  concerns           String?
+  correctiveActions  String?
+  wouldUseAgain      Boolean?
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  vendor       Vendor       @relation(fields: [vendorId], references: [id], onDelete: Cascade)
+  program      Program?     @relation(fields: [programId], references: [id], onDelete: SetNull)
+
+  documents Document[]
+
+  deletedAt DateTime?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  @@index([organizationId, reviewDate])
+  @@index([vendorId])
+  @@index([programId])
+  @@index([organizationId, deletedAt])
+}
+
+// ============================================================
+// DOCUMENTS, AI, AND EXECUTIVE REPORTING
+// ============================================================
+
+model Document {
+  id                        String         @id @default(uuid())
+  organizationId            String
+  createdById               String?
+  programId                 String?
+  projectId                 String?
+  milestoneId               String?
+  deliverableId             String?
+  vendorId                  String?
+  quoteId                   String?
+  contractId                String?
+  sowId                     String?
+  purchaseOrderId           String?
+  invoiceId                 String?
+  expenseId                 String?
+  fundingRoundId            String?
+  grantId                   String?
+  budgetId                  String?
+  forecastId                String?
+  riskId                    String?
+  decisionId                String?
+  vendorPerformanceReviewId String?
+  title                     String
+  description               String?
+  type                      DocumentType   @default(GENERAL)
+  status                    DocumentStatus @default(DRAFT)
+  currentVersion            Int            @default(1)
+  sourceUrl                 String?
+  tags                      String[]       @default([])
+
+  organization            Organization             @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  createdBy               User?                    @relation("DocumentCreator", fields: [createdById], references: [id], onDelete: SetNull)
+  program                 Program?                 @relation(fields: [programId], references: [id], onDelete: SetNull)
+  project                 Project?                 @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  milestone               Milestone?               @relation(fields: [milestoneId], references: [id], onDelete: SetNull)
+  deliverable             Deliverable?             @relation(fields: [deliverableId], references: [id], onDelete: SetNull)
+  vendor                  Vendor?                  @relation(fields: [vendorId], references: [id], onDelete: SetNull)
+  quote                   Quote?                   @relation(fields: [quoteId], references: [id], onDelete: SetNull)
+  contract                Contract?                @relation(fields: [contractId], references: [id], onDelete: SetNull)
+  sow                     StatementOfWork?         @relation(fields: [sowId], references: [id], onDelete: SetNull)
+  purchaseOrder           PurchaseOrder?           @relation(fields: [purchaseOrderId], references: [id], onDelete: SetNull)
+  invoice                 Invoice?                 @relation(fields: [invoiceId], references: [id], onDelete: SetNull)
+  expense                 Expense?                 @relation(fields: [expenseId], references: [id], onDelete: SetNull)
+  fundingRound            FundingRound?            @relation(fields: [fundingRoundId], references: [id], onDelete: SetNull)
+  grant                   Grant?                   @relation(fields: [grantId], references: [id], onDelete: SetNull)
+  budget                  Budget?                  @relation(fields: [budgetId], references: [id], onDelete: SetNull)
+  forecast                Forecast?                @relation(fields: [forecastId], references: [id], onDelete: SetNull)
+  risk                    Risk?                    @relation(fields: [riskId], references: [id], onDelete: SetNull)
+  decision                Decision?                @relation(fields: [decisionId], references: [id], onDelete: SetNull)
+  vendorPerformanceReview VendorPerformanceReview? @relation(fields: [vendorPerformanceReviewId], references: [id], onDelete: SetNull)
+
+  versions      DocumentVersion[]
+  aiExtractions AIExtraction[]
+  outgoingLinks DocumentLink[]    @relation("DocumentLinkSource")
+  incomingLinks DocumentLink[]    @relation("DocumentLinkTarget")
+
+  deletedAt DateTime?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  @@index([organizationId, type])
+  @@index([organizationId, status])
+  @@index([programId])
+  @@index([projectId])
+  @@index([vendorId])
+  @@index([contractId])
+  @@index([invoiceId])
+  @@index([riskId])
+  @@index([decisionId])
+  @@index([organizationId, deletedAt])
+}
+
+model DocumentVersion {
+  id             String  @id @default(uuid())
+  organizationId String
+  documentId     String
+  uploadedById   String?
+  versionNumber  Int
+  fileName       String
+  storageKey     String
+  mimeType       String?
+  fileSizeBytes  BigInt?
+  checksum       String?
+  extractedText  String?
+  changeNotes    String?
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  document     Document     @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  uploadedBy   User?        @relation("DocumentVersionUploader", fields: [uploadedById], references: [id], onDelete: SetNull)
+
+  aiExtractions AIExtraction[]
+
+  createdAt DateTime @default(now())
+
+  @@unique([documentId, versionNumber])
+  @@index([organizationId])
+  @@index([uploadedById])
+}
+
+model DocumentLink {
+  id               String           @id @default(uuid())
+  organizationId   String
+  sourceDocumentId String
+  targetDocumentId String
+  type             DocumentLinkType @default(RELATED_TO)
+  notes            String?
+
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  sourceDocument Document     @relation("DocumentLinkSource", fields: [sourceDocumentId], references: [id], onDelete: Cascade)
+  targetDocument Document     @relation("DocumentLinkTarget", fields: [targetDocumentId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@unique([sourceDocumentId, targetDocumentId, type])
+  @@index([organizationId])
+  @@index([targetDocumentId])
+}
+
+model AIExtraction {
+  id                String             @id @default(uuid())
+  organizationId    String
+  documentId        String
+  documentVersionId String?
+  reviewedById      String?
+  type              AIExtractionType
+  status            AIExtractionStatus @default(PENDING)
+  modelProvider     String?
+  modelName         String?
+  promptVersion     String?
+  inputHash         String?
+  confidence        Decimal?           @db.Decimal(5, 4)
+  resultJson        Json?
+  errorMessage      String?
+  reviewedAt        DateTime?
+  acceptedAt        DateTime?
+
+  organization    Organization     @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  document        Document         @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  documentVersion DocumentVersion? @relation(fields: [documentVersionId], references: [id], onDelete: SetNull)
+  reviewedBy      User?            @relation("AIExtractionReviewer", fields: [reviewedById], references: [id], onDelete: SetNull)
+  aiRuns          AiRun[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([organizationId, status])
+  @@index([documentId])
+  @@index([documentVersionId])
+  @@index([reviewedById])
+}
+
+model ExecutiveReport {
+  id             String                @id @default(uuid())
+  organizationId String
+  programId      String?
+  projectId      String?
+  createdById    String?
+  approvedById   String?
+  name           String
+  description    String?
+  type           ExecutiveReportType
+  status         ExecutiveReportStatus @default(DRAFT)
+  periodStart    DateTime?
+  periodEnd      DateTime?
+  contentJson    Json?
+  generatedAt    DateTime?
+  approvedAt     DateTime?
+  publishedAt    DateTime?
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  program      Program?     @relation(fields: [programId], references: [id], onDelete: SetNull)
+  project      Project?     @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  createdBy    User?        @relation("ExecutiveReportCreator", fields: [createdById], references: [id], onDelete: SetNull)
+  approvedBy   User?        @relation("ExecutiveReportApprover", fields: [approvedById], references: [id], onDelete: SetNull)
+
+  deletedAt DateTime?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  @@index([organizationId, type])
+  @@index([organizationId, status])
+  @@index([programId])
+  @@index([projectId])
+  @@index([periodStart, periodEnd])
+  @@index([organizationId, deletedAt])
+}
+
+// ============================================================
+// PLATFORM GOVERNANCE, AUDIT, AND API SAFETY
+// ============================================================
+
+model ApiKey {
+  id             String       @id @default(uuid())
+  organizationId String
+  createdById    String?
+  name           String
+  keyPrefix      String       @db.VarChar(16)
+  keyHash        String       @unique
+  status         ApiKeyStatus @default(ACTIVE)
+  scopes         String[]
+  lastUsedAt     DateTime?
+  expiresAt      DateTime?
+  revokedAt      DateTime?
+  metadata       Json?
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  createdBy    User?        @relation("ApiKeyCreator", fields: [createdById], references: [id], onDelete: SetNull)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  program   Program? @relation(fields: [programId], references: [id])
+  programId String?
+
+  @@unique([organizationId, name])
+  @@index([organizationId, status])
+  @@index([createdById])
+  @@index([expiresAt])
+}
+
+model AuditEvent {
+  id             String      @id @default(uuid())
+  organizationId String
+  userId         String?
+  actorType      ActorType   @default(USER)
+  actorId        String?
+  action         AuditAction
+  entityType     String
+  entityId       String?
+  requestId      String?
+  correlationId  String?
+  ipAddress      String?
+  userAgent      String?
+  before         Json?
+  after          Json?
+  metadata       Json?
+  occurredAt     DateTime    @default(now())
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  user         User?        @relation("AuditEventUser", fields: [userId], references: [id], onDelete: SetNull)
+  program      Program?     @relation(fields: [programId], references: [id])
+  programId    String?
+
+  @@index([organizationId, occurredAt])
+  @@index([organizationId, entityType, entityId])
+  @@index([userId, occurredAt])
+  @@index([correlationId])
+}
+
+model DomainEvent {
+  id             String            @id @default(uuid())
+  organizationId String
+  aggregateType  String
+  aggregateId    String
+  eventType      String
+  eventVersion   Int               @default(1)
+  payload        Json
+  metadata       Json?
+  status         DomainEventStatus @default(PENDING)
+  correlationId  String?
+  causationId    String?
+  availableAt    DateTime          @default(now())
+  publishedAt    DateTime?
+  attempts       Int               @default(0)
+  lastError      String?
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  program   Program? @relation(fields: [programId], references: [id])
+  programId String?
+
+  @@index([status, availableAt])
+  @@index([organizationId, aggregateType, aggregateId])
+  @@index([organizationId, createdAt(sort: Desc), id(sort: Asc)])
+  @@index([correlationId])
+}
+
+model IdempotencyKey {
+  id             String    @id @default(uuid())
+  organizationId String
+  key            String
+  operation      String
+  requestHash    String?
+  responseCode   Int?
+  responseBody   Json?
+  lockedAt       DateTime?
+  completedAt    DateTime?
+  expiresAt      DateTime
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  program   Program? @relation(fields: [programId], references: [id])
+  programId String?
+
+  @@unique([organizationId, key, operation])
+  @@index([expiresAt])
+}
+
+// ============================================================
+// DOUBLE-ENTRY FINANCIAL LEDGER
+// ============================================================
+
+model LedgerAccount {
+  id             String                @id @default(uuid())
+  organizationId String
+  parentId       String?
+  cashAccountId  String?               @unique
+  code           String
+  name           String
+  description    String?
+  type           LedgerAccountType
+  subtype        LedgerAccountSubtype?
+  currency       String                @default("USD") @db.VarChar(3)
+  isActive       Boolean               @default(true)
+  isSystem       Boolean               @default(false)
+  metadata       Json?
+  deletedAt      DateTime?
+
+  organization Organization    @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  parent       LedgerAccount?  @relation("LedgerAccountHierarchy", fields: [parentId], references: [id], onDelete: Restrict)
+  children     LedgerAccount[] @relation("LedgerAccountHierarchy")
+  cashAccount  CashAccount?    @relation(fields: [cashAccountId], references: [id], onDelete: SetNull)
+  entries      LedgerEntry[]
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  program   Program?  @relation(fields: [programId], references: [id])
+  programId String?
+  expenses  Expense[]
+
+  @@unique([organizationId, code])
+  @@index([organizationId, type, isActive])
+  @@index([organizationId, deletedAt])
+  @@index([parentId])
+}
+
+model LedgerTransaction {
+  id                String                  @id @default(uuid())
+  organizationId    String
+  createdById       String?
+  postedById        String?
+  reversalOfId      String?                 @unique
+  transactionNumber String
+  status            LedgerTransactionStatus @default(DRAFT)
+  transactionDate   DateTime
+  postingDate       DateTime?
+  description       String
+  currency          String                  @default("USD") @db.VarChar(3)
+  sourceType        String?
+  sourceId          String?
+  externalReference String?
+  correlationId     String?
+  metadata          Json?
+  postedAt          DateTime?
+  voidedAt          DateTime?
+
+  organization Organization       @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  createdBy    User?              @relation("LedgerTransactionCreator", fields: [createdById], references: [id], onDelete: SetNull)
+  postedBy     User?              @relation("LedgerTransactionPoster", fields: [postedById], references: [id], onDelete: SetNull)
+  reversalOf   LedgerTransaction? @relation("LedgerReversal", fields: [reversalOfId], references: [id], onDelete: Restrict)
+  reversedBy   LedgerTransaction? @relation("LedgerReversal")
+  entries      LedgerEntry[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  program   Program? @relation(fields: [programId], references: [id])
+  programId String?
+
+  @@unique([organizationId, transactionNumber])
+  @@index([organizationId, status, transactionDate])
+  @@index([organizationId, sourceType, sourceId])
+  @@index([correlationId])
+  @@index([createdById])
+  @@index([postedById])
+}
+
+model LedgerEntry {
+  id             String          @id @default(uuid())
+  organizationId String
+  transactionId  String
+  accountId      String
+  programId      String?
+  projectId      String?
+  vendorId       String?
+  budgetLineId   String?
+  side           LedgerEntrySide
+  amount         Decimal         @db.Decimal(20, 4)
+  currency       String          @default("USD") @db.VarChar(3)
+  exchangeRate   Decimal?        @db.Decimal(20, 8)
+  baseAmount     Decimal?        @db.Decimal(20, 4)
+  memo           String?
+  metadata       Json?
+
+  organization Organization      @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  transaction  LedgerTransaction @relation(fields: [transactionId], references: [id], onDelete: Cascade)
+  account      LedgerAccount     @relation(fields: [accountId], references: [id], onDelete: Restrict)
+  program      Program?          @relation(fields: [programId], references: [id], onDelete: SetNull)
+  project      Project?          @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  vendor       Vendor?           @relation(fields: [vendorId], references: [id], onDelete: SetNull)
+  budgetLine   BudgetLine?       @relation(fields: [budgetLineId], references: [id], onDelete: SetNull)
+
+  createdAt DateTime @default(now())
+
+  @@index([organizationId, accountId])
+  @@index([transactionId])
+  @@index([programId])
+  @@index([projectId])
+  @@index([vendorId])
+  @@index([budgetLineId])
+}
+
+// ============================================================
+// AI EXECUTION AND TRACEABILITY
+// ============================================================
+
+model AiRun {
+  id               String      @id @default(uuid())
+  organizationId   String
+  initiatedById    String?
+  extractionId     String?
+  provider         AiProvider
+  model            String
+  operation        String
+  status           AiRunStatus @default(QUEUED)
+  promptVersion    String?
+  systemPromptHash String?
+  inputHash        String?
+  input            Json?
+  output           Json?
+  errorCode        String?
+  errorMessage     String?
+  promptTokens     Int?
+  completionTokens Int?
+  totalTokens      Int?
+  estimatedCost    Decimal?    @db.Decimal(18, 6)
+  startedAt        DateTime?
+  completedAt      DateTime?
+  reviewedAt       DateTime?
+  metadata         Json?
+
+  organization Organization  @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  initiatedBy  User?         @relation("AiRunInitiator", fields: [initiatedById], references: [id], onDelete: SetNull)
+  extraction   AIExtraction? @relation(fields: [extractionId], references: [id], onDelete: SetNull)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  program   Program? @relation(fields: [programId], references: [id])
+  programId String?
+
+  @@index([organizationId, status, createdAt])
+  @@index([organizationId, operation])
+  @@index([initiatedById])
+  @@index([extractionId])
+  @@index([inputHash])
+}
+
+// ============================================================
+// FINANCE — FUNDING EVENTS
+// ============================================================
+
+model FundingEvent {
+  id             String             @id @default(uuid())
+  organizationId String
+  name           String
+  type           FundingEventType
+  status         FundingEventStatus @default(COMMITTED)
+  amount         Decimal            @db.Decimal(18, 2)
+  currency       String             @default("USD") @db.VarChar(3)
+  receivedAt     DateTime?
+  expectedAt     DateTime?
+  investor       String?
+  notes          String?
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  deletedAt DateTime?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  @@index([organizationId, status])
+  @@index([organizationId, type])
+  @@index([organizationId, deletedAt])
+}

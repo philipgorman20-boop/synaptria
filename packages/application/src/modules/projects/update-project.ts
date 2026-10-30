@@ -1,0 +1,127 @@
+import { AuditService } from '@synaptria/audit';
+import {
+  CryptoIdGenerator,
+  SystemClock,
+  type Clock,
+  type CorrelationId,
+  type IdGenerator,
+  type MembershipId,
+  type OrganizationId,
+  type ProgramId,
+  type ProjectId,
+  type RequestId,
+  type UserId,
+} from '@synaptria/core';
+import type { OrganizationRole } from '@synaptria/core/context';
+import type {
+  Project,
+  ProjectPriority,
+  ProjectStatus,
+  UpdateProjectInput as RepositoryUpdateProjectInput,
+} from '@synaptria/domain/projects';
+import { DomainEventService } from '@synaptria/events';
+import { PERMISSIONS, requirePermission } from '@synaptria/permissions';
+
+import { ApplicationError } from '../../shared/application-error';
+import type { ProjectUnitOfWork } from './project-unit-of-work';
+
+export interface UpdateProjectContext {
+  readonly organizationId: OrganizationId;
+  readonly userId: UserId;
+  readonly membershipId: MembershipId;
+  readonly role: OrganizationRole;
+  readonly requestId: RequestId;
+  readonly correlationId: CorrelationId;
+}
+
+export interface UpdateProjectInput {
+  readonly projectId: ProjectId;
+  readonly name?: string;
+  readonly description?: string | null;
+  readonly status?: ProjectStatus;
+  readonly priority?: ProjectPriority;
+  readonly percentComplete?: number;
+  readonly programId?: ProgramId | null;
+}
+
+export interface UpdateProjectOutput {
+  readonly project: Project;
+}
+
+export class UpdateProjectUseCase {
+  constructor(
+    private readonly unitOfWork: ProjectUnitOfWork,
+    private readonly clock: Clock = new SystemClock(),
+    private readonly eventIdGenerator: IdGenerator = new CryptoIdGenerator(),
+  ) {}
+
+  async execute(context: UpdateProjectContext, input: UpdateProjectInput): Promise<UpdateProjectOutput> {
+    requirePermission(context.role, PERMISSIONS.PROJECTS_MANAGE);
+
+    const repositoryInput: RepositoryUpdateProjectInput = {};
+
+    if (input.name !== undefined) {
+      const name = input.name.trim();
+      if (name.length === 0) {
+        throw new ApplicationError({ code: 'VALIDATION_FAILED', message: 'name cannot be empty.', details: { field: 'name' } });
+      }
+      (repositoryInput as Record<string, unknown>).name = name;
+    }
+
+    if (input.description !== undefined) (repositoryInput as Record<string, unknown>).description = input.description;
+    if (input.status !== undefined) (repositoryInput as Record<string, unknown>).status = input.status;
+    if (input.priority !== undefined) (repositoryInput as Record<string, unknown>).priority = input.priority;
+    if (input.percentComplete !== undefined) (repositoryInput as Record<string, unknown>).percentComplete = input.percentComplete;
+    if (input.programId !== undefined) (repositoryInput as Record<string, unknown>).programId = input.programId;
+
+    const occurredAt = this.clock.now();
+
+    return this.unitOfWork.execute(async (repositories) => {
+      const existing = await repositories.projects.findById(context.organizationId, input.projectId);
+      if (existing === null || existing.deletedAt !== undefined) {
+        throw new ApplicationError({ code: 'NOT_FOUND', message: 'Project not found.', details: { field: 'projectId' } });
+      }
+
+      const project = await repositories.projects.update(context.organizationId, input.projectId, repositoryInput);
+
+      const audit = new AuditService(repositories.audit, this.clock);
+      await audit.record({
+        organizationId: context.organizationId,
+        actor: { type: 'USER', id: context.userId, userId: context.userId },
+        action: 'UPDATE',
+        target: { entityType: 'Project', entityId: project.id },
+        request: { requestId: context.requestId, correlationId: context.correlationId },
+        before: { id: existing.id, name: existing.name, status: existing.status },
+        after: { id: project.id, name: project.name, status: project.status },
+        occurredAt,
+      });
+
+      const events = new DomainEventService(repositories.events, this.clock, this.eventIdGenerator);
+      await events.publish({
+        context: {
+          userId: context.userId,
+          organizationId: context.organizationId,
+          membershipId: context.membershipId,
+          role: context.role,
+          requestId: context.requestId,
+          correlationId: context.correlationId,
+        },
+        event: {
+          type: 'project.updated',
+          aggregateType: 'Project',
+          aggregateId: project.id,
+          payload: {
+            projectId: project.id,
+            organizationId: context.organizationId,
+            name: project.name,
+            status: project.status,
+            updatedByUserId: context.userId,
+          },
+          occurredAt,
+        },
+      });
+
+      return { project };
+    });
+  }
+}
