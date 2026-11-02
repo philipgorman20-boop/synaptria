@@ -28,6 +28,10 @@ export default async function FinancePage() {
     throw error;
   }
 
+  if (context.role !== 'OWNER' && context.role !== 'ADMIN') {
+    redirect('/dashboard');
+  }
+
   const [fundingEventsResult, budgetLinesResult, categoriesResult] = await Promise.all([
     getFundingEventService().listFundingEvents(toListFundingEventsContext(context)),
     getBudgetLineService().listAllBudgetLines(toListAllBudgetLinesContext(context)),

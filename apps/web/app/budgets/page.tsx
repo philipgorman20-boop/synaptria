@@ -27,6 +27,10 @@ export default async function BudgetsPage() {
     throw error;
   }
 
+  if (context.role !== 'OWNER' && context.role !== 'ADMIN') {
+    redirect('/dashboard');
+  }
+
   const result = await getBudgetService().listBudgets(toListBudgetsContext(context));
   const budgets = result.budgets.filter(isVisibleBudget);
 

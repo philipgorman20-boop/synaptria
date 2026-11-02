@@ -1,5 +1,6 @@
 'use client';
 
+import type { OrganizationRole } from '@synaptria/core';
 import type { ReactNode } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -7,7 +8,21 @@ import { usePathname } from 'next/navigation';
 
 const PUBLIC_PATHS = ['/', '/sign-in', '/no-organization'];
 
-const NAV_SECTIONS = [
+const FINANCE_ROLES: readonly OrganizationRole[] = ['OWNER', 'ADMIN'];
+
+type NavItem = {
+  href: string;
+  label: string;
+  icon: () => ReactNode;
+  minRoles?: readonly OrganizationRole[];
+};
+
+type NavSection = {
+  label?: string;
+  items: NavItem[];
+};
+
+const NAV_SECTIONS: NavSection[] = [
   {
     items: [
       { href: '/dashboard', label: 'Dashboard', icon: IconDashboard },
@@ -31,8 +46,8 @@ const NAV_SECTIONS = [
   {
     label: 'OPERATIONS',
     items: [
-      { href: '/finance', label: 'Finance', icon: IconFinance },
-      { href: '/budgets', label: 'Budgets', icon: IconBudgets },
+      { href: '/finance', label: 'Finance', icon: IconFinance, minRoles: FINANCE_ROLES },
+      { href: '/budgets', label: 'Budgets', icon: IconBudgets, minRoles: FINANCE_ROLES },
       { href: '/vendors', label: 'Vendors', icon: IconVendors },
     ],
   },
@@ -44,9 +59,21 @@ const NAV_SECTIONS = [
       { href: '/action-proposals', label: 'Action Proposals', icon: IconActionProposals },
     ],
   },
+  {
+    label: 'ORGANIZATION',
+    items: [
+      { href: '/team', label: 'Team', icon: IconTeam },
+    ],
+  },
 ];
 
-export function AppShell({ children }: { readonly children: ReactNode }) {
+export function AppShell({
+  children,
+  role,
+}: {
+  readonly children: ReactNode;
+  readonly role: OrganizationRole | null;
+}) {
   const pathname = usePathname();
   const isPublic = PUBLIC_PATHS.some((p) => pathname === p || pathname.startsWith(`${p}/`));
 
@@ -81,27 +108,33 @@ export function AppShell({ children }: { readonly children: ReactNode }) {
         </div>
 
         <div className="app-sidebar-nav">
-          {NAV_SECTIONS.map((section, i) => (
-            <div key={i} className="app-nav-section">
-              {section.label !== undefined ? (
-                <p className="app-nav-section-label">{section.label}</p>
-              ) : null}
-              {section.items.map((item) => {
-                const active = pathname === item.href || pathname.startsWith(`${item.href}/`);
-                return (
-                  <Link
-                    key={item.href}
-                    href={item.href}
-                    className={`app-nav-link${active ? ' app-nav-link--active' : ''}`}
-                    aria-current={active ? 'page' : undefined}
-                  >
-                    <item.icon />
-                    <span>{item.label}</span>
-                  </Link>
-                );
-              })}
-            </div>
-          ))}
+          {NAV_SECTIONS.map((section, i) => {
+            const visibleItems = section.items.filter(
+              (item) => !item.minRoles || role === null || item.minRoles.includes(role),
+            );
+            if (visibleItems.length === 0) return null;
+            return (
+              <div key={i} className="app-nav-section">
+                {section.label !== undefined ? (
+                  <p className="app-nav-section-label">{section.label}</p>
+                ) : null}
+                {visibleItems.map((item) => {
+                  const active = pathname === item.href || pathname.startsWith(`${item.href}/`);
+                  return (
+                    <Link
+                      key={item.href}
+                      href={item.href}
+                      className={`app-nav-link${active ? ' app-nav-link--active' : ''}`}
+                      aria-current={active ? 'page' : undefined}
+                    >
+                      <item.icon />
+                      <span>{item.label}</span>
+                    </Link>
+                  );
+                })}
+              </div>
+            );
+          })}
         </div>
       </nav>
 
@@ -217,6 +250,17 @@ function IconRecommendations() {
   return (
     <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
       <path d="M8 1L9.8 5.4L14.5 5.9L11.1 9L12.1 13.6L8 11.2L3.9 13.6L4.9 9L1.5 5.9L6.2 5.4L8 1Z" fill="currentColor" opacity=".7" />
+    </svg>
+  );
+}
+
+function IconTeam() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+      <circle cx="6" cy="5" r="2.5" fill="currentColor" opacity=".7" />
+      <path d="M1 13C1 10.79 3.24 9 6 9C8.76 9 11 10.79 11 13" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" opacity=".7" />
+      <circle cx="12" cy="5.5" r="1.75" fill="currentColor" opacity=".45" />
+      <path d="M11.5 9.5C12.86 9.85 14 10.84 14 12.5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" opacity=".45" />
     </svg>
   );
 }
