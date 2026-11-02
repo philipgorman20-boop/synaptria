@@ -16,9 +16,8 @@ import { getProgramService } from '../../lib/program-service';
 import { toListProjectsContext } from '../../lib/project-context';
 import { getProjectService } from '../../lib/project-service';
 
-import { getDocumentDetailHref } from './documents-format';
-
 import { CreateDocumentDialog } from './components/create-document-dialog';
+import { DocumentsTable } from './components/documents-table';
 
 export default async function DocumentsPage() {
   let context: ResolvedOrganizationContext;
@@ -62,34 +61,7 @@ export default async function DocumentsPage() {
         </div>
       ) : (
         <section aria-label="Documents">
-          <table className="data-table">
-            <thead>
-              <tr>
-                <th>Title</th>
-                <th>Type</th>
-                <th>Status</th>
-                <th>Version</th>
-                <th>Program</th>
-                <th>Project</th>
-              </tr>
-            </thead>
-            <tbody>
-              {documents.map((doc) => {
-                const program = doc.programId !== undefined ? programs.find((p) => p.id === doc.programId) : undefined;
-                const project = doc.projectId !== undefined ? projects.find((p) => p.id === doc.projectId) : undefined;
-                return (
-                  <tr key={doc.id}>
-                    <td><Link href={getDocumentDetailHref(doc.id)}>{doc.title}</Link></td>
-                    <td>{doc.type}</td>
-                    <td>{doc.status}</td>
-                    <td>{doc.currentVersion}</td>
-                    <td>{program?.name ?? '—'}</td>
-                    <td>{project?.name ?? '—'}</td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
+          <DocumentsTable documents={documents} programs={programs} projects={projects} />
         </section>
       )}
     </main>

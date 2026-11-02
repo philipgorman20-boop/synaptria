@@ -2340,6 +2340,80 @@ a.primary-button {
   align-items: center;
 }
 
+/* ── Filterable table ──────────────────────────────────────────── */
+.table-with-filter {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.table-filter-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.table-filter-input {
+  appearance: none;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  background: white;
+  color: #111827;
+  font: inherit;
+  font-size: 0.875rem;
+  padding: 7px 12px;
+  width: min(280px, 100%);
+  transition: border-color 150ms var(--ease-out);
+}
+
+.table-filter-input:focus-visible {
+  outline: none;
+  border-color: #6956C8;
+  box-shadow: 0 0 0 3px rgb(105 86 200 / 16%);
+}
+
+.table-filter-count {
+  font-size: 0.8125rem;
+  color: #6b7280;
+}
+
+.table-sort-button {
+  appearance: none;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font: inherit;
+  font-size: inherit;
+  font-weight: 600;
+  color: inherit;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  white-space: nowrap;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .table-sort-button:hover {
+    color: #007F82;
+  }
+}
+
+.table-sort-button:active {
+  transform: scale(0.97);
+}
+
+.sort-indicator {
+  font-size: 0.75rem;
+  color: #6956C8;
+}
+
+.table-empty-filter {
+  color: #6b7280;
+  font-size: 0.9rem;
+  padding: 16px 0;
+}
+
 .table-action-button {
   appearance: none;
   cursor: pointer;

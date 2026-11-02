@@ -16,9 +16,8 @@ import { getProgramService } from '../../lib/program-service';
 import { toListProjectsContext } from '../../lib/project-context';
 import { getProjectService } from '../../lib/project-service';
 
-import { getDecisionDetailHref } from './decisions-format';
-
 import { CreateDecisionDialog } from './components/create-decision-dialog';
+import { DecisionsTable } from './components/decisions-table';
 
 export default async function DecisionsPage() {
   let context: ResolvedOrganizationContext;
@@ -62,24 +61,7 @@ export default async function DecisionsPage() {
         </div>
       ) : (
         <section aria-label="Decisions">
-          <table className="data-table">
-            <thead>
-              <tr>
-                <th>Title</th>
-                <th>Status</th>
-                <th>Decision date</th>
-              </tr>
-            </thead>
-            <tbody>
-              {decisions.map((decision) => (
-                <tr key={decision.id}>
-                  <td><Link href={getDecisionDetailHref(decision.id)}>{decision.title}</Link></td>
-                  <td>{decision.status}</td>
-                  <td>{decision.decisionDate?.toLocaleDateString() ?? '—'}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+          <DecisionsTable decisions={decisions} />
         </section>
       )}
     </main>

@@ -41,6 +41,7 @@ const NAV_SECTIONS = [
     items: [
       { href: '/daily-briefing', label: 'Daily Briefing', icon: IconBriefing },
       { href: '/recommendations', label: 'Recommendations', icon: IconRecommendations },
+      { href: '/action-proposals', label: 'Action Proposals', icon: IconActionProposals },
     ],
   },
 ];
@@ -216,6 +217,16 @@ function IconRecommendations() {
   return (
     <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
       <path d="M8 1L9.8 5.4L14.5 5.9L11.1 9L12.1 13.6L8 11.2L3.9 13.6L4.9 9L1.5 5.9L6.2 5.4L8 1Z" fill="currentColor" opacity=".7" />
+    </svg>
+  );
+}
+
+function IconActionProposals() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+      <path d="M2 3.5C2 2.67 2.67 2 3.5 2H9L12 5V12.5C12 13.33 11.33 14 10.5 14H3.5C2.67 14 2 13.33 2 12.5V3.5Z" fill="currentColor" opacity=".6" />
+      <path d="M9 2V5H12" stroke="white" strokeWidth="1" strokeLinejoin="round" />
+      <path d="M10.5 9L13.5 6L14.5 7L10.5 11L8.5 9L9.5 8L10.5 9Z" fill="currentColor" opacity=".9" />
     </svg>
   );
 }

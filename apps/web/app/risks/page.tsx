@@ -8,7 +8,6 @@ import type { Risk } from '@synaptria/domain/risks';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
 
-import { getRiskDetailHref } from './risks-format';
 import { toListRisksContext } from '../../lib/risk-context';
 import { getRiskService } from '../../lib/risk-service';
 import { getRequestContext } from '../../lib/request-context';
@@ -18,6 +17,7 @@ import { toListProjectsContext } from '../../lib/project-context';
 import { getProjectService } from '../../lib/project-service';
 
 import { CreateRiskDialog } from './components/create-risk-dialog';
+import { RisksTable } from './components/risks-table';
 
 export default async function RisksPage() {
   let context: ResolvedOrganizationContext;
@@ -61,28 +61,7 @@ export default async function RisksPage() {
         </div>
       ) : (
         <section aria-label="Risks">
-          <table className="data-table">
-            <thead>
-              <tr>
-                <th>Title</th>
-                <th>Category</th>
-                <th>Status</th>
-                <th>Probability</th>
-                <th>Impact</th>
-              </tr>
-            </thead>
-            <tbody>
-              {risks.map((risk) => (
-                <tr key={risk.id}>
-                  <td><Link href={getRiskDetailHref(risk.id)}>{risk.title}</Link></td>
-                  <td>{risk.category}</td>
-                  <td>{risk.status}</td>
-                  <td>{risk.probability}</td>
-                  <td>{risk.impact}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+          <RisksTable risks={risks} />
         </section>
       )}
     </main>

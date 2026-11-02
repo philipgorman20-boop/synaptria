@@ -12,9 +12,8 @@ import { toListVendorsContext } from '../../lib/vendor-context';
 import { getVendorService } from '../../lib/vendor-service';
 import { getRequestContext } from '../../lib/request-context';
 
-import { getVendorDetailHref } from './vendors-format';
-
 import { CreateVendorDialog } from './components/create-vendor-dialog';
+import { VendorsTable } from './components/vendors-table';
 
 export default async function VendorsPage() {
   let context: ResolvedOrganizationContext;
@@ -52,26 +51,7 @@ export default async function VendorsPage() {
         </div>
       ) : (
         <section aria-label="Vendors">
-          <table className="data-table">
-            <thead>
-              <tr>
-                <th>Name</th>
-                <th>Category</th>
-                <th>Status</th>
-                <th>Country</th>
-              </tr>
-            </thead>
-            <tbody>
-              {vendors.map((vendor) => (
-                <tr key={vendor.id}>
-                  <td><Link href={getVendorDetailHref(vendor.id)}>{vendor.name}</Link></td>
-                  <td>{vendor.category}</td>
-                  <td>{vendor.status}</td>
-                  <td>{vendor.country ?? '—'}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+          <VendorsTable vendors={vendors} />
         </section>
       )}
     </main>
